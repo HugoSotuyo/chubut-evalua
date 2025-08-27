@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Button } from "@/components/ui/button"
@@ -5,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FileDown, Filter } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { Label } from "@/components/ui/label";
 
 const data = [
   { name: 'Pregunta 1', '1er Grado': 0.8, '2do Grado': 0.7, '3er Grado': 0.85 },
@@ -41,26 +43,41 @@ export default function AnalisisPage() {
                     <CardDescription>Selecciona los criterios para acotar tu búsqueda. Los gráficos se actualizarán automáticamente.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <Select>
-                        <SelectTrigger><SelectValue placeholder="Distrito" /></SelectTrigger>
-                        <SelectContent><SelectItem value="1">Distrito I</SelectItem></SelectContent>
-                    </Select>
-                    <Select>
-                        <SelectTrigger><SelectValue placeholder="Escuela" /></SelectTrigger>
-                        <SelectContent><SelectItem value="101">Escuela N° 101</SelectItem></SelectContent>
-                    </Select>
-                    <Select>
-                        <SelectTrigger><SelectValue placeholder="Grado" /></SelectTrigger>
-                        <SelectContent><SelectItem value="1">1er Grado</SelectItem></SelectContent>
-                    </Select>
-                    <Select>
-                        <SelectTrigger><SelectValue placeholder="Curso" /></SelectTrigger>
-                        <SelectContent><SelectItem value="A">"A"</SelectItem></SelectContent>
-                    </Select>
-                    <Select>
-                        <SelectTrigger><SelectValue placeholder="Examen" /></SelectTrigger>
-                        <SelectContent><SelectItem value="mat2023">Matemática 2023</SelectItem></SelectContent>
-                    </Select>
+                    <div className="grid gap-2">
+                        <Label htmlFor="filtro-distrito">Distrito</Label>
+                        <Select>
+                            <SelectTrigger id="filtro-distrito"><SelectValue placeholder="Distrito" /></SelectTrigger>
+                            <SelectContent><SelectItem value="1">Distrito I</SelectItem></SelectContent>
+                        </Select>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="filtro-escuela">Escuela</Label>
+                        <Select>
+                            <SelectTrigger id="filtro-escuela"><SelectValue placeholder="Escuela" /></SelectTrigger>
+                            <SelectContent><SelectItem value="101">Escuela N° 101</SelectItem></SelectContent>
+                        </Select>
+                    </div>
+                     <div className="grid gap-2">
+                        <Label htmlFor="filtro-grado">Grado</Label>
+                        <Select>
+                            <SelectTrigger id="filtro-grado"><SelectValue placeholder="Grado" /></SelectTrigger>
+                            <SelectContent><SelectItem value="1">1er Grado</SelectItem></SelectContent>
+                        </Select>
+                    </div>
+                     <div className="grid gap-2">
+                        <Label htmlFor="filtro-curso">Curso</Label>
+                        <Select>
+                            <SelectTrigger id="filtro-curso"><SelectValue placeholder="Curso" /></SelectTrigger>
+                            <SelectContent><SelectItem value="A">"A"</SelectItem></SelectContent>
+                        </Select>
+                    </div>
+                     <div className="grid gap-2">
+                        <Label htmlFor="filtro-examen">Examen</Label>
+                        <Select>
+                            <SelectTrigger id="filtro-examen"><SelectValue placeholder="Examen" /></SelectTrigger>
+                            <SelectContent><SelectItem value="mat2023">Matemática 2023</SelectItem></SelectContent>
+                        </Select>
+                    </div>
                 </CardContent>
             </Card>
 
