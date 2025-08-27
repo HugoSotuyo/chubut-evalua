@@ -43,6 +43,8 @@ export default function AnalisisPage() {
         exam: "all",
     });
 
+    const [appliedFilters, setAppliedFilters] = useState(filters);
+
     const getUniqueValues = (key: keyof typeof mockResults[0]) => {
         const values = mockResults.map(item => item[key]);
         return [...new Set(values)];
@@ -50,6 +52,13 @@ export default function AnalisisPage() {
 
     const handleFilterChange = (filterName: keyof typeof filters, value: string) => {
         setFilters(prev => ({...prev, [filterName]: value}));
+    }
+
+    const handleApplyFilters = () => {
+        setAppliedFilters(filters);
+        // NOTE: Chart data is static for now. In a real scenario, you would
+        // re-fetch or re-calculate the chart data based on `appliedFilters`.
+        console.log("Applying filters:", filters);
     }
 
     return (
@@ -66,7 +75,7 @@ export default function AnalisisPage() {
                             <Filter className="h-5 w-5" />
                             <CardTitle>Filtros</CardTitle>
                         </div>
-                         <Button onClick={() => console.log("Applying filters:", filters)}>
+                         <Button onClick={handleApplyFilters}>
                             <Filter className="mr-2 h-4 w-4" />
                             Aplicar Filtros
                         </Button>
