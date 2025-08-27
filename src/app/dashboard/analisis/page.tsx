@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FileDown, Filter } from "lucide-react"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, LabelList } from 'recharts';
 import { Label } from "@/components/ui/label";
 
 const originalData = [
@@ -60,23 +60,28 @@ export default function AnalisisPage() {
     }
     
     const { data, dataAprobados } = useMemo(() => {
-        if (appliedFilters.district === "all" && appliedFilters.school === "all" && appliedFilters.grade === "all" && appliedFilters.course === "all" && appliedFilters.exam === "all") {
-            return { data: originalData, dataAprobados: originalDataAprobados };
+        const hasActiveFilters = Object.values(appliedFilters).some(value => value !== "all");
+
+        if (!hasActiveFilters) {
+             return { data: originalData, dataAprobados: originalDataAprobados };
         }
 
         const newQuestionData = originalData.map(d => {
-            const filteredData = { ...d };
+            let filteredData = { ...d };
             const selectedGrade = appliedFilters.grade;
 
-            if (selectedGrade !== "all") {
-                if ('1er Grado' in filteredData && selectedGrade !== '1er Grado') filteredData['1er Grado'] = 0;
-                if ('2do Grado' in filteredData && selectedGrade !== '2do Grado') filteredData['2do Grado'] = 0;
-                if ('3er Grado' in filteredData && selectedGrade !== '3er Grado') filteredData['3er Grado'] = 0;
+            const shouldFilter = (key: '1er Grado' | '2do Grado' | '3er Grado') => {
+                return selectedGrade !== 'all' && key !== selectedGrade;
+            };
+
+            if (appliedFilters.district !== "all" || appliedFilters.school !== "all" || appliedFilters.course !== "all" || appliedFilters.exam !== "all" || appliedFilters.grade !== "all") {
+                filteredData['1er Grado'] = shouldFilter('1er Grado') ? 0 : Math.max(0, d['1er Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
+                filteredData['2do Grado'] = shouldFilter('2do Grado') ? 0 : Math.max(0, d['2do Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
+                filteredData['3er Grado'] = shouldFilter('3er Grado') ? 0 : Math.max(0, d['3er Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
             } else {
-                if ('1er Grado' in filteredData) filteredData['1er Grado'] = Math.max(0, filteredData['1er Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
-                if ('2do Grado' in filteredData) filteredData['2do Grado'] = Math.max(0, filteredData['2do Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
-                if ('3er Grado' in filteredData) filteredData['3er Grado'] = Math.max(0, filteredData['3er Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
+                return d;
             }
+
             return filteredData;
         });
 
@@ -226,9 +231,15 @@ export default function AnalisisPage() {
                                 <YAxis />
                                 <Tooltip />
                                 <Legend />
-                                <Line type="monotone" dataKey="1er Grado" stroke="hsl(var(--primary))" activeDot={{ r: 8 }} />
-                                <Line type="monotone" dataKey="2do Grado" stroke="hsl(var(--accent))" />
-                                <Line type="monotone" dataKey="3er Grado" stroke="hsl(var(--destructive))" />
+                                <Line type="monotone" dataKey="1er Grado" stroke="hsl(var(--primary))" activeDot={{ r: 8 }}>
+                                  <LabelList dataKey="1er Grado" position="top" formatter={(value: number) => value.toFixed(2)} />
+                                </Line>
+                                <Line type="monotone" dataKey="2do Grado" stroke="hsl(var(--accent))">
+                                  <LabelList dataKey="2do Grado" position="top" formatter={(value: number) => value.toFixed(2)} />
+                                </Line>
+                                <Line type="monotone" dataKey="3er Grado" stroke="hsl(var(--destructive))">
+                                  <LabelList dataKey="3er Grado" position="top" formatter={(value: number) => value.toFixed(2)} />
+                                </Line>
                             </LineChart>
                         </ResponsiveContainer>
                     </CardContent>
