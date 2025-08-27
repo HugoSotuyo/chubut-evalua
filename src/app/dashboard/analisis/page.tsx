@@ -31,6 +31,7 @@ const mockResults = [
     { district: "Distrito II", school: "Escuela N° 789", grade: "3er Grado", course: "C", exam: "Ciencias Naturales 2023" },
     { district: "Distrito II", school: "Escuela N° 502", grade: "1er Grado", course: "A", exam: "Matemática 2024" },
     { district: "Distrito III", school: "Escuela N° 23", grade: "4to Grado", course: "A", exam: "Matemática Cierre 2023" },
+    { district: "Distrito I", school: "Escuela N° 101", grade: "3er Grado", course: "A", exam: "Matemática 2023" },
 ];
 
 
@@ -63,21 +64,15 @@ export default function AnalisisPage() {
             return { data: originalData, dataAprobados: originalDataAprobados };
         }
 
-        // This is a mock data randomization to simulate filtering.
-        // In a real app, you would fetch data based on `appliedFilters`.
-
-        // Logic for "Análisis por Pregunta" chart
         const newQuestionData = originalData.map(d => {
             const filteredData = { ...d };
             const selectedGrade = appliedFilters.grade;
 
             if (selectedGrade !== "all") {
-                // If a specific grade is selected, zero out the others
                 if ('1er Grado' in filteredData && selectedGrade !== '1er Grado') filteredData['1er Grado'] = 0;
                 if ('2do Grado' in filteredData && selectedGrade !== '2do Grado') filteredData['2do Grado'] = 0;
                 if ('3er Grado' in filteredData && selectedGrade !== '3er Grado') filteredData['3er Grado'] = 0;
             } else {
-                // If no specific grade, but other filters are active, randomize all to show some change
                 if ('1er Grado' in filteredData) filteredData['1er Grado'] = Math.max(0, filteredData['1er Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
                 if ('2do Grado' in filteredData) filteredData['2do Grado'] = Math.max(0, filteredData['2do Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
                 if ('3er Grado' in filteredData) filteredData['3er Grado'] = Math.max(0, filteredData['3er Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
@@ -85,16 +80,13 @@ export default function AnalisisPage() {
             return filteredData;
         });
 
-        // Mock logic for "Aprobados vs. Desaprobados" chart
         const newApprovalData = originalDataAprobados.map(d => {
             const selectedGrade = appliedFilters.grade;
             
-            // If a specific grade is selected and it's not the current data point, zero it out.
             if (selectedGrade !== "all" && d.name !== selectedGrade) {
                  return { ...d, Aprobados: 0, Desaprobados: 0 };
             }
 
-            // Otherwise, randomize data to show some change based on general filters
             const newAprobados = Math.min(100, Math.floor(d.Aprobados * (Math.random() * (1.2 - 0.8) + 0.8)));
             return {
                 ...d,
@@ -106,6 +98,44 @@ export default function AnalisisPage() {
         return { data: newQuestionData, dataAprobados: newApprovalData };
 
     }, [appliedFilters]);
+
+    const handleExport = () => {
+        let csvContent = "";
+        const bom = "\uFEFF";
+        
+        // Headers
+        const headersAnalisis = ["Pregunta", "Promedio 1er Grado", "Promedio 2do Grado", "Promedio 3er Grado"];
+        const headersAprobados = ["Grado", "% Aprobados", "% Desaprobados"];
+
+        // Análisis por Pregunta
+        csvContent += "Análisis por Pregunta\n";
+        csvContent += headersAnalisis.join(';') + '\n';
+        data.forEach(row => {
+            const rowData = [row.name, row['1er Grado'].toFixed(2), row['2do Grado'].toFixed(2), row['3er Grado'].toFixed(2)];
+            csvContent += rowData.join(';') + '\n';
+        });
+
+        csvContent += '\n\n'; // Separator
+
+        // Aprobados vs. Desaprobados
+        csvContent += "Aprobados vs. Desaprobados\n";
+        csvContent += headersAprobados.join(';') + '\n';
+        dataAprobados.forEach(row => {
+            const rowData = [row.name, row.Aprobados, row.Desaprobados];
+            csvContent += rowData.join(';') + '\n';
+        });
+
+        const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "analisis_resultados.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
 
     return (
         <div className="flex flex-col gap-8">
@@ -223,7 +253,7 @@ export default function AnalisisPage() {
                 </Card>
             </div>
              <div className="flex justify-end">
-                <Button>
+                <Button onClick={handleExport}>
                     <FileDown className="mr-2 h-4 w-4" />
                     Exportar Resultados (CSV)
                 </Button>
