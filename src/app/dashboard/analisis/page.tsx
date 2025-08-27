@@ -1,6 +1,7 @@
 
 "use client"
 
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -22,9 +23,35 @@ const dataAprobados = [
     { name: '3er Grado', Aprobados: 88, Desaprobados: 12 },
     { name: '4to Grado', Aprobados: 70, Desaprobados: 30 },
     { name: '5to Grado', Aprobados: 92, Desaprobados: 8 },
-]
+];
+
+const mockResults = [
+    { district: "Distrito I", school: "Escuela N° 101", grade: "1er Grado", course: "A", exam: "Matemática 2023" },
+    { district: "Distrito I", school: "Escuela N° 456", grade: "2do Grado", course: "B", exam: "Lengua y Literatura 2024" },
+    { district: "Distrito II", school: "Escuela N° 789", grade: "3er Grado", course: "C", exam: "Ciencias Naturales 2023" },
+    { district: "Distrito II", school: "Escuela N° 502", grade: "1er Grado", course: "A", exam: "Matemática 2024" },
+    { district: "Distrito III", school: "Escuela N° 23", grade: "4to Grado", course: "A", exam: "Matemática Cierre 2023" },
+];
+
 
 export default function AnalisisPage() {
+    const [filters, setFilters] = useState({
+        district: "all",
+        school: "all",
+        grade: "all",
+        course: "all",
+        exam: "all",
+    });
+
+    const getUniqueValues = (key: keyof typeof mockResults[0]) => {
+        const values = mockResults.map(item => item[key]);
+        return [...new Set(values)];
+    }
+
+    const handleFilterChange = (filterName: keyof typeof filters, value: string) => {
+        setFilters(prev => ({...prev, [filterName]: value}));
+    }
+
     return (
         <div className="flex flex-col gap-8">
             <div>
@@ -39,43 +66,62 @@ export default function AnalisisPage() {
                             <Filter className="h-5 w-5" />
                             <CardTitle>Filtros</CardTitle>
                         </div>
+                         <Button onClick={() => console.log("Applying filters:", filters)}>
+                            <Filter className="mr-2 h-4 w-4" />
+                            Aplicar Filtros
+                        </Button>
                     </div>
                     <CardDescription>Selecciona los criterios para acotar tu búsqueda. Los gráficos se actualizarán automáticamente.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     <div className="grid gap-2">
                         <Label htmlFor="filtro-distrito">Distrito</Label>
-                        <Select>
+                        <Select onValueChange={(v) => handleFilterChange('district', v)} value={filters.district}>
                             <SelectTrigger id="filtro-distrito"><SelectValue placeholder="Distrito" /></SelectTrigger>
-                            <SelectContent><SelectItem value="1">Distrito I</SelectItem></SelectContent>
+                            <SelectContent>
+                                <SelectItem value="all">Todos</SelectItem>
+                                {getUniqueValues("district").map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                            </SelectContent>
                         </Select>
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="filtro-escuela">Escuela</Label>
-                        <Select>
+                        <Select onValueChange={(v) => handleFilterChange('school', v)} value={filters.school}>
                             <SelectTrigger id="filtro-escuela"><SelectValue placeholder="Escuela" /></SelectTrigger>
-                            <SelectContent><SelectItem value="101">Escuela N° 101</SelectItem></SelectContent>
+                            <SelectContent>
+                                <SelectItem value="all">Todas</SelectItem>
+                                {getUniqueValues("school").map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                            </SelectContent>
                         </Select>
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="filtro-grado">Grado</Label>
-                        <Select>
+                        <Select onValueChange={(v) => handleFilterChange('grade', v)} value={filters.grade}>
                             <SelectTrigger id="filtro-grado"><SelectValue placeholder="Grado" /></SelectTrigger>
-                            <SelectContent><SelectItem value="1">1er Grado</SelectItem></SelectContent>
+                            <SelectContent>
+                                <SelectItem value="all">Todos</SelectItem>
+                                {getUniqueValues("grade").map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                            </SelectContent>
                         </Select>
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="filtro-curso">Curso</Label>
-                        <Select>
+                        <Select onValueChange={(v) => handleFilterChange('course', v)} value={filters.course}>
                             <SelectTrigger id="filtro-curso"><SelectValue placeholder="Curso" /></SelectTrigger>
-                            <SelectContent><SelectItem value="A">"A"</SelectItem></SelectContent>
+                            <SelectContent>
+                                <SelectItem value="all">Todos</SelectItem>
+                                {getUniqueValues("course").map(c => <SelectItem key={c} value={c}>"{c}"</SelectItem>)}
+                            </SelectContent>
                         </Select>
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="filtro-examen">Examen</Label>
-                        <Select>
+                        <Select onValueChange={(v) => handleFilterChange('exam', v)} value={filters.exam}>
                             <SelectTrigger id="filtro-examen"><SelectValue placeholder="Examen" /></SelectTrigger>
-                            <SelectContent><SelectItem value="mat2023">Matemática 2023</SelectItem></SelectContent>
+                            <SelectContent>
+                                <SelectItem value="all">Todos</SelectItem>
+                                {getUniqueValues("exam").map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                            </SelectContent>
                         </Select>
                     </div>
                 </CardContent>
