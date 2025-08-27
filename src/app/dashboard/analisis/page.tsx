@@ -9,7 +9,7 @@ import { FileDown, Filter } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Label } from "@/components/ui/label";
 
-const data = [
+const originalData = [
   { name: 'Pregunta 1', '1er Grado': 0.8, '2do Grado': 0.7, '3er Grado': 0.85 },
   { name: 'Pregunta 2', '1er Grado': 0.6, '2do Grado': 0.65, '3er Grado': 0.7 },
   { name: 'Pregunta 3', '1er Grado': 0.9, '2do Grado': 0.8, '3er Grado': 0.95 },
@@ -17,7 +17,7 @@ const data = [
   { name: 'Pregunta 5', '1er Grado': 0.7, '2do Grado': 0.75, '3er Grado': 0.8 },
 ];
 
-const dataAprobados = [
+const originalDataAprobados = [
     { name: '1er Grado', Aprobados: 75, Desaprobados: 25 },
     { name: '2do Grado', Aprobados: 80, Desaprobados: 20 },
     { name: '3er Grado', Aprobados: 88, Desaprobados: 12 },
@@ -56,10 +56,34 @@ export default function AnalisisPage() {
 
     const handleApplyFilters = () => {
         setAppliedFilters(filters);
-        // NOTE: Chart data is static for now. In a real scenario, you would
-        // re-fetch or re-calculate the chart data based on `appliedFilters`.
-        console.log("Applying filters:", filters);
     }
+    
+    const { data, dataAprobados } = useMemo(() => {
+        // This is a mock effect. In a real app, you'd filter/fetch data based on appliedFilters.
+        // For now, we'll just alter the data to show a visual change when filters are applied.
+        if (appliedFilters.district === "all" && appliedFilters.school === "all" && appliedFilters.grade === "all" && appliedFilters.course === "all" && appliedFilters.exam === "all") {
+            return { data: originalData, dataAprobados: originalDataAprobados };
+        }
+
+        const newQuestionData = originalData.map(d => ({
+            ...d,
+            '1er Grado': d['1er Grado'] * (Math.random() * (1.2 - 0.8) + 0.8),
+            '2do Grado': d['2do Grado'] * (Math.random() * (1.2 - 0.8) + 0.8),
+            '3er Grado': d['3er Grado'] * (Math.random() * (1.2 - 0.8) + 0.8),
+        }));
+
+        const newApprovalData = originalDataAprobados.map(d => {
+            const newApproved = Math.min(100, Math.floor(d.Aprobados * (Math.random() * (1.2 - 0.8) + 0.8)));
+            return {
+                ...d,
+                Aprobados: newApproved,
+                Desaprobados: 100 - newApproved,
+            }
+        });
+
+        return { data: newQuestionData, dataAprobados: newApprovalData };
+
+    }, [appliedFilters]);
 
     return (
         <div className="flex flex-col gap-8">
