@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -9,12 +9,14 @@ import { FileDown, Filter } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, LabelList } from 'recharts';
 import { Label } from "@/components/ui/label";
 
+// Datos simulados: Cantidad de respuestas correctas por pregunta.
+// Asumimos un total de alumnos: 1er Grado (100), 2do Grado (120), 3er Grado (110)
 const originalData = [
-  { name: 'Pregunta 1', '1er Grado': 0.8, '2do Grado': 0.7, '3er Grado': 0.85 },
-  { name: 'Pregunta 2', '1er Grado': 0.6, '2do Grado': 0.65, '3er Grado': 0.7 },
-  { name: 'Pregunta 3', '1er Grado': 0.9, '2do Grado': 0.8, '3er Grado': 0.95 },
-  { name: 'Pregunta 4', '1er Grado': 0.5, '2do Grado': 0.6, '3er Grado': 0.55 },
-  { name: 'Pregunta 5', '1er Grado': 0.7, '2do Grado': 0.75, '3er Grado': 0.8 },
+  { name: 'Pregunta 1', '1er Grado': 80, '2do Grado': 84, '3er Grado': 94 }, // 0.8*100, 0.7*120, 0.85*110
+  { name: 'Pregunta 2', '1er Grado': 60, '2do Grado': 78, '3er Grado': 77 }, // 0.6*100, 0.65*120, 0.7*110
+  { name: 'Pregunta 3', '1er Grado': 90, '2do Grado': 96, '3er Grado': 105}, // 0.9*100, 0.8*120, 0.95*110
+  { name: 'Pregunta 4', '1er Grado': 50, '2do Grado': 72, '3er Grado': 61 }, // 0.5*100, 0.6*120, 0.55*110
+  { name: 'Pregunta 5', '1er Grado': 70, '2do Grado': 90, '3er Grado': 88 }, // 0.7*100, 0.75*120, 0.8*110
 ];
 
 const originalDataAprobados = [
@@ -75,9 +77,9 @@ export default function AnalisisPage() {
             };
 
             if (appliedFilters.district !== "all" || appliedFilters.school !== "all" || appliedFilters.course !== "all" || appliedFilters.exam !== "all" || appliedFilters.grade !== "all") {
-                filteredData['1er Grado'] = shouldFilter('1er Grado') ? 0 : Math.max(0, d['1er Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
-                filteredData['2do Grado'] = shouldFilter('2do Grado') ? 0 : Math.max(0, d['2do Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
-                filteredData['3er Grado'] = shouldFilter('3er Grado') ? 0 : Math.max(0, d['3er Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
+                filteredData['1er Grado'] = shouldFilter('1er Grado') ? 0 : Math.floor(d['1er Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
+                filteredData['2do Grado'] = shouldFilter('2do Grado') ? 0 : Math.floor(d['2do Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
+                filteredData['3er Grado'] = shouldFilter('3er Grado') ? 0 : Math.floor(d['3er Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
             } else {
                 return d;
             }
@@ -109,21 +111,21 @@ export default function AnalisisPage() {
         const bom = "\uFEFF";
         
         // Headers
-        const headersAnalisis = ["Pregunta", "Promedio 1er Grado", "Promedio 2do Grado", "Promedio 3er Grado"];
+        const headersAnalisis = ["Pregunta", "Correctas 1er Grado", "Correctas 2do Grado", "Correctas 3er Grado"];
         const headersAprobados = ["Grado", "% Aprobados", "% Desaprobados"];
 
         // Análisis por Pregunta
-        csvContent += "Análisis por Pregunta\n";
+        csvContent += "Análisis por Pregunta (Cantidad de Respuestas Correctas)\n";
         csvContent += headersAnalisis.join(';') + '\n';
         data.forEach(row => {
-            const rowData = [row.name, row['1er Grado'].toFixed(2), row['2do Grado'].toFixed(2), row['3er Grado'].toFixed(2)];
+            const rowData = [row.name, row['1er Grado'], row['2do Grado'], row['3er Grado']];
             csvContent += rowData.join(';') + '\n';
         });
 
         csvContent += '\n\n'; // Separator
 
         // Aprobados vs. Desaprobados
-        csvContent += "Aprobados vs. Desaprobados\n";
+        csvContent += "Aprobados vs. Desaprobados (%)\n";
         csvContent += headersAprobados.join(';') + '\n';
         dataAprobados.forEach(row => {
             const rowData = [row.name, row.Aprobados, row.Desaprobados];
@@ -221,7 +223,7 @@ export default function AnalisisPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Análisis por Pregunta</CardTitle>
-                        <CardDescription>Promedio de respuestas correctas por pregunta y grado.</CardDescription>
+                        <CardDescription>Cantidad de respuestas correctas por pregunta y grado.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
@@ -232,13 +234,13 @@ export default function AnalisisPage() {
                                 <Tooltip />
                                 <Legend />
                                 <Line type="monotone" dataKey="1er Grado" stroke="hsl(var(--primary))" activeDot={{ r: 8 }}>
-                                  <LabelList dataKey="1er Grado" position="top" formatter={(value: number) => value.toFixed(2)} />
+                                  <LabelList dataKey="1er Grado" position="top" formatter={(value: number) => value} />
                                 </Line>
                                 <Line type="monotone" dataKey="2do Grado" stroke="hsl(var(--accent))">
-                                  <LabelList dataKey="2do Grado" position="top" formatter={(value: number) => value.toFixed(2)} />
+                                  <LabelList dataKey="2do Grado" position="top" formatter={(value: number) => value} />
                                 </Line>
                                 <Line type="monotone" dataKey="3er Grado" stroke="hsl(var(--destructive))">
-                                  <LabelList dataKey="3er Grado" position="top" formatter={(value: number) => value.toFixed(2)} />
+                                  <LabelList dataKey="3er Grado" position="top" formatter={(value: number) => value} />
                                 </Line>
                             </LineChart>
                         </ResponsiveContainer>
