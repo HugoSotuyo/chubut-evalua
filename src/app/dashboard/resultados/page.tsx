@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -19,32 +19,49 @@ const allResults = [
     { id: "res-006", studentName: "Laura García", examName: "Lengua y Literatura 2024", school: "Escuela N° 456", grade: "Aprobado", score: 88 },
 ]
 
-export default function ResultadosPage() {
-    const [examFilter, setExamFilter] = useState("all");
-    const [schoolFilter, setSchoolFilter] = useState("all");
-    const [studentNameFilter, setStudentNameFilter] = useState("");
-    const [statusFilter, setStatusFilter] = useState("all");
-    const [filteredResults, setFilteredResults] = useState(allResults);
+type Filters = {
+    exam: string;
+    school: string;
+    studentName: string;
+    status: string;
+}
 
-    useEffect(() => {
+export default function ResultadosPage() {
+    const [filters, setFilters] = useState<Filters>({
+        exam: "all",
+        school: "all",
+        studentName: "",
+        status: "all",
+    });
+
+    const [appliedFilters, setAppliedFilters] = useState<Filters>(filters);
+
+    const filteredResults = useMemo(() => {
         let results = allResults;
 
-        if (examFilter !== "all") {
-            results = results.filter(r => r.examName === examFilter);
+        if (appliedFilters.exam !== "all") {
+            results = results.filter(r => r.examName === appliedFilters.exam);
         }
-        if (schoolFilter !== "all") {
-            results = results.filter(r => r.school === schoolFilter);
+        if (appliedFilters.school !== "all") {
+            results = results.filter(r => r.school === appliedFilters.school);
         }
-        if (studentNameFilter) {
-            results = results.filter(r => r.studentName.toLowerCase().includes(studentNameFilter.toLowerCase()));
+        if (appliedFilters.studentName) {
+            results = results.filter(r => r.studentName.toLowerCase().includes(appliedFilters.studentName.toLowerCase()));
         }
-        if (statusFilter !== "all") {
-            results = results.filter(r => r.grade.toLowerCase() === statusFilter);
+        if (appliedFilters.status !== "all") {
+            results = results.filter(r => r.grade.toLowerCase() === appliedFilters.status);
         }
 
-        setFilteredResults(results);
-    }, [examFilter, schoolFilter, studentNameFilter, statusFilter]);
+        return results;
+    }, [appliedFilters]);
 
+    const handleFilterChange = <K extends keyof Filters>(filterName: K, value: Filters[K]) => {
+        setFilters(prev => ({...prev, [filterName]: value}));
+    }
+
+    const handleApplyFilters = () => {
+        setAppliedFilters(filters);
+    }
 
     const getUniqueValues = (key: keyof typeof allResults[0]) => {
         const values = allResults.map(item => item[key]);
@@ -72,10 +89,10 @@ export default function ResultadosPage() {
                             <CardTitle>Filtros de Búsqueda</CardTitle>
                         </div>
                     </div>
-                    <CardDescription>Utiliza los filtros para encontrar resultados específicos. La tabla se actualizará automáticamente.</CardDescription>
+                    <CardDescription>Utiliza los filtros para encontrar resultados específicos y luego presiona "Aplicar Filtros".</CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Select onValueChange={setExamFilter} defaultValue="all">
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <Select onValueChange={(value) => handleFilterChange("exam", value)} value={filters.exam}>
                         <SelectTrigger><SelectValue placeholder="Examen" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Todos</SelectItem>
@@ -84,7 +101,7 @@ export default function ResultadosPage() {
                             ))}
                         </SelectContent>
                     </Select>
-                    <Select onValueChange={setSchoolFilter} defaultValue="all">
+                    <Select onValueChange={(value) => handleFilterChange("school", value)} value={filters.school}>
                         <SelectTrigger><SelectValue placeholder="Escuela" /></SelectTrigger>
                         <SelectContent>
                              <SelectItem value="all">Todas</SelectItem>
@@ -95,10 +112,10 @@ export default function ResultadosPage() {
                     </Select>
                      <Input
                         placeholder="Buscar por nombre de alumno..."
-                        value={studentNameFilter}
-                        onChange={(e) => setStudentNameFilter(e.target.value)}
+                        value={filters.studentName}
+                        onChange={(e) => handleFilterChange("studentName", e.target.value)}
                      />
-                    <Select onValueChange={setStatusFilter} defaultValue="all">
+                    <Select onValueChange={(value) => handleFilterChange("status", value)} value={filters.status}>
                         <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Todos</SelectItem>
@@ -106,6 +123,10 @@ export default function ResultadosPage() {
                             <SelectItem value="desaprobado">Desaprobado</SelectItem>
                         </SelectContent>
                     </Select>
+                    <Button onClick={handleApplyFilters} className="lg:col-start-5">
+                        <Filter className="mr-2 h-4 w-4" />
+                        Aplicar Filtros
+                    </Button>
                 </CardContent>
             </Card>
 
