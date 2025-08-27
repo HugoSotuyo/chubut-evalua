@@ -274,16 +274,16 @@ export default function AnalisisPage() {
                                 <YAxis />
                                 <Tooltip content={<CustomTooltip />} />
                                 <Legend />
-                                <Bar name="1er Grado - Correctas" dataKey="1er Grado.correctas" fill="hsl(var(--chart-1))">
+                                <Bar name="1er Grado - Correctas" dataKey="1er Grado.correctas" fill="hsl(var(--chart-5))">
                                     <LabelList dataKey="1er Grado.correctas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
                                 </Bar>
-                                <Bar name="1er Grado - Incorrectas" dataKey="1er Grado.incorrectas" fill="hsl(var(--chart-1)/0.4)">
+                                <Bar name="1er Grado - Incorrectas" dataKey="1er Grado.incorrectas" fill="hsl(var(--chart-5)/0.4)">
                                     <LabelList dataKey="1er Grado.incorrectas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
                                 </Bar>
-                                 <Bar name="2do Grado - Correctas" dataKey="2do Grado.correctas" fill="hsl(var(--chart-2))">
+                                 <Bar name="2do Grado - Correctas" dataKey="2do Grado.correctas" fill="hsl(var(--chart-4))">
                                     <LabelList dataKey="2do Grado.correctas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
                                 </Bar>
-                                <Bar name="2do Grado - Incorrectas" dataKey="2do Grado.incorrectas" fill="hsl(var(--chart-2)/0.4)">
+                                <Bar name="2do Grado - Incorrectas" dataKey="2do Grado.incorrectas" fill="hsl(var(--chart-4)/0.4)">
                                     <LabelList dataKey="2do Grado.incorrectas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
                                 </Bar>
                                  <Bar name="3er Grado - Correctas" dataKey="3er Grado.correctas" fill="hsl(var(--chart-3))">
@@ -329,3 +329,5 @@ export default function AnalisisPage() {
         </div>
     )
 }
+
+    
