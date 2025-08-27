@@ -37,9 +37,8 @@ export default function AnalisisPage() {
                             <Filter className="h-5 w-5" />
                             <CardTitle>Filtros</CardTitle>
                         </div>
-                        <Button variant="outline">Aplicar Filtros</Button>
                     </div>
-                    <CardDescription>Selecciona los criterios para acotar tu búsqueda.</CardDescription>
+                    <CardDescription>Selecciona los criterios para acotar tu búsqueda. Los gráficos se actualizarán automáticamente.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     <Select>

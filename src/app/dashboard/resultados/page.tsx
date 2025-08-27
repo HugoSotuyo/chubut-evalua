@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -26,24 +26,25 @@ export default function ResultadosPage() {
     const [statusFilter, setStatusFilter] = useState("all");
     const [filteredResults, setFilteredResults] = useState(allResults);
 
-    const handleApplyFilters = () => {
+    useEffect(() => {
         let results = allResults;
 
-        if (examFilter && examFilter !== "all") {
+        if (examFilter !== "all") {
             results = results.filter(r => r.examName === examFilter);
         }
-        if (schoolFilter && schoolFilter !== "all") {
+        if (schoolFilter !== "all") {
             results = results.filter(r => r.school === schoolFilter);
         }
         if (studentNameFilter) {
             results = results.filter(r => r.studentName.toLowerCase().includes(studentNameFilter.toLowerCase()));
         }
-        if (statusFilter && statusFilter !== "all") {
+        if (statusFilter !== "all") {
             results = results.filter(r => r.grade.toLowerCase() === statusFilter);
         }
 
         setFilteredResults(results);
-    };
+    }, [examFilter, schoolFilter, studentNameFilter, statusFilter]);
+
 
     const getUniqueValues = (key: keyof typeof allResults[0]) => {
         const values = allResults.map(item => item[key]);
@@ -70,9 +71,8 @@ export default function ResultadosPage() {
                             <Filter className="h-5 w-5" />
                             <CardTitle>Filtros de Búsqueda</CardTitle>
                         </div>
-                        <Button variant="outline" onClick={handleApplyFilters}>Aplicar Filtros</Button>
                     </div>
-                    <CardDescription>Utiliza los filtros para encontrar resultados específicos.</CardDescription>
+                    <CardDescription>Utiliza los filtros para encontrar resultados específicos. La tabla se actualizará automáticamente.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <Select onValueChange={setExamFilter} defaultValue="all">
