@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useMemo } from "react"
@@ -15,7 +16,7 @@ const allResults = [
     { id: "res-002", studentName: "María Rodríguez", examName: "Matemática Diagnóstico 2024", school: "Escuela N° 101", grade: "Desaprobado", score: 55 },
     { id: "res-003", studentName: "Carlos Sánchez", examName: "Lengua y Literatura 2024", school: "Escuela N° 789", grade: "Aprobado", score: 92 },
     { id: "res-004", studentName: "Ana López", examName: "Matemática Diagnóstico 2024", school: "Escuela N° 456", grade: "Aprobado", score: 78 },
-    { id: "res-005", studentName: "Luis Martinez", examName: "Ciencias Naturales 2023", school: "Escuela N° 101", grade: "Desaprobado", score: 45 },
+    { id: "res-005", studentName: "Luis Martínez", examName: "Ciencias Naturales 2023", school: "Escuela N° 101", grade: "Desaprobado", score: 45 },
     { id: "res-006", studentName: "Laura García", examName: "Lengua y Literatura 2024", school: "Escuela N° 456", grade: "Aprobado", score: 88 },
 ]
 
@@ -66,14 +67,21 @@ export default function ResultadosPage() {
     const handleExport = () => {
         const headers = ["ID", "Alumno", "Examen", "Escuela", "Nota", "Estado"];
         const rows = filteredResults.map(res => [res.id, res.studentName, res.examName, res.school, res.score, res.grade].join(','));
-        let csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join("\n");
-        const encodedUri = encodeURI(csvContent);
+        
+        // BOM para compatibilidad con Excel
+        const bom = "\uFEFF";
+        const csvContent = bom + [headers.join(','), ...rows].join("\n");
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
         const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
+        link.setAttribute("href", url);
         link.setAttribute("download", "resultados_evaluacion.csv");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     const getUniqueValues = (key: 'examName' | 'school') => {
