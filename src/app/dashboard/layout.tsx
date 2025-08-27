@@ -1,7 +1,7 @@
 import { getMockUser } from "@/lib/auth";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardNav } from "@/components/dashboard-nav";
-import { SidebarProvider, Sidebar, SidebarContent, SidebarInset, SidebarHeader, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, Sidebar, SidebarContent, SidebarInset, SidebarHeader } from "@/components/ui/sidebar";
 import { GraduationCap } from "lucide-react";
 
 export default function DashboardLayout({
@@ -25,14 +25,12 @@ export default function DashboardLayout({
             <DashboardNav userRole={user.role} />
           </SidebarContent>
         </Sidebar>
-        <SidebarInset>
-            <div className="flex flex-col">
-                <DashboardHeader user={user} />
-                <main className="flex-1 p-4 md:p-8 pt-6">
-                    {children}
-                </main>
-            </div>
-        </SidebarInset>
+        <div className="flex flex-col flex-1">
+          <DashboardHeader user={user} />
+          <main className="flex-1 p-4 md:p-8 pt-6">
+            {children}
+          </main>
+        </div>
       </div>
     </SidebarProvider>
   );
