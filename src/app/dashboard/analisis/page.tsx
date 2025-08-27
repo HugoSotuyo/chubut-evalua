@@ -347,7 +347,7 @@ export default function AnalisisPage() {
                         <CardTitle>Aprobados vs. Desaprobados</CardTitle>
                         <CardDescription>Cantidad de alumnos por condición en cada grado.</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
                          <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={dataAprobados} layout="vertical">
                                 <CartesianGrid strokeDasharray="3 3" />
@@ -363,6 +363,43 @@ export default function AnalisisPage() {
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
+                        <Separator />
+                        <CardDescription>Datos detallados por condición.</CardDescription>
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="font-bold">Grado</TableHead>
+                                        <TableHead className="text-center">Aprobados (N°)</TableHead>
+                                        <TableHead className="text-center">Aprobados (%)</TableHead>
+                                        <TableHead className="text-center">Desaprobados (N°)</TableHead>
+                                        <TableHead className="text-center">Desaprobados (%)</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {dataAprobados.map((item) => {
+                                        const gradoKey = item.name as keyof typeof totalAlumnos;
+                                        const total = totalAlumnos[gradoKey];
+                                        const aprobadosPercent = total > 0 ? ((item.Aprobados / total) * 100).toFixed(1) : "0.0";
+                                        const desaprobadosPercent = total > 0 ? ((item.Desaprobados / total) * 100).toFixed(1) : "0.0";
+                                        
+                                        if (item.Aprobados === 0 && item.Desaprobados === 0 && appliedFilters.grade !== 'all' && appliedFilters.grade !== gradoKey) {
+                                            return null;
+                                        }
+
+                                        return (
+                                            <TableRow key={item.name}>
+                                                <TableCell className="font-medium">{item.name}</TableCell>
+                                                <TableCell className="text-center">{item.Aprobados}</TableCell>
+                                                <TableCell className="text-center">{aprobadosPercent}%</TableCell>
+                                                <TableCell className="text-center">{item.Desaprobados}</TableCell>
+                                                <TableCell className="text-center">{desaprobadosPercent}%</TableCell>
+                                            </TableRow>
+                                        )
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
