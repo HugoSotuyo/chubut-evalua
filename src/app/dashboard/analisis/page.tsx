@@ -9,18 +9,18 @@ import { FileDown, Filter } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, LabelList } from 'recharts';
 import { Label } from "@/components/ui/label";
 
-// Datos simulados: Cantidad de respuestas correctas por pregunta.
-// Asumimos un total de alumnos: 1er Grado (100), 2do Grado (120), 3er Grado (110)
-const originalData = [
-  { name: 'Pregunta 1', '1er Grado': 80, '2do Grado': 84, '3er Grado': 94 }, // 0.8*100, 0.7*120, 0.85*110
-  { name: 'Pregunta 2', '1er Grado': 60, '2do Grado': 78, '3er Grado': 77 }, // 0.6*100, 0.65*120, 0.7*110
-  { name: 'Pregunta 3', '1er Grado': 90, '2do Grado': 96, '3er Grado': 105}, // 0.9*100, 0.8*120, 0.95*110
-  { name: 'Pregunta 4', '1er Grado': 50, '2do Grado': 72, '3er Grado': 61 }, // 0.5*100, 0.6*120, 0.55*110
-  { name: 'Pregunta 5', '1er Grado': 70, '2do Grado': 90, '3er Grado': 88 }, // 0.7*100, 0.75*120, 0.8*110
-];
-
 // Total de alumnos por grado (simulado)
 const totalAlumnos = { '1er Grado': 100, '2do Grado': 120, '3er Grado': 110, '4to Grado': 95, '5to Grado': 105 };
+
+// Datos simulados: Cantidad de respuestas correctas e incorrectas por pregunta.
+const originalData = [
+  { name: 'Pregunta 1', '1er Grado': { correctas: 80, incorrectas: 20 }, '2do Grado': { correctas: 84, incorrectas: 36 }, '3er Grado': { correctas: 94, incorrectas: 16 } },
+  { name: 'Pregunta 2', '1er Grado': { correctas: 60, incorrectas: 40 }, '2do Grado': { correctas: 78, incorrectas: 42 }, '3er Grado': { correctas: 77, incorrectas: 33 } },
+  { name: 'Pregunta 3', '1er Grado': { correctas: 90, incorrectas: 10 }, '2do Grado': { correctas: 96, incorrectas: 24 }, '3er Grado': { correctas: 105, incorrectas: 5 } },
+  { name: 'Pregunta 4', '1er Grado': { correctas: 50, incorrectas: 50 }, '2do Grado': { correctas: 72, incorrectas: 48 }, '3er Grado': { correctas: 61, incorrectas: 49 } },
+  { name: 'Pregunta 5', '1er Grado': { correctas: 70, incorrectas: 30 }, '2do Grado': { correctas: 90, incorrectas: 30 }, '3er Grado': { correctas: 88, incorrectas: 22 } },
+];
+
 
 // Datos calculados en base a porcentajes y totales.
 const originalDataAprobados = [
@@ -81,10 +81,19 @@ export default function AnalisisPage() {
                 return selectedGrade !== 'all' && key !== selectedGrade;
             };
 
+            const alterData = (data: { correctas: number; incorrectas: number }) => {
+                const total = data.correctas + data.incorrectas;
+                const newCorrectas = Math.floor(data.correctas * (Math.random() * (1.2 - 0.8) + 0.8));
+                return {
+                    correctas: Math.min(total, newCorrectas),
+                    incorrectas: Math.max(0, total - Math.min(total, newCorrectas)),
+                };
+            };
+            
             if (appliedFilters.district !== "all" || appliedFilters.school !== "all" || appliedFilters.course !== "all" || appliedFilters.exam !== "all" || appliedFilters.grade !== "all") {
-                filteredData['1er Grado'] = shouldFilter('1er Grado') ? 0 : Math.floor(d['1er Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
-                filteredData['2do Grado'] = shouldFilter('2do Grado') ? 0 : Math.floor(d['2do Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
-                filteredData['3er Grado'] = shouldFilter('3er Grado') ? 0 : Math.floor(d['3er Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
+                filteredData['1er Grado'] = shouldFilter('1er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['1er Grado']);
+                filteredData['2do Grado'] = shouldFilter('2do Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['2do Grado']);
+                filteredData['3er Grado'] = shouldFilter('3er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['3er Grado']);
             } else {
                 return d;
             }
@@ -99,14 +108,17 @@ export default function AnalisisPage() {
                  return { ...d, Aprobados: 0, Desaprobados: 0 };
             }
 
-            const total = (totalAlumnos[d.name as keyof typeof totalAlumnos] || 100);
-            const newAprobados = Math.floor(d.Aprobados * (Math.random() * (1.2 - 0.8) + 0.8));
-            
-            return {
-                ...d,
-                Aprobados: Math.min(total, newAprobados),
-                Desaprobados: Math.max(0, total - Math.min(total, newAprobados)),
-            };
+            if (hasActiveFilters) {
+                const total = (totalAlumnos[d.name as keyof typeof totalAlumnos] || 100);
+                const newAprobados = Math.floor(d.Aprobados * (Math.random() * (1.2 - 0.8) + 0.8));
+                
+                return {
+                    ...d,
+                    Aprobados: Math.min(total, newAprobados),
+                    Desaprobados: Math.max(0, total - Math.min(total, newAprobados)),
+                };
+            }
+            return d;
         });
 
         return { data: newQuestionData, dataAprobados: newApprovalData };
@@ -118,15 +130,20 @@ export default function AnalisisPage() {
         const bom = "\uFEFF";
         
         // Headers
-        const headersAnalisis = ["Pregunta", "Correctas 1er Grado", "Correctas 2do Grado", "Correctas 3er Grado"];
+        const headersAnalisis = ["Pregunta", "Grado", "Correctas", "Incorrectas"];
         const headersAprobados = ["Grado", "Aprobados", "Desaprobados"];
 
         // Análisis por Pregunta
-        csvContent += "Análisis por Pregunta (Cantidad de Respuestas Correctas)\n";
+        csvContent += "Análisis por Pregunta (Cantidad de Respuestas)\n";
         csvContent += headersAnalisis.join(';') + '\n';
         data.forEach(row => {
-            const rowData = [row.name, row['1er Grado'], row['2do Grado'], row['3er Grado']];
-            csvContent += rowData.join(';') + '\n';
+            Object.keys(row).forEach(key => {
+                if (key !== 'name') {
+                    const gradeData = row[key as keyof typeof row] as { correctas: number, incorrectas: number };
+                    const rowData = [row.name, key, gradeData.correctas, gradeData.incorrectas];
+                    csvContent += rowData.join(';') + '\n';
+                }
+            });
         });
 
         csvContent += '\n\n'; // Separator
@@ -150,6 +167,23 @@ export default function AnalisisPage() {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     };
+    
+    const CustomTooltip = ({ active, payload, label }: any) => {
+        if (active && payload && payload.length) {
+            return (
+            <div className="p-2 bg-background border rounded-lg shadow-lg">
+                <p className="font-bold">{`${label}`}</p>
+                {payload.map((pld: any, index: number) => (
+                <p key={index} style={{ color: pld.fill }}>
+                    {`${pld.name}: ${pld.value}`}
+                </p>
+                ))}
+            </div>
+            );
+        }
+        return null;
+    };
+
 
     return (
         <div className="flex flex-col gap-8">
@@ -230,26 +264,35 @@ export default function AnalisisPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Análisis por Pregunta</CardTitle>
-                        <CardDescription>Cantidad de respuestas correctas por pregunta y grado.</CardDescription>
+                        <CardDescription>Respuestas correctas vs. incorrectas por pregunta y grado.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
-                            <LineChart data={data}>
+                            <BarChart data={data} margin={{ top: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="name" />
                                 <YAxis />
-                                <Tooltip />
+                                <Tooltip content={<CustomTooltip />} />
                                 <Legend />
-                                <Line type="monotone" dataKey="1er Grado" stroke="hsl(var(--primary))" activeDot={{ r: 8 }}>
-                                  <LabelList dataKey="1er Grado" position="top" formatter={(value: number) => value > 0 ? value : ''} />
-                                </Line>
-                                <Line type="monotone" dataKey="2do Grado" stroke="hsl(var(--accent))">
-                                  <LabelList dataKey="2do Grado" position="top" formatter={(value: number) => value > 0 ? value : ''} />
-                                </Line>
-                                <Line type="monotone" dataKey="3er Grado" stroke="hsl(var(--destructive))">
-                                  <LabelList dataKey="3er Grado" position="top" formatter={(value: number) => value > 0 ? value : ''} />
-                                </Line>
-                            </LineChart>
+                                <Bar name="1er Grado - Correctas" dataKey="1er Grado.correctas" fill="hsl(var(--chart-1))">
+                                    <LabelList dataKey="1er Grado.correctas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
+                                </Bar>
+                                <Bar name="1er Grado - Incorrectas" dataKey="1er Grado.incorrectas" fill="hsl(var(--chart-1)/0.4)">
+                                    <LabelList dataKey="1er Grado.incorrectas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
+                                </Bar>
+                                 <Bar name="2do Grado - Correctas" dataKey="2do Grado.correctas" fill="hsl(var(--chart-2))">
+                                    <LabelList dataKey="2do Grado.correctas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
+                                </Bar>
+                                <Bar name="2do Grado - Incorrectas" dataKey="2do Grado.incorrectas" fill="hsl(var(--chart-2)/0.4)">
+                                    <LabelList dataKey="2do Grado.incorrectas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
+                                </Bar>
+                                 <Bar name="3er Grado - Correctas" dataKey="3er Grado.correctas" fill="hsl(var(--chart-3))">
+                                    <LabelList dataKey="3er Grado.correctas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
+                                </Bar>
+                                <Bar name="3er Grado - Incorrectas" dataKey="3er Grado.incorrectas" fill="hsl(var(--chart-3)/0.4)">
+                                    <LabelList dataKey="3er Grado.incorrectas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
+                                </Bar>
+                            </BarChart>
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>
@@ -286,5 +329,3 @@ export default function AnalisisPage() {
         </div>
     )
 }
-
-    
