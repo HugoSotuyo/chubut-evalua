@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileDown, Filter } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, LabelList } from 'recharts';
 import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
 
 // Total de alumnos por grado (simulado)
 const totalAlumnos = { '1er Grado': 100, '2do Grado': 120, '3er Grado': 110, '4to Grado': 95, '5to Grado': 105 };
@@ -229,7 +231,7 @@ export default function AnalisisPage() {
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="filtro-grado">Grado</Label>
-                        <Select onValueChange={(v) => handleFilterChange('grade', v)} value={filters.grade}>
+                        <Select onValuechange={(v) => handleFilterChange('grade', v)} value={filters.grade}>
                             <SelectTrigger id="filtro-grado"><SelectValue placeholder="Grado" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todos</SelectItem>
@@ -266,7 +268,7 @@ export default function AnalisisPage() {
                         <CardTitle>Análisis por Pregunta</CardTitle>
                         <CardDescription>Respuestas correctas vs. incorrectas por pregunta y grado.</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={data} margin={{ top: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" />
@@ -294,6 +296,50 @@ export default function AnalisisPage() {
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
+                        <Separator />
+                        <CardDescription>Datos detallados por pregunta.</CardDescription>
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="font-bold">Pregunta</TableHead>
+                                        <TableHead className="font-bold text-center">Grado</TableHead>
+                                        <TableHead className="text-center">Correctas (N°)</TableHead>
+                                        <TableHead className="text-center">Correctas (%)</TableHead>
+                                        <TableHead className="text-center">Incorrectas (N°)</TableHead>
+                                        <TableHead className="text-center">Incorrectas (%)</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {data.map((pregunta) => (
+                                        <React.Fragment key={pregunta.name}>
+                                            {['1er Grado', '2do Grado', '3er Grado'].map((grado, index) => {
+                                                const gradoKey = grado as keyof typeof totalAlumnos;
+                                                const total = totalAlumnos[gradoKey];
+                                                const { correctas, incorrectas } = pregunta[gradoKey as keyof typeof pregunta] as { correctas: number, incorrectas: number };
+                                                const correctasPercent = total > 0 ? ((correctas / total) * 100).toFixed(1) : 0;
+                                                const incorrectasPercent = total > 0 ? ((incorrectas / total) * 100).toFixed(1) : 0;
+                                                
+                                                if (correctas === 0 && incorrectas === 0 && appliedFilters.grade !== 'all' && appliedFilters.grade !== gradoKey) {
+                                                    return null;
+                                                }
+
+                                                return (
+                                                    <TableRow key={grado}>
+                                                        {index === 0 && <TableCell rowSpan={3} className="font-medium align-middle">{pregunta.name}</TableCell>}
+                                                        <TableCell className="text-center">{grado}</TableCell>
+                                                        <TableCell className="text-center">{correctas}</TableCell>
+                                                        <TableCell className="text-center">{correctasPercent}%</TableCell>
+                                                        <TableCell className="text-center">{incorrectas}</TableCell>
+                                                        <TableCell className="text-center">{incorrectasPercent}%</TableCell>
+                                                    </TableRow>
+                                                )
+                                            })}
+                                        </React.Fragment>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -329,5 +375,3 @@ export default function AnalisisPage() {
         </div>
     )
 }
-
-    
