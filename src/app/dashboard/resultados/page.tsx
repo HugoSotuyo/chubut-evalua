@@ -66,11 +66,11 @@ export default function ResultadosPage() {
     
     const handleExport = () => {
         const headers = ["ID", "Alumno", "Examen", "Escuela", "Nota", "Estado"];
-        const rows = filteredResults.map(res => [res.id, res.studentName, res.examName, res.school, res.score, res.grade].join(','));
+        const rows = filteredResults.map(res => [res.id, res.studentName, res.examName, res.school, res.score, res.grade].join(';'));
         
         // BOM para compatibilidad con Excel
         const bom = "\uFEFF";
-        const csvContent = bom + [headers.join(','), ...rows].join("\n");
+        const csvContent = bom + [headers.join(';'), ...rows].join("\n");
         
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
