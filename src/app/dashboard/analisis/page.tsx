@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useMemo, useState } from "react"
+import React, { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -231,7 +231,7 @@ export default function AnalisisPage() {
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="filtro-grado">Grado</Label>
-                        <Select onValuechange={(v) => handleFilterChange('grade', v)} value={filters.grade}>
+                        <Select onValueChange={(v) => handleFilterChange('grade', v)} value={filters.grade}>
                             <SelectTrigger id="filtro-grado"><SelectValue placeholder="Grado" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todos</SelectItem>
