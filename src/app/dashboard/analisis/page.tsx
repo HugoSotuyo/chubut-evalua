@@ -59,10 +59,12 @@ export default function AnalisisPage() {
     }
     
     const { data, dataAprobados } = useMemo(() => {
-        // When no filters are applied, return original data
         if (appliedFilters.district === "all" && appliedFilters.school === "all" && appliedFilters.grade === "all" && appliedFilters.course === "all" && appliedFilters.exam === "all") {
             return { data: originalData, dataAprobados: originalDataAprobados };
         }
+
+        // This is a mock data randomization to simulate filtering.
+        // In a real app, you would fetch data based on `appliedFilters`.
 
         // Logic for "Análisis por Pregunta" chart
         const newQuestionData = originalData.map(d => {
@@ -70,16 +72,15 @@ export default function AnalisisPage() {
             const selectedGrade = appliedFilters.grade;
 
             if (selectedGrade !== "all") {
-                // Set other grades to 0 if a specific grade is selected
+                // If a specific grade is selected, zero out the others
                 if ('1er Grado' in filteredData && selectedGrade !== '1er Grado') filteredData['1er Grado'] = 0;
                 if ('2do Grado' in filteredData && selectedGrade !== '2do Grado') filteredData['2do Grado'] = 0;
                 if ('3er Grado' in filteredData && selectedGrade !== '3er Grado') filteredData['3er Grado'] = 0;
-            }
-             // To show some change for other filters, we apply a randomizer if grade is not the main filter.
-            else {
-                 if ('1er Grado' in filteredData) filteredData['1er Grado'] *= (Math.random() * (1.2 - 0.8) + 0.8);
-                 if ('2do Grado' in filteredData) filteredData['2do Grado'] *= (Math.random() * (1.2 - 0.8) + 0.8);
-                 if ('3er Grado' in filteredData) filteredData['3er Grado'] *= (Math.random() * (1.2 - 0.8) + 0.8);
+            } else {
+                // If no specific grade, but other filters are active, randomize all to show some change
+                if ('1er Grado' in filteredData) filteredData['1er Grado'] = Math.max(0, filteredData['1er Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
+                if ('2do Grado' in filteredData) filteredData['2do Grado'] = Math.max(0, filteredData['2do Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
+                if ('3er Grado' in filteredData) filteredData['3er Grado'] = Math.max(0, filteredData['3er Grado'] * (Math.random() * (1.2 - 0.8) + 0.8));
             }
             return filteredData;
         });
@@ -87,17 +88,19 @@ export default function AnalisisPage() {
         // Mock logic for "Aprobados vs. Desaprobados" chart
         const newApprovalData = originalDataAprobados.map(d => {
             const selectedGrade = appliedFilters.grade;
-            // If a grade is selected and it's not this data point, we can choose to hide it or show it differently.
-            // For now, we just randomize it to show a change.
+            
+            // If a specific grade is selected and it's not the current data point, zero it out.
             if (selectedGrade !== "all" && d.name !== selectedGrade) {
-                 return { ...d, Aprobados: d.Aprobados * 0.9, Desaprobados: 100 - (d.Aprobados * 0.9) };
+                 return { ...d, Aprobados: 0, Desaprobados: 0 };
             }
-            const newApproved = Math.min(100, Math.floor(d.Aprobados * (Math.random() * (1.2 - 0.8) + 0.8)));
+
+            // Otherwise, randomize data to show some change based on general filters
+            const newAprobados = Math.min(100, Math.floor(d.Aprobados * (Math.random() * (1.2 - 0.8) + 0.8)));
             return {
                 ...d,
-                Aprobados: newApproved,
-                Desaprobados: 100 - newApproved,
-            }
+                Aprobados: newAprobados,
+                Desaprobados: 100 - newAprobados,
+            };
         });
 
         return { data: newQuestionData, dataAprobados: newApprovalData };
