@@ -19,13 +19,18 @@ const originalData = [
   { name: 'Pregunta 5', '1er Grado': 70, '2do Grado': 90, '3er Grado': 88 }, // 0.7*100, 0.75*120, 0.8*110
 ];
 
+// Total de alumnos por grado (simulado)
+const totalAlumnos = { '1er Grado': 100, '2do Grado': 120, '3er Grado': 110, '4to Grado': 95, '5to Grado': 105 };
+
+// Datos calculados en base a porcentajes y totales.
 const originalDataAprobados = [
     { name: '1er Grado', Aprobados: 75, Desaprobados: 25 },
-    { name: '2do Grado', Aprobados: 80, Desaprobados: 20 },
-    { name: '3er Grado', Aprobados: 88, Desaprobados: 12 },
-    { name: '4to Grado', Aprobados: 70, Desaprobados: 30 },
-    { name: '5to Grado', Aprobados: 92, Desaprobados: 8 },
+    { name: '2do Grado', Aprobados: 96, Desaprobados: 24 }, // 80% de 120
+    { name: '3er Grado', Aprobados: 97, Desaprobados: 13 }, // 88% de 110
+    { name: '4to Grado', Aprobados: 67, Desaprobados: 28 }, // 70% de 95
+    { name: '5to Grado', Aprobados: 97, Desaprobados: 8 },  // 92% de 105
 ];
+
 
 const mockResults = [
     { district: "Distrito I", school: "Escuela N° 101", grade: "1er Grado", course: "A", exam: "Matemática 2023" },
@@ -94,11 +99,13 @@ export default function AnalisisPage() {
                  return { ...d, Aprobados: 0, Desaprobados: 0 };
             }
 
-            const newAprobados = Math.min(100, Math.floor(d.Aprobados * (Math.random() * (1.2 - 0.8) + 0.8)));
+            const total = (totalAlumnos[d.name as keyof typeof totalAlumnos] || 100);
+            const newAprobados = Math.floor(d.Aprobados * (Math.random() * (1.2 - 0.8) + 0.8));
+            
             return {
                 ...d,
-                Aprobados: newAprobados,
-                Desaprobados: 100 - newAprobados,
+                Aprobados: Math.min(total, newAprobados),
+                Desaprobados: Math.max(0, total - Math.min(total, newAprobados)),
             };
         });
 
@@ -112,7 +119,7 @@ export default function AnalisisPage() {
         
         // Headers
         const headersAnalisis = ["Pregunta", "Correctas 1er Grado", "Correctas 2do Grado", "Correctas 3er Grado"];
-        const headersAprobados = ["Grado", "% Aprobados", "% Desaprobados"];
+        const headersAprobados = ["Grado", "Aprobados", "Desaprobados"];
 
         // Análisis por Pregunta
         csvContent += "Análisis por Pregunta (Cantidad de Respuestas Correctas)\n";
@@ -125,7 +132,7 @@ export default function AnalisisPage() {
         csvContent += '\n\n'; // Separator
 
         // Aprobados vs. Desaprobados
-        csvContent += "Aprobados vs. Desaprobados (%)\n";
+        csvContent += "Aprobados vs. Desaprobados (Cantidad de Alumnos)\n";
         csvContent += headersAprobados.join(';') + '\n';
         dataAprobados.forEach(row => {
             const rowData = [row.name, row.Aprobados, row.Desaprobados];
@@ -234,13 +241,13 @@ export default function AnalisisPage() {
                                 <Tooltip />
                                 <Legend />
                                 <Line type="monotone" dataKey="1er Grado" stroke="hsl(var(--primary))" activeDot={{ r: 8 }}>
-                                  <LabelList dataKey="1er Grado" position="top" formatter={(value: number) => value} />
+                                  <LabelList dataKey="1er Grado" position="top" formatter={(value: number) => value > 0 ? value : ''} />
                                 </Line>
                                 <Line type="monotone" dataKey="2do Grado" stroke="hsl(var(--accent))">
-                                  <LabelList dataKey="2do Grado" position="top" formatter={(value: number) => value} />
+                                  <LabelList dataKey="2do Grado" position="top" formatter={(value: number) => value > 0 ? value : ''} />
                                 </Line>
                                 <Line type="monotone" dataKey="3er Grado" stroke="hsl(var(--destructive))">
-                                  <LabelList dataKey="3er Grado" position="top" formatter={(value: number) => value} />
+                                  <LabelList dataKey="3er Grado" position="top" formatter={(value: number) => value > 0 ? value : ''} />
                                 </Line>
                             </LineChart>
                         </ResponsiveContainer>
@@ -249,17 +256,22 @@ export default function AnalisisPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Aprobados vs. Desaprobados</CardTitle>
-                        <CardDescription>Porcentaje de alumnos por condición en cada grado.</CardDescription>
+                        <CardDescription>Cantidad de alumnos por condición en cada grado.</CardDescription>
                     </CardHeader>
                     <CardContent>
                          <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={dataAprobados} layout="vertical" stackOffset="expand">
-                                <XAxis hide type="number" />
-                                <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} />
+                            <BarChart data={dataAprobados} layout="vertical">
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis type="number" />
+                                <YAxis type="category" dataKey="name" width={80} />
                                 <Tooltip />
                                 <Legend />
-                                <Bar dataKey="Aprobados" fill="hsl(var(--chart-1))" stackId="a" />
-                                <Bar dataKey="Desaprobados" fill="hsl(var(--chart-3))" stackId="a" />
+                                <Bar dataKey="Aprobados" fill="hsl(var(--chart-1))" stackId="a">
+                                    <LabelList dataKey="Aprobados" position="center" className="fill-white font-bold" formatter={(value: number) => value > 0 ? value : ''} />
+                                </Bar>
+                                <Bar dataKey="Desaprobados" fill="hsl(var(--chart-3))" stackId="a">
+                                     <LabelList dataKey="Desaprobados" position="center" className="fill-white font-bold" formatter={(value: number) => value > 0 ? value : ''} />
+                                </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     </CardContent>
@@ -274,3 +286,5 @@ export default function AnalisisPage() {
         </div>
     )
 }
+
+    
