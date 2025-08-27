@@ -62,8 +62,21 @@ export default function ResultadosPage() {
     const handleApplyFilters = () => {
         setAppliedFilters(filters);
     }
+    
+    const handleExport = () => {
+        const headers = ["ID", "Alumno", "Examen", "Escuela", "Nota", "Estado"];
+        const rows = filteredResults.map(res => [res.id, res.studentName, res.examName, res.school, res.score, res.grade].join(','));
+        let csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "resultados_evaluacion.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
-    const getUniqueValues = (key: keyof typeof allResults[0]) => {
+    const getUniqueValues = (key: 'examName' | 'school') => {
         const values = allResults.map(item => item[key]);
         return [...new Set(values)];
     }
@@ -75,7 +88,7 @@ export default function ResultadosPage() {
                     <h1 className="text-3xl font-bold tracking-tight font-headline">Resultados de Evaluaciones</h1>
                     <p className="text-muted-foreground">Consulta y filtra los resultados de los alumnos.</p>
                 </div>
-                 <Button>
+                 <Button onClick={handleExport}>
                     <FileDown className="mr-2 h-4 w-4" />
                     Exportar Resultados
                 </Button>
