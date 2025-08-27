@@ -10,6 +10,7 @@ import { MoreHorizontal, FileDown, Filter } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 const allResults = [
     { id: "res-001", studentName: "Juan Pérez", examName: "Matemática Diagnóstico 2024", school: "Escuela N° 101", grade: "Aprobado", score: 85 },
@@ -112,39 +113,52 @@ export default function ResultadosPage() {
                     </div>
                     <CardDescription>Utiliza los filtros para encontrar resultados específicos y luego presiona "Aplicar Filtros".</CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <Select onValueChange={(value) => handleFilterChange("exam", value)} value={filters.exam}>
-                        <SelectTrigger><SelectValue placeholder="Examen" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Todos</SelectItem>
-                            {getUniqueValues("examName").map(exam => (
-                                <SelectItem key={exam as string} value={exam as string}>{exam as string}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <Select onValueChange={(value) => handleFilterChange("school", value)} value={filters.school}>
-                        <SelectTrigger><SelectValue placeholder="Escuela" /></SelectTrigger>
-                        <SelectContent>
-                             <SelectItem value="all">Todas</SelectItem>
-                             {getUniqueValues("school").map(school => (
-                                <SelectItem key={school as string} value={school as string}>{school as string}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                     <Input
-                        placeholder="Buscar por nombre de alumno..."
-                        value={filters.studentName}
-                        onChange={(e) => handleFilterChange("studentName", e.target.value)}
-                     />
-                    <Select onValueChange={(value) => handleFilterChange("status", value)} value={filters.status}>
-                        <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Todos</SelectItem>
-                            <SelectItem value="aprobado">Aprobado</SelectItem>
-                            <SelectItem value="desaprobado">Desaprobado</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Button onClick={handleApplyFilters} className="lg:col-start-5">
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
+                    <div className="grid gap-2">
+                        <Label htmlFor="filtro-examen">Examen</Label>
+                        <Select onValueChange={(value) => handleFilterChange("exam", value)} value={filters.exam}>
+                            <SelectTrigger id="filtro-examen"><SelectValue placeholder="Examen" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos</SelectItem>
+                                {getUniqueValues("examName").map(exam => (
+                                    <SelectItem key={exam as string} value={exam as string}>{exam as string}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="filtro-escuela">Escuela</Label>
+                        <Select onValueChange={(value) => handleFilterChange("school", value)} value={filters.school}>
+                            <SelectTrigger id="filtro-escuela"><SelectValue placeholder="Escuela" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todas</SelectItem>
+                                {getUniqueValues("school").map(school => (
+                                    <SelectItem key={school as string} value={school as string}>{school as string}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="filtro-alumno">Alumno</Label>
+                        <Input
+                            id="filtro-alumno"
+                            placeholder="Buscar por nombre..."
+                            value={filters.studentName}
+                            onChange={(e) => handleFilterChange("studentName", e.target.value)}
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="filtro-estado">Estado</Label>
+                        <Select onValueChange={(value) => handleFilterChange("status", value)} value={filters.status}>
+                            <SelectTrigger id="filtro-estado"><SelectValue placeholder="Estado" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos</SelectItem>
+                                <SelectItem value="aprobado">Aprobado</SelectItem>
+                                <SelectItem value="desaprobado">Desaprobado</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <Button onClick={handleApplyFilters}>
                         <Filter className="mr-2 h-4 w-4" />
                         Aplicar Filtros
                     </Button>
