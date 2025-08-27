@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -20,25 +20,25 @@ const allResults = [
 ]
 
 export default function ResultadosPage() {
-    const [examFilter, setExamFilter] = useState("");
-    const [schoolFilter, setSchoolFilter] = useState("");
+    const [examFilter, setExamFilter] = useState("all");
+    const [schoolFilter, setSchoolFilter] = useState("all");
     const [studentNameFilter, setStudentNameFilter] = useState("");
-    const [statusFilter, setStatusFilter] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
     const [filteredResults, setFilteredResults] = useState(allResults);
 
     const handleApplyFilters = () => {
         let results = allResults;
 
-        if (examFilter) {
+        if (examFilter && examFilter !== "all") {
             results = results.filter(r => r.examName === examFilter);
         }
-        if (schoolFilter) {
+        if (schoolFilter && schoolFilter !== "all") {
             results = results.filter(r => r.school === schoolFilter);
         }
         if (studentNameFilter) {
             results = results.filter(r => r.studentName.toLowerCase().includes(studentNameFilter.toLowerCase()));
         }
-        if (statusFilter) {
+        if (statusFilter && statusFilter !== "all") {
             results = results.filter(r => r.grade.toLowerCase() === statusFilter);
         }
 
@@ -75,19 +75,19 @@ export default function ResultadosPage() {
                     <CardDescription>Utiliza los filtros para encontrar resultados específicos.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Select onValueChange={setExamFilter} value={examFilter}>
+                    <Select onValueChange={setExamFilter} defaultValue="all">
                         <SelectTrigger><SelectValue placeholder="Examen" /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">Todos</SelectItem>
+                            <SelectItem value="all">Todos</SelectItem>
                             {getUniqueValues("examName").map(exam => (
                                 <SelectItem key={exam as string} value={exam as string}>{exam as string}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
-                    <Select onValueChange={setSchoolFilter} value={schoolFilter}>
+                    <Select onValueChange={setSchoolFilter} defaultValue="all">
                         <SelectTrigger><SelectValue placeholder="Escuela" /></SelectTrigger>
                         <SelectContent>
-                             <SelectItem value="">Todas</SelectItem>
+                             <SelectItem value="all">Todas</SelectItem>
                              {getUniqueValues("school").map(school => (
                                 <SelectItem key={school as string} value={school as string}>{school as string}</SelectItem>
                             ))}
@@ -98,10 +98,10 @@ export default function ResultadosPage() {
                         value={studentNameFilter}
                         onChange={(e) => setStudentNameFilter(e.target.value)}
                      />
-                    <Select onValueChange={setStatusFilter} value={statusFilter}>
+                    <Select onValueChange={setStatusFilter} defaultValue="all">
                         <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">Todos</SelectItem>
+                            <SelectItem value="all">Todos</SelectItem>
                             <SelectItem value="aprobado">Aprobado</SelectItem>
                             <SelectItem value="desaprobado">Desaprobado</SelectItem>
                         </SelectContent>
