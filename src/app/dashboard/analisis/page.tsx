@@ -168,6 +168,7 @@ export default function AnalisisPage() {
         // Headers
         const headersAnalisis = ["Pregunta", "Grado", "Correctas", "Incorrectas"];
         const headersAprobados = ["Grado", "Aprobados", "Desaprobados"];
+        const headersExamen = ["Examen", "Grado", "Correctas", "Incorrectas"];
 
         // Análisis por Pregunta
         csvContent += "Análisis por Pregunta (Cantidad de Respuestas)\n";
@@ -182,7 +183,7 @@ export default function AnalisisPage() {
             });
         });
 
-        csvContent += '\n\n'; // Separator
+        csvContent += '\n\n';
 
         // Aprobados vs. Desaprobados
         csvContent += "Aprobados vs. Desaprobados (Cantidad de Alumnos)\n";
@@ -191,6 +192,24 @@ export default function AnalisisPage() {
             const rowData = [row.name, row.Aprobados, row.Desaprobados];
             csvContent += rowData.join(';') + '\n';
         });
+
+        csvContent += '\n\n';
+
+        // Análisis por Examen
+        csvContent += "Análisis por Examen (Cantidad de Respuestas)\n";
+        csvContent += headersExamen.join(';') + '\n';
+        examAnalysisData.forEach(row => {
+             Object.keys(row).forEach(key => {
+                if (key !== 'name') {
+                    const gradeData = row[key as keyof typeof row] as { correctas: number, incorrectas: number };
+                    if (gradeData.correctas > 0 || gradeData.incorrectas > 0) {
+                        const rowData = [row.name, key, gradeData.correctas, gradeData.incorrectas];
+                        csvContent += rowData.join(';') + '\n';
+                    }
+                }
+            });
+        });
+
 
         const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -509,7 +528,7 @@ export default function AnalisisPage() {
                                             const correctasPercent = total > 0 ? ((correctas / total) * 100).toFixed(1) : "0.0";
                                             const incorrectasPercent = total > 0 ? ((incorrectas / total) * 100).toFixed(1) : "0.0";
                                             
-                                            const shouldShowRow = !(correctas === 0 && incorrectas === 0 && appliedFilters.grade !== 'all' && appliedFilters.grade !== gradoKey);
+                                            const shouldShowRow = !(correctas === 0 && incorrectas === 0);
                                             
                                             if (!shouldShowRow) {
                                                 return null;
