@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FileDown, Filter } from "lucide-react"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, LabelList } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from 'recharts';
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
@@ -304,10 +304,10 @@ export default function AnalisisPage() {
                                     <TableRow>
                                         <TableHead className="font-bold">Pregunta</TableHead>
                                         <TableHead className="font-bold text-center">Grado</TableHead>
-                                        <TableHead className="text-center">Correctas (N°)</TableHead>
-                                        <TableHead className="text-center">Correctas (%)</TableHead>
-                                        <TableHead className="text-center">Incorrectas (N°)</TableHead>
-                                        <TableHead className="text-center">Incorrectas (%)</TableHead>
+                                        <TableHead className="text-center">Correctas</TableHead>
+                                        <TableHead className="text-center">% Correctas</TableHead>
+                                        <TableHead className="text-center">Incorrectas</TableHead>
+                                        <TableHead className="text-center">% Incorrectas</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -326,12 +326,12 @@ export default function AnalisisPage() {
 
                                                 return (
                                                     <TableRow key={grado}>
-                                                        {index === 0 && <TableCell rowSpan={3} className="font-medium align-middle">{pregunta.name}</TableCell>}
-                                                        <TableCell className="text-center">{grado}</TableCell>
-                                                        <TableCell className="text-center">{correctas}</TableCell>
-                                                        <TableCell className="text-center">{correctasPercent}%</TableCell>
-                                                        <TableCell className="text-center">{incorrectas}</TableCell>
-                                                        <TableCell className="text-center">{incorrectasPercent}%</TableCell>
+                                                        {index === 0 && <TableCell rowSpan={3} className="font-medium align-middle px-2 py-1">{pregunta.name}</TableCell>}
+                                                        <TableCell className="text-center px-2 py-1">{grado}</TableCell>
+                                                        <TableCell className="text-center px-2 py-1">{correctas}</TableCell>
+                                                        <TableCell className="text-center px-2 py-1">{correctasPercent}%</TableCell>
+                                                        <TableCell className="text-center px-2 py-1">{incorrectas}</TableCell>
+                                                        <TableCell className="text-center px-2 py-1">{incorrectasPercent}%</TableCell>
                                                     </TableRow>
                                                 )
                                             })}
@@ -370,10 +370,10 @@ export default function AnalisisPage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead className="font-bold">Grado</TableHead>
-                                        <TableHead className="text-center">Aprobados (N°)</TableHead>
-                                        <TableHead className="text-center">Aprobados (%)</TableHead>
-                                        <TableHead className="text-center">Desaprobados (N°)</TableHead>
-                                        <TableHead className="text-center">Desaprobados (%)</TableHead>
+                                        <TableHead className="text-center">Aprobados</TableHead>
+                                        <TableHead className="text-center">% Aprobados</TableHead>
+                                        <TableHead className="text-center">Desaprobados</TableHead>
+                                        <TableHead className="text-center">% Desaprobados</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -389,11 +389,11 @@ export default function AnalisisPage() {
 
                                         return (
                                             <TableRow key={item.name}>
-                                                <TableCell className="font-medium">{item.name}</TableCell>
-                                                <TableCell className="text-center">{item.Aprobados}</TableCell>
-                                                <TableCell className="text-center">{aprobadosPercent}%</TableCell>
-                                                <TableCell className="text-center">{item.Desaprobados}</TableCell>
-                                                <TableCell className="text-center">{desaprobadosPercent}%</TableCell>
+                                                <TableCell className="font-medium px-2 py-1">{item.name}</TableCell>
+                                                <TableCell className="text-center px-2 py-1">{item.Aprobados}</TableCell>
+                                                <TableCell className="text-center px-2 py-1">{aprobadosPercent}%</TableCell>
+                                                <TableCell className="text-center px-2 py-1">{item.Desaprobados}</TableCell>
+                                                <TableCell className="text-center px-2 py-1">{desaprobadosPercent}%</TableCell>
                                             </TableRow>
                                         )
                                     })}
