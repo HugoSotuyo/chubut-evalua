@@ -302,12 +302,12 @@ export default function AnalisisPage() {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="font-bold">Pregunta</TableHead>
+                                        <TableHead className="font-bold">Preg.</TableHead>
                                         <TableHead className="font-bold text-center">Grado</TableHead>
-                                        <TableHead className="text-center">Correctas</TableHead>
-                                        <TableHead className="text-center">% Correctas</TableHead>
-                                        <TableHead className="text-center">Incorrectas</TableHead>
-                                        <TableHead className="text-center">% Incorrectas</TableHead>
+                                        <TableHead className="text-center">Corr.</TableHead>
+                                        <TableHead className="text-center">% Corr.</TableHead>
+                                        <TableHead className="text-center">Incorr.</TableHead>
+                                        <TableHead className="text-center">% Incorr.</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -370,10 +370,10 @@ export default function AnalisisPage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead className="font-bold">Grado</TableHead>
-                                        <TableHead className="text-center">Aprobados</TableHead>
-                                        <TableHead className="text-center">% Aprobados</TableHead>
-                                        <TableHead className="text-center">Desaprobados</TableHead>
-                                        <TableHead className="text-center">% Desaprobados</TableHead>
+                                        <TableHead className="text-center">Aprob.</TableHead>
+                                        <TableHead className="text-center">% Aprob.</TableHead>
+                                        <TableHead className="text-center">Desap.</TableHead>
+                                        <TableHead className="text-center">% Desap.</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
