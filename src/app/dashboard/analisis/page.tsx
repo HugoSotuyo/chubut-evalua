@@ -246,20 +246,13 @@ export default function AnalisisPage() {
     };
     
     const handlePrint = (cardId: string) => {
-        const printContents = document.getElementById(cardId)?.innerHTML;
-        const originalContents = document.body.innerHTML;
-        
-        if (printContents) {
-            const printableElement = document.createElement('div');
-            printableElement.innerHTML = printContents;
-            
-            const buttonsToHide = printableElement.querySelectorAll('.no-print');
-            buttonsToHide.forEach(btn => (btn as HTMLElement).style.display = 'none');
-            
-            document.body.innerHTML = printableElement.innerHTML;
+        const cardToPrint = document.getElementById(cardId);
+        if (cardToPrint) {
+            document.body.classList.add('printing-active');
+            cardToPrint.classList.add('printable-section');
             window.print();
-            document.body.innerHTML = originalContents;
-            window.location.reload(); 
+            cardToPrint.classList.remove('printable-section');
+            document.body.classList.remove('printing-active');
         }
     };
 
