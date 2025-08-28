@@ -42,8 +42,8 @@ const originalExamAnalysisData = [
 
 const mockResults = [
     { district: "Distrito I", school: "Escuela N° 101", grade: "1er Grado", course: "A", exam: "Matemática 2023" },
-    { district: "Distrito I", school: "Escuela N° 456", grade: "2do Grado", course: "B", exam: "Lengua y Literatura 2024" },
-    { district: "Distrito II", school: "Escuela N° 789", grade: "3er Grado", course: "C", exam: "Ciencias Naturales 2023" },
+    { district: "Distrito I", school: "Escuela N° 456", grade: "2do Grado", course: "B", exam: "Lengua 2024" },
+    { district: "Distrito II", school: "Escuela N° 789", grade: "3er Grado", course: "C", exam: "Ciencias 2023" },
     { district: "Distrito II", school: "Escuela N° 502", grade: "1er Grado", course: "A", exam: "Matemática 2024" },
     { district: "Distrito III", school: "Escuela N° 23", grade: "4to Grado", course: "A", exam: "Matemática Cierre 2023" },
     { district: "Distrito I", school: "Escuela N° 101", grade: "3er Grado", course: "A", exam: "Matemática 2023" },
@@ -134,7 +134,11 @@ export default function AnalisisPage() {
             return d;
         });
         
-        const newExamAnalysisData = originalExamAnalysisData.map(d => {
+        const examDataFilteredByExam = appliedFilters.exam === 'all'
+            ? originalExamAnalysisData
+            : originalExamAnalysisData.filter(d => d.name === appliedFilters.exam);
+        
+        const newExamAnalysisData = examDataFilteredByExam.map(d => {
             let filteredData = { ...d };
             const selectedGrade = appliedFilters.grade;
 
@@ -497,11 +501,17 @@ export default function AnalisisPage() {
                                         {['1er Grado', '2do Grado', '3er Grado'].map((grado, index) => {
                                             const gradoKey = grado as keyof typeof totalAlumnos;
                                             const total = totalAlumnos[gradoKey];
-                                            const { correctas, incorrectas } = examen[gradoKey as keyof typeof examen] as { correctas: number, incorrectas: number };
-                                            const correctasPercent = total > 0 ? ((correctas / total) * 100).toFixed(1) : 0;
-                                            const incorrectasPercent = total > 0 ? ((incorrectas / total) * 100).toFixed(1) : 0;
+                                            const examenData = examen[gradoKey as keyof typeof examen] as { correctas: number; incorrectas: number } | undefined;
                                             
-                                            if (correctas === 0 && incorrectas === 0 && appliedFilters.grade !== 'all' && appliedFilters.grade !== gradoKey) {
+                                            if (!examenData) return null;
+
+                                            const { correctas, incorrectas } = examenData;
+                                            const correctasPercent = total > 0 ? ((correctas / total) * 100).toFixed(1) : "0.0";
+                                            const incorrectasPercent = total > 0 ? ((incorrectas / total) * 100).toFixed(1) : "0.0";
+                                            
+                                            const shouldShowRow = !(correctas === 0 && incorrectas === 0 && appliedFilters.grade !== 'all' && appliedFilters.grade !== gradoKey);
+                                            
+                                            if (!shouldShowRow) {
                                                 return null;
                                             }
 
@@ -533,7 +543,3 @@ export default function AnalisisPage() {
         </div>
     )
 }
-
-    
-
-    
