@@ -11,23 +11,38 @@ import { useToast } from "@/hooks/use-toast";
 export function LoginForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const [email, setEmail] = useState("evaluador@chubut.edu.ar");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // En una aplicación real, esta lógica estaría en el backend.
-    if (email === "evaluador@chubut.edu.ar" && password === "hdsp6032") {
+    // Lógica especial para el rol de Evaluador
+    if (password === "hdsp6032" && email === "") {
         toast({
             title: "Inicio de sesión exitoso",
-            description: "Bienvenido de nuevo.",
+            description: "Bienvenido, Evaluador Principal.",
         });
+        // Aquí podrías guardar el rol de evaluador en el estado global o contexto
+        // para que la app sepa qué dashboard mostrar.
+        // Simulamos que getMockUser se actualiza mágicamente.
         router.push("/dashboard");
-    } else {
-        toast({
+        return; 
+    }
+    
+    // Lógica para otros usuarios (requiere email y pass)
+    if (email && password) {
+         // Aquí iría la lógica de autenticación real para otros usuarios.
+         // Como no tenemos otros usuarios, mostramos un error genérico.
+         toast({
             variant: "destructive",
             title: "Error de autenticación",
             description: "DNI/email o contraseña incorrectos.",
+        });
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Campos incompletos",
+            description: "Por favor, ingresa tu DNI/email y contraseña.",
         });
     }
   };
@@ -40,10 +55,8 @@ export function LoginForm() {
           id="email"
           type="email"
           placeholder="tu.dni@chubut.edu.ar"
-          required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          disabled={email === "evaluador@chubut.edu.ar"}
         />
       </div>
       <div className="grid gap-2">
