@@ -5,7 +5,7 @@ import React, { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FileDown, Filter } from "lucide-react"
+import { FileDown, Filter, Printer } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from 'recharts';
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -177,8 +177,10 @@ export default function AnalisisPage() {
             Object.keys(row).forEach(key => {
                 if (key !== 'name') {
                     const gradeData = row[key as keyof typeof row] as { correctas: number, incorrectas: number };
-                    const rowData = [row.name, key, gradeData.correctas, gradeData.incorrectas];
-                    csvContent += rowData.join(';') + '\n';
+                     if (gradeData.correctas > 0 || gradeData.incorrectas > 0) {
+                        const rowData = [row.name, key, gradeData.correctas, gradeData.incorrectas];
+                        csvContent += rowData.join(';') + '\n';
+                    }
                 }
             });
         });
@@ -238,16 +240,36 @@ export default function AnalisisPage() {
         }
         return null;
     };
+    
+    const handlePrint = (cardId: string) => {
+        const printContents = document.getElementById(cardId)?.innerHTML;
+        const originalContents = document.body.innerHTML;
+        
+        if (printContents) {
+            const printableElement = document.createElement('div');
+            printableElement.innerHTML = printContents;
+            
+            // Add a class to hide the print button in the printed output
+            const buttonsToHide = printableElement.querySelectorAll('.no-print');
+            buttonsToHide.forEach(btn => (btn as HTMLElement).style.display = 'none');
+            
+            document.body.innerHTML = printableElement.innerHTML;
+            window.print();
+            document.body.innerHTML = originalContents;
+            // We need to re-attach event listeners, reloading is the simplest way.
+            window.location.reload(); 
+        }
+    };
 
 
     return (
         <div className="flex flex-col gap-8">
-            <div>
+            <div className="no-print">
                 <h1 className="text-3xl font-bold tracking-tight font-headline">Análisis de Resultados</h1>
                 <p className="text-muted-foreground">Filtra y visualiza los datos de las evaluaciones.</p>
             </div>
 
-            <Card>
+            <Card className="no-print">
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -326,10 +348,16 @@ export default function AnalisisPage() {
             </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Análisis por Pregunta</CardTitle>
-                        <CardDescription>Respuestas correctas vs. incorrectas por pregunta y grado.</CardDescription>
+                <Card id="analisis-pregunta-card">
+                    <CardHeader className="flex flex-row items-start justify-between">
+                        <div>
+                            <CardTitle>Análisis por Pregunta</CardTitle>
+                            <CardDescription>Respuestas correctas vs. incorrectas por pregunta y grado.</CardDescription>
+                        </div>
+                        <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('analisis-pregunta-card')}>
+                            <Printer className="h-4 w-4" />
+                            <span className="sr-only">Imprimir</span>
+                        </Button>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <ResponsiveContainer width="100%" height={300}>
@@ -405,10 +433,16 @@ export default function AnalisisPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Aprobados vs. Desaprobados</CardTitle>
-                        <CardDescription>Cantidad de alumnos por condición en cada grado.</CardDescription>
+                <Card id="aprobados-desaprobados-card">
+                    <CardHeader className="flex flex-row items-start justify-between">
+                        <div>
+                            <CardTitle>Aprobados vs. Desaprobados</CardTitle>
+                            <CardDescription>Cantidad de alumnos por condición en cada grado.</CardDescription>
+                        </div>
+                        <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('aprobados-desaprobados-card')}>
+                            <Printer className="h-4 w-4" />
+                            <span className="sr-only">Imprimir</span>
+                        </Button>
                     </CardHeader>
                     <CardContent className="space-y-4">
                          <ResponsiveContainer width="100%" height={300}>
@@ -467,10 +501,16 @@ export default function AnalisisPage() {
                 </Card>
             </div>
             
-            <Card className="col-span-1 lg:col-span-2">
-                <CardHeader>
-                    <CardTitle>Análisis por Examen</CardTitle>
-                    <CardDescription>Resultados por examen, desglosado por grado.</CardDescription>
+            <Card className="col-span-1 lg:col-span-2" id="analisis-examen-card">
+                <CardHeader className="flex flex-row items-start justify-between">
+                    <div>
+                        <CardTitle>Análisis por Examen</CardTitle>
+                        <CardDescription>Resultados por examen, desglosado por grado.</CardDescription>
+                    </div>
+                     <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('analisis-examen-card')}>
+                        <Printer className="h-4 w-4" />
+                        <span className="sr-only">Imprimir</span>
+                    </Button>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <ResponsiveContainer width="100%" height={300}>
@@ -514,8 +554,13 @@ export default function AnalisisPage() {
                                     <TableHead className="text-center">% Incorr.</TableHead>
                                 </TableRow>
                             </TableHeader>
-                            <TableBody>
-                                {examAnalysisData.map((examen) => (
+                             <TableBody>
+                                {examAnalysisData
+                                    .filter(examen => {
+                                        if (appliedFilters.exam === 'all') return true;
+                                        return examen.name === appliedFilters.exam;
+                                    })
+                                    .map((examen) => (
                                     <React.Fragment key={examen.name}>
                                         {['1er Grado', '2do Grado', '3er Grado'].map((grado, index) => {
                                             const gradoKey = grado as keyof typeof totalAlumnos;
@@ -533,10 +578,25 @@ export default function AnalisisPage() {
                                             if (!shouldShowRow) {
                                                 return null;
                                             }
+                                            
+                                            const firstVisibleRow = ['1er Grado', '2do Grado', '3er Grado']
+                                                .map(g => examen[g as keyof typeof examen] as { correctas: number; incorrectas: number })
+                                                .findIndex(d => d && (d.correctas > 0 || d.incorrectas > 0));
+
 
                                             return (
                                                 <TableRow key={grado}>
-                                                    {index === 0 && <TableCell rowSpan={3} className="font-medium align-middle px-2 py-1">{examen.name}</TableCell>}
+                                                    {index === firstVisibleRow && (
+                                                        <TableCell 
+                                                            rowSpan={['1er Grado', '2do Grado', '3er Grado'].reduce((acc, g) => {
+                                                                const data = examen[g as keyof typeof examen] as { correctas: number; incorrectas: number };
+                                                                return acc + (data && (data.correctas > 0 || data.incorrectas > 0) ? 1 : 0);
+                                                            }, 0)} 
+                                                            className="font-medium align-middle px-2 py-1"
+                                                        >
+                                                            {examen.name}
+                                                        </TableCell>
+                                                    )}
                                                     <TableCell className="text-center px-2 py-1">{grado}</TableCell>
                                                     <TableCell className="text-center px-2 py-1">{correctas}</TableCell>
                                                     <TableCell className="text-center px-2 py-1">{correctasPercent}%</TableCell>
@@ -553,7 +613,7 @@ export default function AnalisisPage() {
                 </CardContent>
             </Card>
 
-             <div className="flex justify-end col-span-1 lg:col-span-2">
+             <div className="flex justify-end col-span-1 lg:col-span-2 no-print">
                 <Button onClick={handleExport}>
                     <FileDown className="mr-2 h-4 w-4" />
                     Exportar Resultados (CSV)
