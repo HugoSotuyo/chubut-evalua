@@ -33,7 +33,7 @@ const originalDataAprobados = [
     { name: '5to Grado', Aprobados: 97, Desaprobados: 8 },  // 92% de 105
 ];
 
-const examAnalysisData = [
+const originalExamAnalysisData = [
   { name: 'Matemática 2023', '1er Grado': { correctas: 70, incorrectas: 30 }, '2do Grado': { correctas: 80, incorrectas: 40 }, '3er Grado': { correctas: 90, incorrectas: 20 } },
   { name: 'Lengua 2024', '1er Grado': { correctas: 85, incorrectas: 15 }, '2do Grado': { correctas: 95, incorrectas: 25 }, '3er Grado': { correctas: 100, incorrectas: 10 } },
   { name: 'Ciencias 2023', '1er Grado': { correctas: 65, incorrectas: 35 }, '2do Grado': { correctas: 75, incorrectas: 45 }, '3er Grado': { correctas: 85, incorrectas: 25 } },
@@ -74,12 +74,21 @@ export default function AnalisisPage() {
         setAppliedFilters(filters);
     }
     
-    const { data, dataAprobados } = useMemo(() => {
+    const { data, dataAprobados, examAnalysisData } = useMemo(() => {
         const hasActiveFilters = Object.values(appliedFilters).some(value => value !== "all");
 
         if (!hasActiveFilters) {
-             return { data: originalData, dataAprobados: originalDataAprobados };
+             return { data: originalData, dataAprobados: originalDataAprobados, examAnalysisData: originalExamAnalysisData };
         }
+        
+        const alterData = (data: { correctas: number; incorrectas: number }) => {
+            const total = data.correctas + data.incorrectas;
+            const newCorrectas = Math.floor(data.correctas * (Math.random() * (1.2 - 0.8) + 0.8));
+            return {
+                correctas: Math.min(total, newCorrectas),
+                incorrectas: Math.max(0, total - Math.min(total, newCorrectas)),
+            };
+        };
 
         const newQuestionData = originalData.map(d => {
             let filteredData = { ...d };
@@ -88,17 +97,8 @@ export default function AnalisisPage() {
             const shouldFilter = (key: '1er Grado' | '2do Grado' | '3er Grado') => {
                 return selectedGrade !== 'all' && key !== selectedGrade;
             };
-
-            const alterData = (data: { correctas: number; incorrectas: number }) => {
-                const total = data.correctas + data.incorrectas;
-                const newCorrectas = Math.floor(data.correctas * (Math.random() * (1.2 - 0.8) + 0.8));
-                return {
-                    correctas: Math.min(total, newCorrectas),
-                    incorrectas: Math.max(0, total - Math.min(total, newCorrectas)),
-                };
-            };
             
-            if (appliedFilters.district !== "all" || appliedFilters.school !== "all" || appliedFilters.course !== "all" || appliedFilters.exam !== "all" || appliedFilters.grade !== "all") {
+            if (hasActiveFilters) {
                 filteredData['1er Grado'] = shouldFilter('1er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['1er Grado']);
                 filteredData['2do Grado'] = shouldFilter('2do Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['2do Grado']);
                 filteredData['3er Grado'] = shouldFilter('3er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['3er Grado']);
@@ -128,8 +128,27 @@ export default function AnalisisPage() {
             }
             return d;
         });
+        
+        const newExamAnalysisData = originalExamAnalysisData.map(d => {
+            let filteredData = { ...d };
+            const selectedGrade = appliedFilters.grade;
 
-        return { data: newQuestionData, dataAprobados: newApprovalData };
+            const shouldFilter = (key: '1er Grado' | '2do Grado' | '3er Grado') => {
+                return selectedGrade !== 'all' && key !== selectedGrade;
+            };
+
+            if (hasActiveFilters) {
+                filteredData['1er Grado'] = shouldFilter('1er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['1er Grado']);
+                filteredData['2do Grado'] = shouldFilter('2do Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['2do Grado']);
+                filteredData['3er Grado'] = shouldFilter('3er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['3er Grado']);
+            } else {
+                return d;
+            }
+
+            return filteredData;
+        });
+
+        return { data: newQuestionData, dataAprobados: newApprovalData, examAnalysisData: newExamAnalysisData };
 
     }, [appliedFilters]);
 
@@ -466,6 +485,10 @@ export default function AnalisisPage() {
                                             const { correctas, incorrectas } = examen[gradoKey as keyof typeof examen] as { correctas: number, incorrectas: number };
                                             const correctasPercent = total > 0 ? ((correctas / total) * 100).toFixed(1) : 0;
                                             const incorrectasPercent = total > 0 ? ((incorrectas / total) * 100).toFixed(1) : 0;
+                                            
+                                            if (correctas === 0 && incorrectas === 0 && appliedFilters.grade !== 'all' && appliedFilters.grade !== gradoKey) {
+                                                return null;
+                                            }
 
                                             return (
                                                 <TableRow key={grado}>
