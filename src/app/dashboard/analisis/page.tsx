@@ -33,6 +33,12 @@ const originalDataAprobados = [
     { name: '5to Grado', Aprobados: 97, Desaprobados: 8 },  // 92% de 105
 ];
 
+const examAnalysisData = [
+  { name: 'Matemática 2023', '1er Grado': { correctas: 70, incorrectas: 30 }, '2do Grado': { correctas: 80, incorrectas: 40 }, '3er Grado': { correctas: 90, incorrectas: 20 } },
+  { name: 'Lengua 2024', '1er Grado': { correctas: 85, incorrectas: 15 }, '2do Grado': { correctas: 95, incorrectas: 25 }, '3er Grado': { correctas: 100, incorrectas: 10 } },
+  { name: 'Ciencias 2023', '1er Grado': { correctas: 65, incorrectas: 35 }, '2do Grado': { correctas: 75, incorrectas: 45 }, '3er Grado': { correctas: 85, incorrectas: 25 } },
+];
+
 
 const mockResults = [
     { district: "Distrito I", school: "Escuela N° 101", grade: "1er Grado", course: "A", exam: "Matemática 2023" },
@@ -403,7 +409,84 @@ export default function AnalisisPage() {
                     </CardContent>
                 </Card>
             </div>
-             <div className="flex justify-end">
+            
+            <Card className="col-span-1 lg:col-span-2">
+                <CardHeader>
+                    <CardTitle>Análisis por Examen</CardTitle>
+                    <CardDescription>Resultados por examen, desglosado por grado.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={examAnalysisData} margin={{ top: 20 }}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip content={<CustomTooltip />} />
+                            <Legend />
+                            <Bar name="1er Grado - Correctas" dataKey="1er Grado.correctas" fill="hsl(var(--chart-5))">
+                                <LabelList dataKey="1er Grado.correctas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
+                            </Bar>
+                            <Bar name="1er Grado - Incorrectas" dataKey="1er Grado.incorrectas" fill="hsl(var(--chart-5)/0.4)">
+                                <LabelList dataKey="1er Grado.incorrectas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
+                            </Bar>
+                             <Bar name="2do Grado - Correctas" dataKey="2do Grado.correctas" fill="hsl(var(--chart-4))">
+                                <LabelList dataKey="2do Grado.correctas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
+                            </Bar>
+                            <Bar name="2do Grado - Incorrectas" dataKey="2do Grado.incorrectas" fill="hsl(var(--chart-4)/0.4)">
+                                <LabelList dataKey="2do Grado.incorrectas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
+                            </Bar>
+                             <Bar name="3er Grado - Correctas" dataKey="3er Grado.correctas" fill="hsl(var(--chart-3))">
+                                <LabelList dataKey="3er Grado.correctas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
+                            </Bar>
+                            <Bar name="3er Grado - Incorrectas" dataKey="3er Grado.incorrectas" fill="hsl(var(--chart-3)/0.4)">
+                                <LabelList dataKey="3er Grado.incorrectas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                    <Separator />
+                    <CardDescription>Datos detallados por examen.</CardDescription>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="font-bold">Examen</TableHead>
+                                    <TableHead className="font-bold text-center">Grado</TableHead>
+                                    <TableHead className="text-center">Corr.</TableHead>
+                                    <TableHead className="text-center">% Corr.</TableHead>
+                                    <TableHead className="text-center">Incorr.</TableHead>
+                                    <TableHead className="text-center">% Incorr.</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {examAnalysisData.map((examen) => (
+                                    <React.Fragment key={examen.name}>
+                                        {['1er Grado', '2do Grado', '3er Grado'].map((grado, index) => {
+                                            const gradoKey = grado as keyof typeof totalAlumnos;
+                                            const total = totalAlumnos[gradoKey];
+                                            const { correctas, incorrectas } = examen[gradoKey as keyof typeof examen] as { correctas: number, incorrectas: number };
+                                            const correctasPercent = total > 0 ? ((correctas / total) * 100).toFixed(1) : 0;
+                                            const incorrectasPercent = total > 0 ? ((incorrectas / total) * 100).toFixed(1) : 0;
+
+                                            return (
+                                                <TableRow key={grado}>
+                                                    {index === 0 && <TableCell rowSpan={3} className="font-medium align-middle px-2 py-1">{examen.name}</TableCell>}
+                                                    <TableCell className="text-center px-2 py-1">{grado}</TableCell>
+                                                    <TableCell className="text-center px-2 py-1">{correctas}</TableCell>
+                                                    <TableCell className="text-center px-2 py-1">{correctasPercent}%</TableCell>
+                                                    <TableCell className="text-center px-2 py-1">{incorrectas}</TableCell>
+                                                    <TableCell className="text-center px-2 py-1">{incorrectasPercent}%</TableCell>
+                                                </TableRow>
+                                            )
+                                        })}
+                                    </React.Fragment>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+
+             <div className="flex justify-end col-span-1 lg:col-span-2">
                 <Button onClick={handleExport}>
                     <FileDown className="mr-2 h-4 w-4" />
                     Exportar Resultados (CSV)
