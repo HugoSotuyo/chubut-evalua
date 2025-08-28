@@ -253,14 +253,12 @@ export default function AnalisisPage() {
             const printableElement = document.createElement('div');
             printableElement.innerHTML = printContents;
             
-            // Add a class to hide the print button in the printed output
             const buttonsToHide = printableElement.querySelectorAll('.no-print');
             buttonsToHide.forEach(btn => (btn as HTMLElement).style.display = 'none');
             
             document.body.innerHTML = printableElement.innerHTML;
             window.print();
             document.body.innerHTML = originalContents;
-            // We need to re-attach event listeners, reloading is the simplest way.
             window.location.reload(); 
         }
     };
@@ -421,9 +419,23 @@ export default function AnalisisPage() {
                                                 
                                                 if(correctas === 0 && incorrectas === 0) return null;
 
+                                                const firstVisibleRow = ['1er Grado', '2do Grado', '3er Grado']
+                                                    .map(g => pregunta[g as keyof typeof pregunta] as { correctas: number, incorrectas: number })
+                                                    .findIndex(d => d && (d.correctas > 0 || d.incorrectas > 0));
+
                                                 return (
                                                     <TableRow key={grado}>
-                                                        {index === 0 && <TableCell rowSpan={3} className="font-medium align-middle px-2 py-1">{pregunta.name}</TableCell>}
+                                                        {index === firstVisibleRow && 
+                                                            <TableCell 
+                                                                rowSpan={['1er Grado', '2do Grado', '3er Grado'].reduce((acc, g) => {
+                                                                    const data = pregunta[g as keyof typeof pregunta] as { correctas: number, incorrectas: number };
+                                                                    return acc + (data && (data.correctas > 0 || data.incorrectas > 0) ? 1 : 0);
+                                                                }, 0)}
+                                                                className="font-medium align-middle px-2 py-1"
+                                                            >
+                                                                {pregunta.name}
+                                                            </TableCell>
+                                                        }
                                                         <TableCell className="text-center px-2 py-1">{grado}</TableCell>
                                                         <TableCell className="text-center px-2 py-1">{correctas}</TableCell>
                                                         <TableCell className="text-center px-2 py-1">{correctasPercent}%</TableCell>
