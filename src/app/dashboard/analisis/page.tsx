@@ -37,6 +37,8 @@ const originalExamAnalysisData = [
   { name: 'Matemática 2023', '1er Grado': { correctas: 70, incorrectas: 30 }, '2do Grado': { correctas: 80, incorrectas: 40 }, '3er Grado': { correctas: 90, incorrectas: 20 } },
   { name: 'Lengua 2024', '1er Grado': { correctas: 85, incorrectas: 15 }, '2do Grado': { correctas: 95, incorrectas: 25 }, '3er Grado': { correctas: 100, incorrectas: 10 } },
   { name: 'Ciencias 2023', '1er Grado': { correctas: 65, incorrectas: 35 }, '2do Grado': { correctas: 75, incorrectas: 45 }, '3er Grado': { correctas: 85, incorrectas: 25 } },
+  { name: 'Matemática 2024', '1er Grado': { correctas: 80, incorrectas: 20 }, '2do Grado': { correctas: 90, incorrectas: 30 }, '3er Grado': { correctas: 95, incorrectas: 15 } },
+  { name: 'Matemática Cierre 2023', '1er Grado': { correctas: 60, incorrectas: 40 }, '2do Grado': { correctas: 70, incorrectas: 50 }, '3er Grado': { correctas: 80, incorrectas: 30 } },
 ];
 
 
@@ -76,7 +78,7 @@ export default function AnalisisPage() {
     }
     
     const { data, dataAprobados, examAnalysisData } = useMemo(() => {
-        const hasActiveFilters = Object.values(appliedFilters).some(value => value !== "all");
+        const hasActiveFilters = Object.values(appliedFilters).some(value => value !== "all" && value !== "");
 
         if (!hasActiveFilters) {
              return { data: originalData, dataAprobados: originalDataAprobados, examAnalysisData: originalExamAnalysisData };
@@ -191,8 +193,10 @@ export default function AnalisisPage() {
         csvContent += "Aprobados vs. Desaprobados (Cantidad de Alumnos)\n";
         csvContent += headersAprobados.join(';') + '\n';
         dataAprobados.forEach(row => {
-            const rowData = [row.name, row.Aprobados, row.Desaprobados];
-            csvContent += rowData.join(';') + '\n';
+            if (row.Aprobados > 0 || row.Desaprobados > 0) {
+                const rowData = [row.name, row.Aprobados, row.Desaprobados];
+                csvContent += rowData.join(';') + '\n';
+            }
         });
 
         csvContent += '\n\n';
@@ -414,6 +418,8 @@ export default function AnalisisPage() {
                                                 if (correctas === 0 && incorrectas === 0 && appliedFilters.grade !== 'all' && appliedFilters.grade !== gradoKey) {
                                                     return null;
                                                 }
+                                                
+                                                if(correctas === 0 && incorrectas === 0) return null;
 
                                                 return (
                                                     <TableRow key={grado}>
@@ -483,6 +489,8 @@ export default function AnalisisPage() {
                                         if (item.Aprobados === 0 && item.Desaprobados === 0 && appliedFilters.grade !== 'all' && appliedFilters.grade !== gradoKey) {
                                             return null;
                                         }
+                                        
+                                        if(item.Aprobados === 0 && item.Desaprobados === 0) return null;
 
                                         return (
                                             <TableRow key={item.name}>
