@@ -57,6 +57,7 @@ export default function AnalisisPage() {
         grade: "all",
         course: "all",
         exam: "all",
+        question: "all",
     });
 
     const [appliedFilters, setAppliedFilters] = useState(filters);
@@ -90,7 +91,11 @@ export default function AnalisisPage() {
             };
         };
 
-        const newQuestionData = originalData.map(d => {
+        const questionDataFilteredByQuestion = appliedFilters.question === 'all'
+            ? originalData
+            : originalData.filter(d => d.name === appliedFilters.question);
+
+        const newQuestionData = questionDataFilteredByQuestion.map(d => {
             let filteredData = { ...d };
             const selectedGrade = appliedFilters.grade;
 
@@ -233,7 +238,7 @@ export default function AnalisisPage() {
                     </div>
                     <CardDescription>Selecciona los criterios para acotar tu búsqueda. Los gráficos se actualizarán automáticamente.</CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                     <div className="grid gap-2">
                         <Label htmlFor="filtro-distrito">Distrito</Label>
                         <Select onValueChange={(v) => handleFilterChange('district', v)} value={filters.district}>
@@ -281,6 +286,16 @@ export default function AnalisisPage() {
                             <SelectContent>
                                 <SelectItem value="all">Todos</SelectItem>
                                 {getUniqueValues("exam").map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="filtro-pregunta">Pregunta</Label>
+                        <Select onValueChange={(v) => handleFilterChange('question', v)} value={filters.question}>
+                            <SelectTrigger id="filtro-pregunta"><SelectValue placeholder="Pregunta" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todas</SelectItem>
+                                {originalData.map(q => <SelectItem key={q.name} value={q.name}>{q.name}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
@@ -518,3 +533,5 @@ export default function AnalisisPage() {
         </div>
     )
 }
+
+    
