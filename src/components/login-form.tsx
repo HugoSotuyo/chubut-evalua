@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -36,7 +37,6 @@ export function LoginForm() {
           id="email"
           type="email"
           placeholder="tu.dni@dominio.com"
-          required
           defaultValue="evaluador@chubut.edu.ar"
         />
       </div>
@@ -50,7 +50,7 @@ export function LoginForm() {
             ¿Olvidaste tu contraseña?
           </a>
         </div>
-        <Input id="password" type="password" required defaultValue="hdsp6032" />
+        <Input id="password" type="password" required />
       </div>
       <Button type="submit" className="w-full">
         Ingresar
