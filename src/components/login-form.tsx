@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 export function LoginForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const [email, setEmail] = useState("evaluador@chubut.edu.ar");
+  const [email] = useState("evaluador@chubut.edu.ar");
   const [password, setPassword] = useState("");
 
   const handleLogin = (e: React.FormEvent) => {
@@ -26,23 +26,13 @@ export function LoginForm() {
         toast({
             variant: "destructive",
             title: "Error de autenticación",
-            description: "El email o la contraseña son incorrectos.",
+            description: "La contraseña es incorrecta.",
         });
     }
   };
 
   return (
     <form onSubmit={handleLogin} className="grid gap-4">
-      <div className="grid gap-2">
-        <Label htmlFor="email">DNI / Email</Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="tu.dni@dominio.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </div>
       <div className="grid gap-2">
         <div className="flex items-center">
           <Label htmlFor="password">Contraseña</Label>
