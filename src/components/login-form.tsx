@@ -2,31 +2,33 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { GraduationCap } from "lucide-react";
 
 export function LoginForm() {
   const router = useRouter();
   const { toast } = useToast();
+  const [email, setEmail] = useState("evaluador@chubut.edu.ar");
+  const [password, setPassword] = useState("");
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login
-    toast({
-      title: "Inicio de sesión exitoso",
-      description: "Bienvenido de nuevo.",
-    });
-    router.push("/dashboard");
+    if (email === "evaluador@chubut.edu.ar" && password === "hdsp6032") {
+        toast({
+            title: "Inicio de sesión exitoso",
+            description: "Bienvenido de nuevo.",
+        });
+        router.push("/dashboard");
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Error de autenticación",
+            description: "El email o la contraseña son incorrectos.",
+        });
+    }
   };
 
   return (
@@ -37,7 +39,8 @@ export function LoginForm() {
           id="email"
           type="email"
           placeholder="tu.dni@dominio.com"
-          defaultValue="evaluador@chubut.edu.ar"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
       </div>
       <div className="grid gap-2">
@@ -50,7 +53,13 @@ export function LoginForm() {
             ¿Olvidaste tu contraseña?
           </a>
         </div>
-        <Input id="password" type="password" required />
+        <Input 
+            id="password" 
+            type="password" 
+            required 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+        />
       </div>
       <Button type="submit" className="w-full">
         Ingresar
