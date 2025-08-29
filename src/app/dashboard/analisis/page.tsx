@@ -65,6 +65,18 @@ export default function AnalisisPage() {
     const [appliedFilters, setAppliedFilters] = useState(filters);
     const [printingCardId, setPrintingCardId] = useState<string | null>(null);
 
+    useEffect(() => {
+        const handleAfterPrint = () => {
+            setPrintingCardId(null);
+        };
+
+        window.addEventListener('afterprint', handleAfterPrint);
+
+        return () => {
+            window.removeEventListener('afterprint', handleAfterPrint);
+        };
+    }, []);
+
     const getUniqueValues = (key: keyof typeof mockResults[0]) => {
         const values = mockResults.map(item => item[key]);
         return [...new Set(values)];
@@ -250,7 +262,6 @@ export default function AnalisisPage() {
         setPrintingCardId(cardId);
         setTimeout(() => {
             window.print();
-            setPrintingCardId(null);
         }, 100); 
     };
 
