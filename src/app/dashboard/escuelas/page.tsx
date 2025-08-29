@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast";
+import { useSearch } from "@/context/search-context";
 
 
 const initialSchools = [
@@ -53,6 +54,7 @@ export default function EscuelasPage() {
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
   const [districtFilter, setDistrictFilter] = useState("all");
   const { toast } = useToast();
+  const { searchTerm } = useSearch();
 
   const uniqueDistricts = useMemo(() => {
     const districts = initialSchools.map(school => school.district);
@@ -60,11 +62,15 @@ export default function EscuelasPage() {
   }, []);
 
   const filteredSchools = useMemo(() => {
-    if (districtFilter === "all") {
-      return schools;
+    let results = schools;
+    if (districtFilter !== "all") {
+      results = results.filter(school => school.district === districtFilter);
     }
-    return schools.filter(school => school.district === districtFilter);
-  }, [schools, districtFilter]);
+    if (searchTerm) {
+      results = results.filter(school => school.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+    return results;
+  }, [schools, districtFilter, searchTerm]);
 
 
   const handleOpenDeleteDialog = (school: School) => {
@@ -322,5 +328,3 @@ export default function EscuelasPage() {
     </div>
   )
 }
-
-    

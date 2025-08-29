@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useSearch } from "@/context/search-context";
 
 const allResults = [
     { id: "res-001", studentName: "Juan Pérez", examName: "Matemática Diagnóstico 2024", school: "Escuela N° 101", grade: "Aprobado", score: 85 },
@@ -29,6 +30,7 @@ type Filters = {
 }
 
 export default function ResultadosPage() {
+    const { searchTerm } = useSearch();
     const [filters, setFilters] = useState<Filters>({
         exam: "all",
         school: "all",
@@ -53,9 +55,12 @@ export default function ResultadosPage() {
         if (appliedFilters.status !== "all") {
             results = results.filter(r => r.grade.toLowerCase() === appliedFilters.status);
         }
+        if (searchTerm) {
+            results = results.filter(r => r.studentName.toLowerCase().includes(searchTerm.toLowerCase()));
+        }
 
         return results;
-    }, [appliedFilters]);
+    }, [appliedFilters, searchTerm]);
 
     const handleFilterChange = <K extends keyof Filters>(filterName: K, value: Filters[K]) => {
         setFilters(prev => ({...prev, [filterName]: value}));

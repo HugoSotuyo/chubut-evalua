@@ -22,6 +22,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { useSearch } from "@/context/search-context";
 
 
 const initialUsers = [
@@ -41,6 +42,7 @@ export default function UsuariosPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [roleFilter, setRoleFilter] = useState("all");
   const { toast } = useToast();
+  const { searchTerm } = useSearch();
 
   const uniqueRoles = useMemo(() => {
     const roles = initialUsers.map(user => user.role);
@@ -48,11 +50,15 @@ export default function UsuariosPage() {
   }, []);
 
   const filteredUsers = useMemo(() => {
-    if (roleFilter === "all") {
-      return users;
+    let results = users;
+    if (roleFilter !== "all") {
+      results = results.filter(user => user.role === roleFilter);
     }
-    return users.filter(user => user.role === roleFilter);
-  }, [users, roleFilter]);
+    if (searchTerm) {
+      results = results.filter(user => user.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+    return results;
+  }, [users, roleFilter, searchTerm]);
 
   const handleOpenDeleteDialog = (user: User) => {
     setSelectedUser(user);
