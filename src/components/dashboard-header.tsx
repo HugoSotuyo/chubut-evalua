@@ -41,6 +41,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import type { User } from "@/lib/auth";
 import { SidebarTrigger } from "./ui/sidebar";
 import { useSearch } from "@/context/search-context";
+import { usePathname } from "next/navigation";
 
 interface DashboardHeaderProps {
   user: User;
@@ -49,23 +50,26 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ user }: DashboardHeaderProps) {
   const userInitials = user.name.split(' ').map(n => n[0]).join('');
   const { searchTerm, setSearchTerm } = useSearch();
+  const pathname = usePathname();
 
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
        <SidebarTrigger className="md:hidden"/>
       <div className="w-full flex-1">
-        <form>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Buscar alumnos, escuelas, usuarios..."
-              className="w-full appearance-none bg-background pl-8 shadow-none md:w-2/3 lg:w-1/3"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </form>
+        {pathname !== '/dashboard/analisis' && (
+          <form>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Buscar alumnos, escuelas, usuarios..."
+                className="w-full appearance-none bg-background pl-8 shadow-none md:w-2/3 lg:w-1/3"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </form>
+        )}
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
