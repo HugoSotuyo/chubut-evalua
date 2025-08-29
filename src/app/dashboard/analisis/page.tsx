@@ -63,6 +63,17 @@ export default function AnalisisPage() {
     });
 
     const [appliedFilters, setAppliedFilters] = useState(filters);
+    
+    useEffect(() => {
+        const handleAfterPrint = () => {
+            document.body.classList.remove('printing-analisis-pregunta-card', 'printing-aprobados-desaprobados-card', 'printing-analisis-examen-card');
+        };
+
+        window.addEventListener('afterprint', handleAfterPrint);
+        return () => {
+            window.removeEventListener('afterprint', handleAfterPrint);
+        };
+    }, []);
 
     const getUniqueValues = (key: keyof typeof mockResults[0]) => {
         const values = mockResults.map(item => item[key]);
@@ -245,49 +256,9 @@ export default function AnalisisPage() {
         return null;
     };
     
-    const handlePrint = (cardId: string) => {
-        const printContents = document.getElementById(cardId)?.innerHTML;
-        const originalContents = document.body.innerHTML;
-
-        if (printContents) {
-            const printWindow = window.open('', '_blank');
-            if (printWindow) {
-                printWindow.document.write(`
-                    <html>
-                        <head>
-                            <title>Imprimir</title>
-                            <link rel="stylesheet" href="/globals.css">
-                            <style>
-                                body { 
-                                    -webkit-print-color-adjust: exact;
-                                    print-color-adjust: exact;
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            ${printContents}
-                        </body>
-                    </html>
-                `);
-                
-                const tempDiv = printWindow.document.createElement('div');
-                tempDiv.innerHTML = printContents;
-                const buttons = tempDiv.getElementsByTagName('button');
-                while(buttons.length > 0) {
-                    buttons[0].parentNode?.removeChild(buttons[0]);
-                }
-
-                printWindow.document.body.innerHTML = tempDiv.innerHTML;
-                
-                // Esperar a que los estilos se carguen
-                setTimeout(() => {
-                    printWindow.document.close();
-                    printWindow.focus();
-                    printWindow.print();
-                    printWindow.close();
-                }, 500); // 500ms de espera puede ser ajustado
-            }
-        }
+    const handlePrint = (printClass: string) => {
+        document.body.classList.add(printClass);
+        window.print();
     };
 
 
@@ -383,7 +354,7 @@ export default function AnalisisPage() {
                             <CardTitle>Análisis por Pregunta</CardTitle>
                             <CardDescription>Respuestas correctas vs. incorrectas por pregunta y grado.</CardDescription>
                         </div>
-                        <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('analisis-pregunta-card')}>
+                        <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('printing-analisis-pregunta-card')}>
                             <Printer className="h-4 w-4" />
                             <span className="sr-only">Imprimir</span>
                         </Button>
@@ -484,7 +455,7 @@ export default function AnalisisPage() {
                             <CardTitle>Aprobados vs. Desaprobados</CardTitle>
                             <CardDescription>Cantidad de alumnos por condición en cada grado.</CardDescription>
                         </div>
-                        <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('aprobados-desaprobados-card')}>
+                        <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('printing-aprobados-desaprobados-card')}>
                             <Printer className="h-4 w-4" />
                             <span className="sr-only">Imprimir</span>
                         </Button>
@@ -554,7 +525,7 @@ export default function AnalisisPage() {
                         <CardTitle>Análisis por Examen</CardTitle>
                         <CardDescription>Resultados por examen, desglosado por grado.</CardDescription>
                     </div>
-                     <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('analisis-examen-card')}>
+                     <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('printing-analisis-examen-card')}>
                         <Printer className="h-4 w-4" />
                         <span className="sr-only">Imprimir</span>
                     </Button>

@@ -4,6 +4,8 @@
 
 body {
   font-family: Arial, Helvetica, sans-serif;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 @layer base {
@@ -88,9 +90,21 @@ body {
 }
 
 @media print {
+  body > * {
+    display: none;
+  }
+
+  body.printing-analisis-pregunta-card #analisis-pregunta-card,
+  body.printing-aprobados-desaprobados-card #aprobados-desaprobados-card,
+  body.printing-analisis-examen-card #analisis-examen-card {
+    display: block !important;
+  }
+
+  .printable-area {
+    display: block !important;
+  }
+
   .no-print {
     display: none !important;
   }
 }
-
-    
