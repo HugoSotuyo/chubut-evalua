@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { MoreHorizontal, UserPlus } from "lucide-react"
+import { Ellipsis, UserPlus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
@@ -66,7 +66,7 @@ export default function UsuariosPage() {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button aria-haspopup="true" size="icon" variant="ghost">
-                                            <MoreHorizontal className="h-4 w-4" />
+                                            <Ellipsis className="h-4 w-4" />
                                             <span className="sr-only">Toggle menu</span>
                                         </Button>
                                     </DropdownMenuTrigger>
