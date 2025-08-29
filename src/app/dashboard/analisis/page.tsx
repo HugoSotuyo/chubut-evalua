@@ -63,19 +63,6 @@ export default function AnalisisPage() {
     });
 
     const [appliedFilters, setAppliedFilters] = useState(filters);
-    const [printingCardId, setPrintingCardId] = useState<string | null>(null);
-
-    useEffect(() => {
-        const handleAfterPrint = () => {
-            setPrintingCardId(null);
-        };
-
-        window.addEventListener('afterprint', handleAfterPrint);
-
-        return () => {
-            window.removeEventListener('afterprint', handleAfterPrint);
-        };
-    }, []);
 
     const getUniqueValues = (key: keyof typeof mockResults[0]) => {
         const values = mockResults.map(item => item[key]);
@@ -259,15 +246,47 @@ export default function AnalisisPage() {
     };
     
     const handlePrint = (cardId: string) => {
-        setPrintingCardId(cardId);
-        setTimeout(() => {
-            window.print();
-        }, 100); 
+        const printContents = document.getElementById(cardId)?.innerHTML;
+        const originalContents = document.body.innerHTML;
+
+        if (printContents) {
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+                printWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>Imprimir</title>
+                            <link rel="stylesheet" href="/globals.css">
+                            <style>
+                                @media print {
+                                    .no-print { display: none !important; }
+                                    body { -webkit-print-color-adjust: exact; }
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            ${printContents}
+                        </body>
+                    </html>
+                `);
+                
+                // Remove buttons from the temporary view
+                const buttons = printWindow.document.getElementsByTagName('button');
+                for (let i = 0; i < buttons.length; i++) {
+                    buttons[i].style.display = 'none';
+                }
+
+                printWindow.document.close();
+                printWindow.focus();
+                printWindow.print();
+                printWindow.close();
+            }
+        }
     };
 
     return (
         <div className="flex flex-col gap-8">
-            <div className="no-print">
+            <div>
                 <h1 className="text-3xl font-bold tracking-tight font-headline">Análisis de Resultados</h1>
                 <p className="text-muted-foreground">Filtra y visualiza los datos de las evaluaciones.</p>
             </div>
@@ -351,7 +370,7 @@ export default function AnalisisPage() {
             </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card id="analisis-pregunta-card" className={printingCardId === 'analisis-pregunta-card' ? 'printable-section' : ''}>
+                <Card id="analisis-pregunta-card">
                     <CardHeader className="flex flex-row items-start justify-between">
                         <div>
                             <CardTitle>Análisis por Pregunta</CardTitle>
@@ -432,16 +451,16 @@ export default function AnalisisPage() {
                                                                     const data = pregunta[g as keyof typeof pregunta] as { correctas: number, incorrectas: number };
                                                                     return acc + (data && (data.correctas > 0 || data.incorrectas > 0) ? 1 : 0);
                                                                 }, 0)}
-                                                                className="font-medium align-middle px-2 py-1"
+                                                                className="font-medium align-middle"
                                                             >
                                                                 {pregunta.name}
                                                             </TableCell>
                                                         }
-                                                        <TableCell className="text-center px-2 py-1">{grado}</TableCell>
-                                                        <TableCell className="text-center px-2 py-1">{correctas}</TableCell>
-                                                        <TableCell className="text-center px-2 py-1">{correctasPercent}%</TableCell>
-                                                        <TableCell className="text-center px-2 py-1">{incorrectas}</TableCell>
-                                                        <TableCell className="text-center px-2 py-1">{incorrectasPercent}%</TableCell>
+                                                        <TableCell className="text-center">{grado}</TableCell>
+                                                        <TableCell className="text-center">{correctas}</TableCell>
+                                                        <TableCell className="text-center">{correctasPercent}%</TableCell>
+                                                        <TableCell className="text-center">{incorrectas}</TableCell>
+                                                        <TableCell className="text-center">{incorrectasPercent}%</TableCell>
                                                     </TableRow>
                                                 )
                                             })}
@@ -452,7 +471,7 @@ export default function AnalisisPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card id="aprobados-desaprobados-card" className={printingCardId === 'aprobados-desaprobados-card' ? 'printable-section' : ''}>
+                <Card id="aprobados-desaprobados-card">
                     <CardHeader className="flex flex-row items-start justify-between">
                         <div>
                             <CardTitle>Aprobados vs. Desaprobados</CardTitle>
@@ -507,11 +526,11 @@ export default function AnalisisPage() {
 
                                         return (
                                             <TableRow key={item.name}>
-                                                <TableCell className="font-medium px-2 py-1">{item.name}</TableCell>
-                                                <TableCell className="text-center px-2 py-1">{item.Aprobados}</TableCell>
-                                                <TableCell className="text-center px-2 py-1">{aprobadosPercent}%</TableCell>
-                                                <TableCell className="text-center px-2 py-1">{item.Desaprobados}</TableCell>
-                                                <TableCell className="text-center px-2 py-1">{desaprobadosPercent}%</TableCell>
+                                                <TableCell className="font-medium">{item.name}</TableCell>
+                                                <TableCell className="text-center">{item.Aprobados}</TableCell>
+                                                <TableCell className="text-center">{aprobadosPercent}%</TableCell>
+                                                <TableCell className="text-center">{item.Desaprobados}</TableCell>
+                                                <TableCell className="text-center">{desaprobadosPercent}%</TableCell>
                                             </TableRow>
                                         )
                                     })}
@@ -522,7 +541,7 @@ export default function AnalisisPage() {
                 </Card>
             </div>
             
-            <Card className={`col-span-1 lg:col-span-2 ${printingCardId === 'analisis-examen-card' ? 'printable-section' : ''}`} id="analisis-examen-card">
+            <Card className="col-span-1 lg:col-span-2" id="analisis-examen-card">
                 <CardHeader className="flex flex-row items-start justify-between">
                     <div>
                         <CardTitle>Análisis por Examen</CardTitle>
@@ -613,16 +632,16 @@ export default function AnalisisPage() {
                                                                 const data = examen[g as keyof typeof examen] as { correctas: number; incorrectas: number };
                                                                 return acc + (data && (data.correctas > 0 || data.incorrectas > 0) ? 1 : 0);
                                                             }, 0)} 
-                                                            className="font-medium align-middle px-2 py-1"
+                                                            className="font-medium align-middle"
                                                         >
                                                             {examen.name}
                                                         </TableCell>
                                                     )}
-                                                    <TableCell className="text-center px-2 py-1">{grado}</TableCell>
-                                                    <TableCell className="text-center px-2 py-1">{correctas}</TableCell>
-                                                    <TableCell className="text-center px-2 py-1">{correctasPercent}%</TableCell>
-                                                    <TableCell className="text-center px-2 py-1">{incorrectas}</TableCell>
-                                                    <TableCell className="text-center px-2 py-1">{incorrectasPercent}%</TableCell>
+                                                    <TableCell className="text-center">{grado}</TableCell>
+                                                    <TableCell className="text-center">{correctas}</TableCell>
+                                                    <TableCell className="text-center">{correctasPercent}%</TableCell>
+                                                    <TableCell className="text-center">{incorrectas}</TableCell>
+                                                    <TableCell className="text-center">{incorrectasPercent}%</TableCell>
                                                 </TableRow>
                                             )
                                         })}
@@ -643,3 +662,5 @@ export default function AnalisisPage() {
         </div>
     )
 }
+
+    
