@@ -63,17 +63,6 @@ export default function AnalisisPage() {
     });
 
     const [appliedFilters, setAppliedFilters] = useState(filters);
-    
-    useEffect(() => {
-        const handleAfterPrint = () => {
-            document.body.classList.remove('printing-analisis-pregunta-card', 'printing-aprobados-desaprobados-card', 'printing-analisis-examen-card');
-        };
-
-        window.addEventListener('afterprint', handleAfterPrint);
-        return () => {
-            window.removeEventListener('afterprint', handleAfterPrint);
-        };
-    }, []);
 
     const getUniqueValues = (key: keyof typeof mockResults[0]) => {
         const values = mockResults.map(item => item[key]);
@@ -256,9 +245,44 @@ export default function AnalisisPage() {
         return null;
     };
     
-    const handlePrint = (printClass: string) => {
-        document.body.classList.add(printClass);
-        window.print();
+    const handlePrint = (cardId: string) => {
+        const printContent = document.getElementById(cardId);
+        if (printContent) {
+            const printWindow = window.open('', '', 'height=800,width=800');
+            if (printWindow) {
+                const contentToPrint = printContent.cloneNode(true) as HTMLElement;
+                
+                // Eliminar el botón de impresión de la copia para que no aparezca en la impresión
+                const noPrintElements = contentToPrint.querySelectorAll('.no-print');
+                noPrintElements.forEach(el => el.parentNode?.removeChild(el));
+
+                printWindow.document.write('<html><head><title>Imprimir</title>');
+                // Enlazar las mismas hojas de estilo que la página principal
+                Array.from(document.styleSheets).forEach(styleSheet => {
+                    if (styleSheet.href) {
+                        printWindow.document.write(`<link rel="stylesheet" href="${styleSheet.href}">`);
+                    }
+                });
+                // Enlazar fuentes de google
+                printWindow.document.write('<link rel="preconnect" href="https://fonts.googleapis.com">');
+                printWindow.document.write('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>');
+                printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">');
+                
+                printWindow.document.write('<style>body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .recharts-responsive-container { width: 100% !important; height: auto !important; } </style>');
+                printWindow.document.write('</head><body >');
+                printWindow.document.write(contentToPrint.innerHTML);
+                printWindow.document.write('</body></html>');
+                
+                printWindow.document.close();
+                
+                // Esperar a que los estilos se carguen antes de imprimir
+                printWindow.onload = () => {
+                    printWindow.focus();
+                    printWindow.print();
+                    printWindow.close();
+                };
+            }
+        }
     };
 
 
@@ -354,7 +378,7 @@ export default function AnalisisPage() {
                             <CardTitle>Análisis por Pregunta</CardTitle>
                             <CardDescription>Respuestas correctas vs. incorrectas por pregunta y grado.</CardDescription>
                         </div>
-                        <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('printing-analisis-pregunta-card')}>
+                        <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('analisis-pregunta-card')}>
                             <Printer className="h-4 w-4" />
                             <span className="sr-only">Imprimir</span>
                         </Button>
@@ -434,11 +458,11 @@ export default function AnalisisPage() {
                                                                 {pregunta.name}
                                                             </TableCell>
                                                         }
-                                                        <TableCell className="text-center px-2 py-1">{grado}</TableCell>
-                                                        <TableCell className="text-center px-2 py-1">{correctas}</TableCell>
-                                                        <TableCell className="text-center px-2 py-1">{correctasPercent}%</TableCell>
-                                                        <TableCell className="text-center px-2 py-1">{incorrectas}</TableCell>
-                                                        <TableCell className="text-center px-2 py-1">{incorrectasPercent}%</TableCell>
+                                                        <TableCell className="text-center">{grado}</TableCell>
+                                                        <TableCell className="text-center">{correctas}</TableCell>
+                                                        <TableCell className="text-center">{correctasPercent}%</TableCell>
+                                                        <TableCell className="text-center">{incorrectas}</TableCell>
+                                                        <TableCell className="text-center">{incorrectasPercent}%</TableCell>
                                                     </TableRow>
                                                 )
                                             })}
@@ -455,7 +479,7 @@ export default function AnalisisPage() {
                             <CardTitle>Aprobados vs. Desaprobados</CardTitle>
                             <CardDescription>Cantidad de alumnos por condición en cada grado.</CardDescription>
                         </div>
-                        <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('printing-aprobados-desaprobados-card')}>
+                        <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('aprobados-desaprobados-card')}>
                             <Printer className="h-4 w-4" />
                             <span className="sr-only">Imprimir</span>
                         </Button>
@@ -504,11 +528,11 @@ export default function AnalisisPage() {
 
                                         return (
                                             <TableRow key={item.name}>
-                                                <TableCell className="font-medium px-2 py-1">{item.name}</TableCell>
-                                                <TableCell className="text-center px-2 py-1">{item.Aprobados}</TableCell>
-                                                <TableCell className="text-center px-2 py-1">{aprobadosPercent}%</TableCell>
-                                                <TableCell className="text-center px-2 py-1">{item.Desaprobados}</TableCell>
-                                                <TableCell className="text-center px-2 py-1">{desaprobadosPercent}%</TableCell>
+                                                <TableCell className="font-medium">{item.name}</TableCell>
+                                                <TableCell className="text-center">{item.Aprobados}</TableCell>
+                                                <TableCell className="text-center">{aprobadosPercent}%</TableCell>
+                                                <TableCell className="text-center">{item.Desaprobados}</TableCell>
+                                                <TableCell className="text-center">{desaprobadosPercent}%</TableCell>
                                             </TableRow>
                                         )
                                     })}
@@ -525,7 +549,7 @@ export default function AnalisisPage() {
                         <CardTitle>Análisis por Examen</CardTitle>
                         <CardDescription>Resultados por examen, desglosado por grado.</CardDescription>
                     </div>
-                     <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('printing-analisis-examen-card')}>
+                     <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('analisis-examen-card')}>
                         <Printer className="h-4 w-4" />
                         <span className="sr-only">Imprimir</span>
                     </Button>
@@ -615,11 +639,11 @@ export default function AnalisisPage() {
                                                             {examen.name}
                                                         </TableCell>
                                                     )}
-                                                    <TableCell className="text-center px-2 py-1">{grado}</TableCell>
-                                                    <TableCell className="text-center px-2 py-1">{correctas}</TableCell>
-                                                    <TableCell className="text-center px-2 py-1">{correctasPercent}%</TableCell>
-                                                    <TableCell className="text-center px-2 py-1">{incorrectas}</TableCell>
-                                                    <TableCell className="text-center px-2 py-1">{incorrectasPercent}%</TableCell>
+                                                    <TableCell className="text-center">{grado}</TableCell>
+                                                    <TableCell className="text-center">{correctas}</TableCell>
+                                                    <TableCell className="text-center">{correctasPercent}%</TableCell>
+                                                    <TableCell className="text-center">{incorrectas}</TableCell>
+                                                    <TableCell className="text-center">{incorrectasPercent}%</TableCell>
                                                 </TableRow>
                                             )
                                         })}
