@@ -260,7 +260,7 @@ export default function AnalisisPage() {
                             <style>
                                 @media print {
                                     .no-print { display: none !important; }
-                                    body { -webkit-print-color-adjust: exact; }
+                                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                                 }
                             </style>
                         </head>
@@ -270,12 +270,14 @@ export default function AnalisisPage() {
                     </html>
                 `);
                 
-                // Remove buttons from the temporary view
-                const buttons = printWindow.document.getElementsByTagName('button');
-                for (let i = 0; i < buttons.length; i++) {
-                    buttons[i].style.display = 'none';
+                const tempDiv = printWindow.document.createElement('div');
+                tempDiv.innerHTML = printContents;
+                const buttons = tempDiv.getElementsByTagName('button');
+                while(buttons.length > 0) {
+                    buttons[0].parentNode?.removeChild(buttons[0]);
                 }
 
+                printWindow.document.body.innerHTML = tempDiv.innerHTML;
                 printWindow.document.close();
                 printWindow.focus();
                 printWindow.print();
@@ -283,6 +285,7 @@ export default function AnalisisPage() {
             }
         }
     };
+
 
     return (
         <div className="flex flex-col gap-8">
@@ -456,11 +459,11 @@ export default function AnalisisPage() {
                                                                 {pregunta.name}
                                                             </TableCell>
                                                         }
-                                                        <TableCell className="text-center">{grado}</TableCell>
-                                                        <TableCell className="text-center">{correctas}</TableCell>
-                                                        <TableCell className="text-center">{correctasPercent}%</TableCell>
-                                                        <TableCell className="text-center">{incorrectas}</TableCell>
-                                                        <TableCell className="text-center">{incorrectasPercent}%</TableCell>
+                                                        <TableCell className="text-center px-2 py-1">{grado}</TableCell>
+                                                        <TableCell className="text-center px-2 py-1">{correctas}</TableCell>
+                                                        <TableCell className="text-center px-2 py-1">{correctasPercent}%</TableCell>
+                                                        <TableCell className="text-center px-2 py-1">{incorrectas}</TableCell>
+                                                        <TableCell className="text-center px-2 py-1">{incorrectasPercent}%</TableCell>
                                                     </TableRow>
                                                 )
                                             })}
@@ -526,11 +529,11 @@ export default function AnalisisPage() {
 
                                         return (
                                             <TableRow key={item.name}>
-                                                <TableCell className="font-medium">{item.name}</TableCell>
-                                                <TableCell className="text-center">{item.Aprobados}</TableCell>
-                                                <TableCell className="text-center">{aprobadosPercent}%</TableCell>
-                                                <TableCell className="text-center">{item.Desaprobados}</TableCell>
-                                                <TableCell className="text-center">{desaprobadosPercent}%</TableCell>
+                                                <TableCell className="font-medium px-2 py-1">{item.name}</TableCell>
+                                                <TableCell className="text-center px-2 py-1">{item.Aprobados}</TableCell>
+                                                <TableCell className="text-center px-2 py-1">{aprobadosPercent}%</TableCell>
+                                                <TableCell className="text-center px-2 py-1">{item.Desaprobados}</TableCell>
+                                                <TableCell className="text-center px-2 py-1">{desaprobadosPercent}%</TableCell>
                                             </TableRow>
                                         )
                                     })}
@@ -637,11 +640,11 @@ export default function AnalisisPage() {
                                                             {examen.name}
                                                         </TableCell>
                                                     )}
-                                                    <TableCell className="text-center">{grado}</TableCell>
-                                                    <TableCell className="text-center">{correctas}</TableCell>
-                                                    <TableCell className="text-center">{correctasPercent}%</TableCell>
-                                                    <TableCell className="text-center">{incorrectas}</TableCell>
-                                                    <TableCell className="text-center">{incorrectasPercent}%</TableCell>
+                                                    <TableCell className="text-center px-2 py-1">{grado}</TableCell>
+                                                    <TableCell className="text-center px-2 py-1">{correctas}</TableCell>
+                                                    <TableCell className="text-center px-2 py-1">{correctasPercent}%</TableCell>
+                                                    <TableCell className="text-center px-2 py-1">{incorrectas}</TableCell>
+                                                    <TableCell className="text-center px-2 py-1">{incorrectasPercent}%</TableCell>
                                                 </TableRow>
                                             )
                                         })}
@@ -662,5 +665,7 @@ export default function AnalisisPage() {
         </div>
     )
 }
+
+    
 
     
