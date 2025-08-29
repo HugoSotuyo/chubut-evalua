@@ -53,6 +53,19 @@ export default function UsuariosPage() {
     setIsAlertOpen(false);
     setSelectedUser(null);
   };
+
+  const handleEnableUser = (userId: string) => {
+    const userToEnable = users.find((user) => user.id === userId);
+    setUsers(users.map((user) => 
+      user.id === userId ? { ...user, status: "Activo" } : user
+    ));
+    if (userToEnable) {
+        toast({
+            title: "Usuario Habilitado",
+            description: `El usuario ${userToEnable.name} ha sido habilitado correctamente.`,
+        });
+    }
+  };
   
   const showToast = (title: string) => {
     toast({
@@ -106,7 +119,7 @@ export default function UsuariosPage() {
                             <TableCell>{user.role}</TableCell>
                             <TableCell>{user.school}</TableCell>
                              <TableCell>
-                                <Badge variant={user.status === "Pendiente" ? "secondary" : "default"}>{user.status}</Badge>
+                                <Badge variant={user.status === "Pendiente" ? "secondary" : (user.status === "Activo" ? "default" : "destructive")}>{user.status}</Badge>
                             </TableCell>
                             <TableCell>
                                 <DropdownMenu>
@@ -118,7 +131,7 @@ export default function UsuariosPage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                        {user.status === "Pendiente" && <DropdownMenuItem onSelect={() => showToast('Habilitar Usuario')}>Habilitar Usuario</DropdownMenuItem>}
+                                        {user.status === "Pendiente" && <DropdownMenuItem onSelect={() => handleEnableUser(user.id)}>Habilitar Usuario</DropdownMenuItem>}
                                         <DropdownMenuItem onSelect={() => showToast('Editar Usuario')}>Editar</DropdownMenuItem>
                                         <DropdownMenuItem onSelect={() => showToast('Cambiar Contraseña')}>Cambiar Contraseña</DropdownMenuItem>
                                         <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(user)}>Eliminar</DropdownMenuItem>
