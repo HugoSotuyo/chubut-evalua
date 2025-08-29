@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Ellipsis, UserPlus, Filter } from "lucide-react"
+import { Ellipsis, UserPlus, Filter, FileDown } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -43,9 +43,9 @@ export default function UsuariosPage() {
   const { toast } = useToast();
 
   const uniqueRoles = useMemo(() => {
-    const roles = users.map(user => user.role);
+    const roles = initialUsers.map(user => user.role);
     return [...new Set(roles)];
-  }, [users]);
+  }, []);
 
   const filteredUsers = useMemo(() => {
     if (roleFilter === "all") {
@@ -90,6 +90,28 @@ export default function UsuariosPage() {
     });
   }
 
+  const handleExport = () => {
+    const headers = ["ID", "Nombre", "Rol", "Escuela", "Estado"];
+    const rows = filteredUsers.map(user => 
+        [user.id, user.name, user.role, user.school, user.status].join(';')
+    );
+    
+    // BOM para compatibilidad con Excel
+    const bom = "\uFEFF";
+    const csvContent = bom + [headers.join(';'), ...rows].join("\n");
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "usuarios.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="flex flex-col gap-8">
         <div className="flex items-center justify-between">
@@ -97,10 +119,16 @@ export default function UsuariosPage() {
                 <h1 className="text-3xl font-bold tracking-tight font-headline">Gestión de Usuarios</h1>
                 <p className="text-muted-foreground">Administra los roles y permisos de los usuarios del sistema.</p>
             </div>
-            <Button onClick={() => showToast('Invitar Usuario')}>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Invitar Usuario
-            </Button>
+            <div className="flex items-center gap-2">
+                <Button onClick={() => showToast('Invitar Usuario')}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Invitar Usuario
+                </Button>
+                <Button variant="outline" onClick={handleExport}>
+                    <FileDown className="mr-2 h-4 w-4" />
+                    Exportar Usuarios
+                </Button>
+            </div>
         </div>
 
         <Card>
