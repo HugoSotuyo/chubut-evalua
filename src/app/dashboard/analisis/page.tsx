@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useMemo, useState } from "react"
+import React, { useMemo, useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -63,6 +63,7 @@ export default function AnalisisPage() {
     });
 
     const [appliedFilters, setAppliedFilters] = useState(filters);
+    const [printingCardId, setPrintingCardId] = useState<string | null>(null);
 
     const getUniqueValues = (key: keyof typeof mockResults[0]) => {
         const values = mockResults.map(item => item[key]);
@@ -245,23 +246,18 @@ export default function AnalisisPage() {
         return null;
     };
     
-     const handlePrint = (cardId: string) => {
-        const printContents = document.getElementById(cardId)?.innerHTML;
-        const originalContents = document.body.innerHTML;
-
-        if (printContents) {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = printContents;
-            
-            const noPrintElements = tempDiv.querySelectorAll('.no-print');
-            noPrintElements.forEach(el => (el as HTMLElement).remove());
-
-            document.body.innerHTML = tempDiv.innerHTML;
-            window.print();
-            document.body.innerHTML = originalContents;
-            window.location.reload(); 
-        }
+    const handlePrint = (cardId: string) => {
+        setPrintingCardId(cardId);
     };
+
+    useEffect(() => {
+        if (printingCardId !== null) {
+            setTimeout(() => {
+                window.print();
+                setPrintingCardId(null);
+            }, 100); 
+        }
+    }, [printingCardId]);
 
 
     return (
@@ -350,7 +346,7 @@ export default function AnalisisPage() {
             </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card id="analisis-pregunta-card">
+                <Card id="analisis-pregunta-card" className={printingCardId === 'analisis-pregunta-card' ? 'printable-section' : ''}>
                     <CardHeader className="flex flex-row items-start justify-between">
                         <div>
                             <CardTitle>Análisis por Pregunta</CardTitle>
@@ -451,7 +447,7 @@ export default function AnalisisPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card id="aprobados-desaprobados-card">
+                <Card id="aprobados-desaprobados-card" className={printingCardId === 'aprobados-desaprobados-card' ? 'printable-section' : ''}>
                     <CardHeader className="flex flex-row items-start justify-between">
                         <div>
                             <CardTitle>Aprobados vs. Desaprobados</CardTitle>
@@ -521,7 +517,7 @@ export default function AnalisisPage() {
                 </Card>
             </div>
             
-            <Card className="col-span-1 lg:col-span-2" id="analisis-examen-card">
+            <Card className={`col-span-1 lg:col-span-2 ${printingCardId === 'analisis-examen-card' ? 'printable-section' : ''}`} id="analisis-examen-card">
                 <CardHeader className="flex flex-row items-start justify-between">
                     <div>
                         <CardTitle>Análisis por Examen</CardTitle>
