@@ -248,17 +248,11 @@ export default function AnalisisPage() {
     
     const handlePrint = (cardId: string) => {
         setPrintingCardId(cardId);
+        setTimeout(() => {
+            window.print();
+            setPrintingCardId(null);
+        }, 100); 
     };
-
-    useEffect(() => {
-        if (printingCardId !== null) {
-            setTimeout(() => {
-                window.print();
-                setPrintingCardId(null);
-            }, 100); 
-        }
-    }, [printingCardId]);
-
 
     return (
         <div className="flex flex-col gap-8">
