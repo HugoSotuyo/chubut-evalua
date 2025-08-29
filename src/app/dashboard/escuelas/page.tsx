@@ -18,6 +18,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -31,15 +43,24 @@ const initialSchools = [
 
 type School = typeof initialSchools[0];
 
+const districts = ["Distrito I", "Distrito II", "Distrito III", "Distrito IV", "Distrito V"];
+
 export default function EscuelasPage() {
   const [schools, setSchools] = useState<School[]>(initialSchools);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
+  const [editingSchool, setEditingSchool] = useState<School | null>(null);
   const { toast } = useToast();
 
   const handleOpenDeleteDialog = (school: School) => {
     setSelectedSchool(school);
     setIsAlertOpen(true);
+  };
+
+  const handleOpenEditDialog = (school: School) => {
+    setEditingSchool({ ...school });
+    setIsEditDialogOpen(true);
   };
 
   const handleDeleteSchool = () => {
@@ -67,6 +88,21 @@ export default function EscuelasPage() {
         title: `Escuela ${newStatus === "Activa" ? "Activada" : "Desactivada"}`,
         description: `La escuela ${schoolToToggle.name} ahora está ${newStatus.toLowerCase()}.`,
     });
+  };
+
+  const handleUpdateSchool = () => {
+    if (!editingSchool) return;
+
+    setSchools(schools.map((school) =>
+        school.id === editingSchool.id ? editingSchool : school
+    ));
+
+    toast({
+        title: "Escuela Actualizada",
+        description: `Los datos de la escuela ${editingSchool.name} han sido actualizados.`,
+    });
+    setIsEditDialogOpen(false);
+    setEditingSchool(null);
   };
   
   const showToast = (title: string) => {
@@ -126,7 +162,7 @@ export default function EscuelasPage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                        <DropdownMenuItem onSelect={() => showToast('Editar Escuela')}>Editar</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleOpenEditDialog(school)}>Editar</DropdownMenuItem>
                                         <DropdownMenuItem onSelect={() => handleToggleStatus(school.id)}>
                                             {school.status === "Activa" ? "Desactivar" : "Activar"}
                                         </DropdownMenuItem>
@@ -158,6 +194,59 @@ export default function EscuelasPage() {
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Editar Escuela</DialogTitle>
+                    <DialogDescription>
+                        Modifica los datos de la escuela. Haz clic en "Guardar Cambios" cuando termines.
+                    </DialogDescription>
+                </DialogHeader>
+                {editingSchool && (
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="name" className="text-right">
+                                Nombre
+                            </Label>
+                            <Input
+                                id="name"
+                                value={editingSchool.name}
+                                onChange={(e) => setEditingSchool({ ...editingSchool, name: e.target.value })}
+                                className="col-span-3"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="district" className="text-right">
+                                Distrito
+                            </Label>
+                            <Select
+                                value={editingSchool.district}
+                                onValueChange={(value) => setEditingSchool({ ...editingSchool, district: value })}
+                            >
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue placeholder="Selecciona un distrito" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {districts.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                )}
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button type="button" variant="secondary">
+                            Cancelar
+                        </Button>
+                    </DialogClose>
+                    <Button type="button" onClick={handleUpdateSchool}>
+                        Guardar Cambios
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
     </div>
   )
 }
