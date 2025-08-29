@@ -88,22 +88,7 @@ body {
 }
 
 @media print {
-  body.printing-active > * {
-    display: none;
-  }
-  body.printing-active .printable-section {
-    display: block !important;
-  }
-  .printable-section * {
-    visibility: visible;
-  }
-  .printable-section {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-  }
-  .no-print, .no-print * {
+  .no-print {
     display: none !important;
   }
 }

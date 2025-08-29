@@ -245,14 +245,21 @@ export default function AnalisisPage() {
         return null;
     };
     
-    const handlePrint = (cardId: string) => {
-        const cardToPrint = document.getElementById(cardId);
-        if (cardToPrint) {
-            document.body.classList.add('printing-active');
-            cardToPrint.classList.add('printable-section');
+     const handlePrint = (cardId: string) => {
+        const printContents = document.getElementById(cardId)?.innerHTML;
+        const originalContents = document.body.innerHTML;
+
+        if (printContents) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = printContents;
+            
+            const noPrintElements = tempDiv.querySelectorAll('.no-print');
+            noPrintElements.forEach(el => (el as HTMLElement).remove());
+
+            document.body.innerHTML = tempDiv.innerHTML;
             window.print();
-            cardToPrint.classList.remove('printable-section');
-            document.body.classList.remove('printing-active');
+            document.body.innerHTML = originalContents;
+            window.location.reload(); 
         }
     };
 
