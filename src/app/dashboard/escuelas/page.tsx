@@ -1,12 +1,12 @@
 
 "use client"
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { MoreHorizontal, PlusCircle, Building } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Building, Filter } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
   AlertDialog,
@@ -51,7 +51,21 @@ export default function EscuelasPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
+  const [districtFilter, setDistrictFilter] = useState("all");
   const { toast } = useToast();
+
+  const uniqueDistricts = useMemo(() => {
+    const districts = initialSchools.map(school => school.district);
+    return [...new Set(districts)];
+  }, []);
+
+  const filteredSchools = useMemo(() => {
+    if (districtFilter === "all") {
+      return schools;
+    }
+    return schools.filter(school => school.district === districtFilter);
+  }, [schools, districtFilter]);
+
 
   const handleOpenDeleteDialog = (school: School) => {
     setSelectedSchool(school);
@@ -124,6 +138,35 @@ export default function EscuelasPage() {
                 Agregar Escuela
             </Button>
         </div>
+
+        <Card>
+            <CardHeader>
+                <div className="flex items-center gap-2">
+                    <Filter className="h-5 w-5" />
+                    <CardTitle>Filtrar por Distrito</CardTitle>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <div className="grid md:grid-cols-4 gap-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="district-filter">Distrito</Label>
+                        <Select onValueChange={setDistrictFilter} value={districtFilter}>
+                            <SelectTrigger id="district-filter">
+                                <SelectValue placeholder="Seleccionar distrito" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos los Distritos</SelectItem>
+                                {uniqueDistricts.map(district => (
+                                    <SelectItem key={district} value={district}>{district}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+
+
         <Card>
             <CardHeader>
                 <div className="flex items-center gap-2">
@@ -145,7 +188,7 @@ export default function EscuelasPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {schools.map((school) => (
+                        {filteredSchools.map((school) => (
                         <TableRow key={school.id}>
                             <TableCell className="font-medium">{school.name}</TableCell>
                             <TableCell>{school.district}</TableCell>
@@ -250,3 +293,5 @@ export default function EscuelasPage() {
     </div>
   )
 }
+
+    
