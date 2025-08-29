@@ -1,12 +1,12 @@
 
 "use client"
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Ellipsis, UserPlus } from "lucide-react"
+import { Ellipsis, UserPlus, Filter } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -20,6 +20,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 
 const initialUsers = [
@@ -28,6 +30,7 @@ const initialUsers = [
     { id: "usr-003", name: "Lucia Fernandez", role: "Referente", school: "N/A", status: "Activo", avatar: "https://i.pravatar.cc/150?u=user3" },
     { id: "usr-004", name: "Marcos Torres", role: "Docente", school: "Escuela N° 101", status: "Pendiente", avatar: "https://i.pravatar.cc/150?u=user4" },
     { id: "usr-005", name: "Sofia Reyes", role: "Administrador", school: "N/A", status: "Activo", avatar: "https://i.pravatar.cc/150?u=user5" },
+    { id: "usr-006", name: "Evaluador Principal", role: "Evaluador", school: "N/A", status: "Activo", avatar: "https://i.pravatar.cc/150?u=evaluador@chubut.edu.ar" },
 ];
 
 type User = typeof initialUsers[0];
@@ -36,7 +39,20 @@ export default function UsuariosPage() {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [roleFilter, setRoleFilter] = useState("all");
   const { toast } = useToast();
+
+  const uniqueRoles = useMemo(() => {
+    const roles = users.map(user => user.role);
+    return [...new Set(roles)];
+  }, [users]);
+
+  const filteredUsers = useMemo(() => {
+    if (roleFilter === "all") {
+      return users;
+    }
+    return users.filter(user => user.role === roleFilter);
+  }, [users, roleFilter]);
 
   const handleOpenDeleteDialog = (user: User) => {
     setSelectedUser(user);
@@ -86,6 +102,34 @@ export default function UsuariosPage() {
                 Invitar Usuario
             </Button>
         </div>
+
+        <Card>
+            <CardHeader>
+                <div className="flex items-center gap-2">
+                    <Filter className="h-5 w-5" />
+                    <CardTitle>Filtrar por Rol</CardTitle>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <div className="grid md:grid-cols-4 gap-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="role-filter">Rol</Label>
+                        <Select onValueChange={setRoleFilter} value={roleFilter}>
+                            <SelectTrigger id="role-filter">
+                                <SelectValue placeholder="Seleccionar rol" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos los Roles</SelectItem>
+                                {uniqueRoles.map(role => (
+                                    <SelectItem key={role} value={role}>{role}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+
         <Card>
             <CardHeader>
                 <CardTitle>Usuarios Registrados</CardTitle>
@@ -105,7 +149,7 @@ export default function UsuariosPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {users.map((user) => (
+                        {filteredUsers.map((user) => (
                         <TableRow key={user.id}>
                             <TableCell className="font-medium">
                                 <div className="flex items-center gap-3">
