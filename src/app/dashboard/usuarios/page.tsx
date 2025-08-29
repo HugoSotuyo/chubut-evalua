@@ -1,3 +1,7 @@
+
+"use client"
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -5,16 +9,58 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Ellipsis, UserPlus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useToast } from "@/hooks/use-toast";
 
-const users = [
+
+const initialUsers = [
     { id: "usr-001", name: "Ana Gomez", role: "Docente", school: "Escuela N° 101", status: "Activo", avatar: "https://i.pravatar.cc/150?u=user1" },
     { id: "usr-002", name: "Carlos Diaz", role: "Director", school: "Escuela N° 789", status: "Activo", avatar: "https://i.pravatar.cc/150?u=user2" },
     { id: "usr-003", name: "Lucia Fernandez", role: "Referente", school: "N/A", status: "Activo", avatar: "https://i.pravatar.cc/150?u=user3" },
     { id: "usr-004", name: "Marcos Torres", role: "Docente", school: "Escuela N° 101", status: "Pendiente", avatar: "https://i.pravatar.cc/150?u=user4" },
     { id: "usr-005", name: "Sofia Reyes", role: "Administrador", school: "N/A", status: "Activo", avatar: "https://i.pravatar.cc/150?u=user5" },
-]
+];
+
+type User = typeof initialUsers[0];
 
 export default function UsuariosPage() {
+  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const { toast } = useToast();
+
+  const handleOpenDeleteDialog = (user: User) => {
+    setSelectedUser(user);
+    setIsAlertOpen(true);
+  };
+
+  const handleDeleteUser = () => {
+    if (!selectedUser) return;
+    setUsers(users.filter((user) => user.id !== selectedUser.id));
+    toast({
+        title: "Usuario Eliminado",
+        description: `El usuario ${selectedUser.name} ha sido eliminado correctamente.`,
+    });
+    setIsAlertOpen(false);
+    setSelectedUser(null);
+  };
+  
+  const showToast = (title: string) => {
+    toast({
+        title,
+        description: "Esta funcionalidad estará disponible próximamente.",
+    });
+  }
+
   return (
     <div className="flex flex-col gap-8">
         <div className="flex items-center justify-between">
@@ -22,7 +68,7 @@ export default function UsuariosPage() {
                 <h1 className="text-3xl font-bold tracking-tight font-headline">Gestión de Usuarios</h1>
                 <p className="text-muted-foreground">Administra los roles y permisos de los usuarios del sistema.</p>
             </div>
-            <Button>
+            <Button onClick={() => showToast('Invitar Usuario')}>
                 <UserPlus className="mr-2 h-4 w-4" />
                 Invitar Usuario
             </Button>
@@ -72,10 +118,10 @@ export default function UsuariosPage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                        {user.status === "Pendiente" && <DropdownMenuItem>Habilitar Usuario</DropdownMenuItem>}
-                                        <DropdownMenuItem>Editar</DropdownMenuItem>
-                                        <DropdownMenuItem>Cambiar Contraseña</DropdownMenuItem>
-                                        <DropdownMenuItem className="text-destructive">Eliminar</DropdownMenuItem>
+                                        {user.status === "Pendiente" && <DropdownMenuItem onSelect={() => showToast('Habilitar Usuario')}>Habilitar Usuario</DropdownMenuItem>}
+                                        <DropdownMenuItem onSelect={() => showToast('Editar Usuario')}>Editar</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => showToast('Cambiar Contraseña')}>Cambiar Contraseña</DropdownMenuItem>
+                                        <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(user)}>Eliminar</DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </TableCell>
@@ -85,6 +131,22 @@ export default function UsuariosPage() {
                 </Table>
             </CardContent>
         </Card>
+
+        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>¿Estás seguro de que deseas eliminar a este usuario?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Esta acción no se puede deshacer. Se eliminará permanentemente al usuario
+                        <span className="font-bold"> {selectedUser?.name}</span> y todos sus datos asociados.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setSelectedUser(null)}>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteUser}>Confirmar</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
   )
 }
