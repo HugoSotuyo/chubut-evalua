@@ -665,7 +665,3 @@ export default function AnalisisPage() {
         </div>
     )
 }
-
-    
-
-    
