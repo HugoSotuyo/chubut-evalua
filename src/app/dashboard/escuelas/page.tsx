@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { MoreHorizontal, PlusCircle, Building, Filter } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Building, Filter, FileDown } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
   AlertDialog,
@@ -126,6 +126,29 @@ export default function EscuelasPage() {
     });
   }
 
+  const handleExport = () => {
+    const headers = ["ID", "Nombre", "Distrito", "Estado"];
+    const rows = filteredSchools.map(school => 
+        [school.id, school.name, school.district, school.status].join(';')
+    );
+    
+    // BOM para compatibilidad con Excel
+    const bom = "\uFEFF";
+    const csvContent = bom + [headers.join(';'), ...rows].join("\n");
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "escuelas.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+
   return (
     <div className="flex flex-col gap-8">
         <div className="flex items-center justify-between">
@@ -133,10 +156,16 @@ export default function EscuelasPage() {
                 <h1 className="text-3xl font-bold tracking-tight font-headline">Gestión de Escuelas</h1>
                 <p className="text-muted-foreground">Administra las escuelas del sistema.</p>
             </div>
-            <Button onClick={() => showToast('Agregar Escuela')}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Agregar Escuela
-            </Button>
+            <div className="flex items-center gap-2">
+                <Button onClick={() => showToast('Agregar Escuela')}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Agregar Escuela
+                </Button>
+                 <Button variant="outline" onClick={handleExport}>
+                    <FileDown className="mr-2 h-4 w-4" />
+                    Exportar Escuelas
+                </Button>
+            </div>
         </div>
 
         <Card>
