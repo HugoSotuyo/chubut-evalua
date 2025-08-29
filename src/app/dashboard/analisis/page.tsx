@@ -258,9 +258,9 @@ export default function AnalisisPage() {
                             <title>Imprimir</title>
                             <link rel="stylesheet" href="/globals.css">
                             <style>
-                                @media print {
-                                    .no-print { display: none !important; }
-                                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                                body { 
+                                    -webkit-print-color-adjust: exact;
+                                    print-color-adjust: exact;
                                 }
                             </style>
                         </head>
@@ -278,10 +278,14 @@ export default function AnalisisPage() {
                 }
 
                 printWindow.document.body.innerHTML = tempDiv.innerHTML;
-                printWindow.document.close();
-                printWindow.focus();
-                printWindow.print();
-                printWindow.close();
+                
+                // Esperar a que los estilos se carguen
+                setTimeout(() => {
+                    printWindow.document.close();
+                    printWindow.focus();
+                    printWindow.print();
+                    printWindow.close();
+                }, 500); // 500ms de espera puede ser ajustado
             }
         }
     };
