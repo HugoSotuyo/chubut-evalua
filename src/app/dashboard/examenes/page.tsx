@@ -23,6 +23,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import type { Exam } from "@/context/exams-context";
+import { useAuth } from "@/context/auth-context";
 
 export default function ExamenesPage() {
   const { exams, deleteExam, toggleExamStatus } = useExams();
@@ -30,6 +31,7 @@ export default function ExamenesPage() {
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const { toast } = useToast();
   const router = useRouter();
+  const { user } = useAuth();
 
   const handleOpenDeleteDialog = (exam: Exam) => {
     setSelectedExam(exam);
@@ -63,6 +65,9 @@ export default function ExamenesPage() {
     router.push(`/dashboard/analisis?exam=${encodeURIComponent(exam.name)}`);
   };
 
+  if (!user) {
+    return <div>Cargando...</div>;
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -71,12 +76,14 @@ export default function ExamenesPage() {
                 <h1 className="text-3xl font-bold tracking-tight font-headline">Gestión de Exámenes</h1>
                 <p className="text-muted-foreground">Crea, edita y administra las evaluaciones del sistema.</p>
             </div>
-            <Button asChild>
-                <Link href="/dashboard/examenes/crear">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Crear Examen
-                </Link>
-            </Button>
+            {user.role !== 'Director' && (
+                <Button asChild>
+                    <Link href="/dashboard/examenes/crear">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Crear Examen
+                    </Link>
+                </Button>
+            )}
         </div>
         <Card>
             <CardHeader>

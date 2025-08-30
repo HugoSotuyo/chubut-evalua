@@ -46,7 +46,7 @@ export default function UsuariosPage() {
     let results = users;
 
     if (user.role === "Director") {
-        results = results.filter(u => u.school === user.school && u.role !== "Evaluador");
+        results = results.filter(u => u.school === user.school && u.role === "Docente");
     }
 
     if (roleFilter !== "all" && user.role !== "Director") {
