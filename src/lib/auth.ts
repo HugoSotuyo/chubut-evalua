@@ -10,7 +10,6 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
-  avatar: string;
 }
 
 const defaultUser: User = {
@@ -18,7 +17,6 @@ const defaultUser: User = {
     name: "Evaluador Principal",
     email: "evaluador@chubut.edu.ar",
     role: "Evaluador",
-    avatar: "https://i.pravatar.cc/150?u=evaluador@chubut.edu.ar",
 };
 
 export const getMockUser = (): User => {

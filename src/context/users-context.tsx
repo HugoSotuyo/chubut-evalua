@@ -12,7 +12,6 @@ export type User = {
   role: UserRole;
   school: string;
   status: "Activo" | "Pendiente" | "Inactivo";
-  avatar: string;
 };
 
 type NewUser = Omit<User, 'id' | 'status' | 'avatar'> & {
@@ -29,12 +28,12 @@ interface UsersContextType {
 const UsersContext = createContext<UsersContextType | undefined>(undefined);
 
 const initialUsers: User[] = [
-    { id: "usr-001", name: "Ana Gomez", email: "ana.gomez@example.com", password: "password123", role: "Docente", school: "Escuela N° 101", status: "Activo", avatar: "https://i.pravatar.cc/150?u=user1" },
-    { id: "usr-002", name: "Carlos Diaz", email: "carlos.diaz@example.com", password: "password123", role: "Director", school: "Escuela N° 789", status: "Activo", avatar: "https://i.pravatar.cc/150?u=user2" },
-    { id: "usr-003", name: "Lucia Fernandez", email: "lucia.fernandez@example.com", password: "password123", role: "Referente", school: "N/A", status: "Activo", avatar: "https://i.pravatar.cc/150?u=user3" },
-    { id: "usr-004", name: "Marcos Torres", email: "marcos.torres@example.com", password: "password123", role: "Docente", school: "Escuela N° 101", status: "Pendiente", avatar: "https://i.pravatar.cc/150?u=user4" },
-    { id: "usr-005", name: "Sofia Reyes", email: "sofia.reyes@example.com", password: "password123", role: "Administrador", school: "N/A", status: "Activo", avatar: "https://i.pravatar.cc/150?u=user5" },
-    { id: "usr-006", name: "Evaluador Principal", email: "evaluador@chubut.edu.ar", password: "hdsp6032", role: "Evaluador", school: "N/A", status: "Activo", avatar: "https://i.pravatar.cc/150?u=evaluador@chubut.edu.ar" },
+    { id: "usr-001", name: "Ana Gomez", email: "ana.gomez@example.com", password: "password123", role: "Docente", school: "Escuela N° 101", status: "Activo" },
+    { id: "usr-002", name: "Carlos Diaz", email: "carlos.diaz@example.com", password: "password123", role: "Director", school: "Escuela N° 789", status: "Activo" },
+    { id: "usr-003", name: "Lucia Fernandez", email: "lucia.fernandez@example.com", password: "password123", role: "Referente", school: "N/A", status: "Activo" },
+    { id: "usr-004", name: "Marcos Torres", email: "marcos.torres@example.com", password: "password123", role: "Docente", school: "Escuela N° 101", status: "Pendiente" },
+    { id: "usr-005", name: "Sofia Reyes", email: "sofia.reyes@example.com", password: "password123", role: "Administrador", school: "N/A", status: "Activo" },
+    { id: "usr-006", name: "Evaluador Principal", email: "evaluador@chubut.edu.ar", password: "hdsp6032", role: "Evaluador", school: "N/A", status: "Activo" },
 ];
 
 const LOCAL_STORAGE_KEY = 'chubut-evalua-users';
@@ -69,7 +68,6 @@ export function UsersProvider({ children }: { children: ReactNode }) {
         ...userData,
         id: `usr-${Date.now()}`,
         status: "Pendiente",
-        avatar: `https://i.pravatar.cc/150?u=${Date.now()}`
     }
     setUsers(prevUsers => [...prevUsers, newUser]);
   };

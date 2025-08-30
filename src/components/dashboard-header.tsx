@@ -42,6 +42,7 @@ import type { User } from "@/lib/auth";
 import { SidebarTrigger } from "./ui/sidebar";
 import { useSearch } from "@/context/search-context";
 import { usePathname } from "next/navigation";
+import { RoleIcon } from "./role-icon";
 
 interface DashboardHeaderProps {
   user: User;
@@ -74,10 +75,9 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="secondary" size="icon" className="rounded-full">
-            <Avatar>
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback>{userInitials}</AvatarFallback>
-            </Avatar>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full">
+                <RoleIcon role={user.role} className="h-6 w-6" />
+            </div>
             <span className="sr-only">Toggle user menu</span>
           </Button>
         </DropdownMenuTrigger>

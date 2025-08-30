@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -39,6 +40,7 @@ import {
     ChartTooltipContent,
   } from "@/components/ui/chart"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart } from "recharts"
+import { RoleIcon } from "@/components/role-icon";
 
 
 const chartData = [
@@ -181,10 +183,9 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="grid gap-8">
             <div className=" flex items-center gap-4">
-                <Avatar className="hidden h-9 w-9 sm:flex">
-                  <AvatarImage src="https://i.pravatar.cc/150?u=docente1" alt="Avatar" />
-                  <AvatarFallback>OM</AvatarFallback>
-                </Avatar>
+                <div className="hidden h-9 w-9 sm:flex items-center justify-center">
+                    <RoleIcon role="Docente" />
+                </div>
                 <div className="grid gap-1">
                   <p className="text-sm font-medium leading-none">
                     Olivia Martin
@@ -196,10 +197,9 @@ export default function Dashboard() {
                 <div className="ml-auto font-medium">Esc. N° 789</div>
               </div>
               <div className="flex items-center gap-4">
-                <Avatar className="hidden h-9 w-9 sm:flex">
-                  <AvatarImage src="https://i.pravatar.cc/150?u=docente2" alt="Avatar" />
-                  <AvatarFallback>JL</AvatarFallback>
-                </Avatar>
+                <div className="hidden h-9 w-9 sm:flex items-center justify-center">
+                    <RoleIcon role="Director" />
+                </div>
                 <div className="grid gap-1">
                   <p className="text-sm font-medium leading-none">Jackson Lee</p>
                   <p className="text-sm text-muted-foreground">
@@ -209,10 +209,9 @@ export default function Dashboard() {
                 <div className="ml-auto font-medium">Esc. N° 101</div>
               </div>
               <div className="flex items-center gap-4">
-                <Avatar className="hidden h-9 w-9 sm:flex">
-                  <AvatarImage src="https://i.pravatar.cc/150?u=docente3" alt="Avatar" />
-                  <AvatarFallback>IN</AvatarFallback>
-                </Avatar>
+                <div className="hidden h-9 w-9 sm:flex items-center justify-center">
+                    <RoleIcon role="Docente" />
+                </div>
                 <div className="grid gap-1">
                   <p className="text-sm font-medium leading-none">
                     Isabella Nguyen

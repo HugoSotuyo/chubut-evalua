@@ -8,7 +8,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Ellipsis, UserPlus, Filter, FileDown } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { useSearch } from "@/context/search-context";
 import { useUsers } from "@/context/users-context";
 import type { User } from "@/context/users-context";
+import { RoleIcon } from "@/components/role-icon";
 
 
 export default function UsuariosPage() {
@@ -177,10 +177,9 @@ export default function UsuariosPage() {
                         <TableRow key={user.id}>
                             <TableCell className="font-medium">
                                 <div className="flex items-center gap-3">
-                                    <Avatar className="h-9 w-9">
-                                        <AvatarImage src={user.avatar} alt={user.name} />
-                                        <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                                    </Avatar>
+                                    <div className="h-9 w-9 flex items-center justify-center">
+                                        <RoleIcon role={user.role} />
+                                    </div>
                                     {user.name}
                                 </div>
                             </TableCell>
