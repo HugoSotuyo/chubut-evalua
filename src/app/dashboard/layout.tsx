@@ -24,6 +24,13 @@ export default function DashboardLayout({
     return <div>Cargando...</div>; 
   }
 
+  const childrenWithProps = React.Children.map(children, child => {
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child, { user } as { user: User });
+    }
+    return child;
+  });
+
   return (
       <SidebarProvider>
         <div className="flex min-h-screen">
@@ -41,7 +48,7 @@ export default function DashboardLayout({
           <div className="flex flex-col flex-1">
             <DashboardHeader user={user} />
             <main className="flex-1 p-4 md:p-8 pt-6">
-              {children}
+              {childrenWithProps}
             </main>
           </div>
         </div>

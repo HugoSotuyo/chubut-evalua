@@ -11,6 +11,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
+import type { User } from "@/lib/auth";
 
 // Total de alumnos por grado (simulado)
 const totalAlumnos = { '1er Grado': 100, '2do Grado': 120, '3er Grado': 110, '4to Grado': 95, '5to Grado': 105 };
@@ -35,11 +36,11 @@ const originalDataAprobados = [
 ];
 
 const originalExamAnalysisData = [
-  { name: 'Matemática 2023', '1er Grado': { correctas: 70, incorrectas: 30 }, '2do Grado': { correctas: 80, incorrectas: 40 }, '3er Grado': { correctas: 90, incorrectas: 20 } },
-  { name: 'Lengua 2024', '1er Grado': { correctas: 85, incorrectas: 15 }, '2do Grado': { correctas: 95, incorrectas: 25 }, '3er Grado': { correctas: 100, incorrectas: 10 } },
-  { name: 'Ciencias 2023', '1er Grado': { correctas: 65, incorrectas: 35 }, '2do Grado': { correctas: 75, incorrectas: 45 }, '3er Grado': { correctas: 85, incorrectas: 25 } },
-  { name: 'Diagnóstico 2024', '1er Grado': { correctas: 80, incorrectas: 20 }, '2do Grado': { correctas: 90, incorrectas: 30 }, '3er Grado': { correctas: 95, incorrectas: 15 } },
-  { name: 'Matemática Cierre 2023', '1er Grado': { correctas: 60, incorrectas: 40 }, '2do Grado': { correctas: 70, incorrectas: 50 }, '3er Grado': { correctas: 80, incorrectas: 30 } },
+  { name: 'Matemática 2023', school: 'Escuela N° 101', '1er Grado': { correctas: 70, incorrectas: 30 }, '2do Grado': { correctas: 80, incorrectas: 40 }, '3er Grado': { correctas: 90, incorrectas: 20 } },
+  { name: 'Lengua 2024', school: 'Escuela N° 456', '1er Grado': { correctas: 85, incorrectas: 15 }, '2do Grado': { correctas: 95, incorrectas: 25 }, '3er Grado': { correctas: 100, incorrectas: 10 } },
+  { name: 'Ciencias 2023', school: 'Escuela N° 789', '1er Grado': { correctas: 65, incorrectas: 35 }, '2do Grado': { correctas: 75, incorrectas: 45 }, '3er Grado': { correctas: 85, incorrectas: 25 } },
+  { name: 'Diagnóstico 2024', school: 'Escuela N° 502', '1er Grado': { correctas: 80, incorrectas: 20 }, '2do Grado': { correctas: 90, incorrectas: 30 }, '3er Grado': { correctas: 95, incorrectas: 15 } },
+  { name: 'Matemática Cierre 2023', school: 'Escuela N° 23', '1er Grado': { correctas: 60, incorrectas: 40 }, '2do Grado': { correctas: 70, incorrectas: 50 }, '3er Grado': { correctas: 80, incorrectas: 30 } },
 ];
 
 
@@ -52,12 +53,15 @@ const mockResults = [
     { district: "Distrito I", school: "Escuela N° 101", grade: "3er Grado", course: "A", exam: "Matemática 2023" },
 ];
 
+interface AnalisisPageContentProps {
+    user: User;
+}
 
-function AnalisisPageContent() {
+function AnalisisPageContent({ user }: AnalisisPageContentProps) {
     const searchParams = useSearchParams();
     const [filters, setFilters] = useState({
         district: "all",
-        school: "all",
+        school: user.role === "Director" ? user.school : "all",
         grade: "all",
         course: "all",
         exam: "all",
@@ -77,9 +81,13 @@ function AnalisisPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
 
-    const getUniqueValues = (key: keyof typeof mockResults[0] | "examName") => {
+    const getUniqueValues = (key: keyof typeof mockResults[0] | "examName" | "schoolName") => {
         if (key === 'examName') {
             const values = originalExamAnalysisData.map(item => item.name);
+            return [...new Set(values)];
+        }
+        if (key === 'schoolName') {
+            const values = originalExamAnalysisData.map(item => item.school);
             return [...new Set(values)];
         }
         const values = mockResults.map(item => item[key as keyof typeof mockResults[0]]);
@@ -95,7 +103,15 @@ function AnalisisPageContent() {
     }
     
     const { data, dataAprobados, examAnalysisData } = useMemo(() => {
-        const hasActiveFilters = Object.values(appliedFilters).some(value => value !== "all" && value !== "");
+        const schoolFilterActive = user.role === "Director" || (appliedFilters.school !== "all");
+        const schoolToFilter = user.role === "Director" ? user.school : appliedFilters.school;
+        
+        let filteredMockResults = mockResults;
+        if(schoolFilterActive) {
+            filteredMockResults = mockResults.filter(r => r.school === schoolToFilter);
+        }
+
+        const hasActiveFilters = Object.values(appliedFilters).some(value => value !== "all" && value !== "") || user.role === "Director";
 
         if (!hasActiveFilters) {
              return { data: originalData, dataAprobados: originalDataAprobados, examAnalysisData: originalExamAnalysisData };
@@ -153,9 +169,14 @@ function AnalisisPageContent() {
             return d;
         });
         
+        let examDataFiltered = originalExamAnalysisData;
+        if(schoolFilterActive) {
+            examDataFiltered = examDataFiltered.filter(d => d.school === schoolToFilter);
+        }
+
         const examDataFilteredByExam = appliedFilters.exam === 'all'
-            ? originalExamAnalysisData
-            : originalExamAnalysisData.filter(d => d.name === appliedFilters.exam);
+            ? examDataFiltered
+            : examDataFiltered.filter(d => d.name === appliedFilters.exam);
         
         const newExamAnalysisData = examDataFilteredByExam.map(d => {
             let filteredData = { ...d };
@@ -165,11 +186,16 @@ function AnalisisPageContent() {
                 return selectedGrade !== 'all' && key !== selectedGrade;
             };
 
-            if (hasActiveFilters) {
+            if (hasActiveFilters && schoolFilterActive) {
                 filteredData['1er Grado'] = shouldFilter('1er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['1er Grado']);
                 filteredData['2do Grado'] = shouldFilter('2do Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['2do Grado']);
                 filteredData['3er Grado'] = shouldFilter('3er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['3er Grado']);
-            } else {
+            } else if (!schoolFilterActive && hasActiveFilters) {
+                 filteredData['1er Grado'] = shouldFilter('1er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['1er Grado']);
+                filteredData['2do Grado'] = shouldFilter('2do Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['2do Grado']);
+                filteredData['3er Grado'] = shouldFilter('3er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['3er Grado']);
+            }
+            else {
                 return d;
             }
 
@@ -178,7 +204,7 @@ function AnalisisPageContent() {
 
         return { data: newQuestionData, dataAprobados: newApprovalData, examAnalysisData: newExamAnalysisData };
 
-    }, [appliedFilters]);
+    }, [appliedFilters, user]);
 
     const handleExport = () => {
         let csvContent = "";
@@ -223,7 +249,7 @@ function AnalisisPageContent() {
         csvContent += headersExamen.join(';') + '\n';
         examAnalysisData.forEach(row => {
              Object.keys(row).forEach(key => {
-                if (key !== 'name') {
+                if (key !== 'name' && key !== 'school') {
                     const gradeData = row[key as keyof typeof row] as { correctas: number, incorrectas: number };
                     if (gradeData.correctas > 0 || gradeData.incorrectas > 0) {
                         const rowData = [row.name, key, gradeData.correctas, gradeData.incorrectas];
@@ -325,26 +351,30 @@ function AnalisisPageContent() {
                     <CardDescription>Selecciona los criterios para acotar tu búsqueda. Los gráficos se actualizarán automáticamente.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="filtro-distrito">Distrito</Label>
-                        <Select onValueChange={(v) => handleFilterChange('district', v)} value={filters.district}>
-                            <SelectTrigger id="filtro-distrito"><SelectValue placeholder="Distrito" /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todos</SelectItem>
-                                {getUniqueValues("district").map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="filtro-escuela">Escuela</Label>
-                        <Select onValueChange={(v) => handleFilterChange('school', v)} value={filters.school}>
-                            <SelectTrigger id="filtro-escuela"><SelectValue placeholder="Escuela" /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todas</SelectItem>
-                                {getUniqueValues("school").map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                    {user.role !== 'Director' && (
+                        <>
+                            <div className="grid gap-2">
+                                <Label htmlFor="filtro-distrito">Distrito</Label>
+                                <Select onValueChange={(v) => handleFilterChange('district', v)} value={filters.district}>
+                                    <SelectTrigger id="filtro-distrito"><SelectValue placeholder="Distrito" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todos</SelectItem>
+                                        {getUniqueValues("district").map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="filtro-escuela">Escuela</Label>
+                                <Select onValueChange={(v) => handleFilterChange('school', v)} value={filters.school}>
+                                    <SelectTrigger id="filtro-escuela"><SelectValue placeholder="Escuela" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todas</SelectItem>
+                                        {getUniqueValues("schoolName").map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </>
+                    )}
                      <div className="grid gap-2">
                         <Label htmlFor="filtro-grado">Grado</Label>
                         <Select onValueChange={(v) => handleFilterChange('grade', v)} value={filters.grade}>
@@ -682,10 +712,14 @@ function AnalisisPageContent() {
     )
 }
 
-export default function AnalisisPage() {
+interface AnalisisPageProps {
+    user: User;
+}
+
+export default function AnalisisPage({ user }: AnalisisPageProps) {
     return (
         <React.Suspense fallback={<div>Cargando...</div>}>
-            <AnalisisPageContent />
+            <AnalisisPageContent user={user} />
         </React.Suspense>
     )
 }

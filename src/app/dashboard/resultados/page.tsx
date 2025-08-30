@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useSearch } from "@/context/search-context";
+import type { User } from "@/lib/auth";
 
 const allResults = [
     { id: "res-001", studentName: "Juan Pérez", examName: "Diagnóstico 2024", school: "Escuela N° 101", grade: "Aprobado", score: 85 },
@@ -30,12 +31,16 @@ type Filters = {
     status: string;
 }
 
-function ResultadosPageContent() {
+interface ResultadosPageContentProps {
+  user: User;
+}
+
+function ResultadosPageContent({ user }: ResultadosPageContentProps) {
     const { searchTerm } = useSearch();
     const searchParams = useSearchParams();
     const [filters, setFilters] = useState<Filters>({
         exam: "all",
-        school: "all",
+        school: user.role === "Director" ? user.school : "all",
         studentName: "",
         status: "all",
     });
@@ -56,10 +61,14 @@ function ResultadosPageContent() {
     const filteredResults = useMemo(() => {
         let results = allResults;
 
+        if (user.role === "Director") {
+            results = results.filter(r => r.school === user.school);
+        }
+
         if (appliedFilters.exam !== "all") {
             results = results.filter(r => r.examName === appliedFilters.exam);
         }
-        if (appliedFilters.school !== "all") {
+        if (appliedFilters.school !== "all" && user.role !== "Director") {
             results = results.filter(r => r.school === appliedFilters.school);
         }
         if (appliedFilters.studentName) {
@@ -73,11 +82,13 @@ function ResultadosPageContent() {
         }
 
         return results;
-    }, [appliedFilters, searchTerm]);
+    }, [appliedFilters, searchTerm, user]);
 
     const handleFilterChange = <K extends keyof Filters>(filterName: K, value: Filters[K]) => {
         setFilters(prev => ({...prev, [filterName]: value}));
     }
+
+
 
     const handleApplyFilters = () => {
         setAppliedFilters(filters);
@@ -145,18 +156,20 @@ function ResultadosPageContent() {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="filtro-escuela">Escuela</Label>
-                        <Select onValueChange={(value) => handleFilterChange("school", value)} value={filters.school}>
-                            <SelectTrigger id="filtro-escuela"><SelectValue placeholder="Escuela" /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todas</SelectItem>
-                                {getUniqueValues("school").map(school => (
-                                    <SelectItem key={school as string} value={school as string}>{school as string}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                    {user.role !== 'Director' && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="filtro-escuela">Escuela</Label>
+                            <Select onValueChange={(value) => handleFilterChange("school", value)} value={filters.school}>
+                                <SelectTrigger id="filtro-escuela"><SelectValue placeholder="Escuela" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todas</SelectItem>
+                                    {getUniqueValues("school").map(school => (
+                                        <SelectItem key={school as string} value={school as string}>{school as string}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
                     <div className="grid gap-2">
                         <Label htmlFor="filtro-alumno">Alumno</Label>
                         <Input
@@ -239,10 +252,14 @@ function ResultadosPageContent() {
     )
 }
 
-export default function ResultadosPage() {
+interface ResultadosPageProps {
+    user: User;
+}
+
+export default function ResultadosPage({ user }: ResultadosPageProps) {
     return (
         <React.Suspense fallback={<div>Cargando...</div>}>
-            <ResultadosPageContent />
+            <ResultadosPageContent user={user}/>
         </React.Suspense>
     )
 }

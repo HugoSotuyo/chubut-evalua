@@ -25,9 +25,13 @@ import { useSearch } from "@/context/search-context";
 import { useUsers } from "@/context/users-context";
 import type { User } from "@/context/users-context";
 import { RoleIcon } from "@/components/role-icon";
+import type { User as AuthUser } from "@/lib/auth";
 
+interface UsuariosPageProps {
+  user: AuthUser;
+}
 
-export default function UsuariosPage() {
+export default function UsuariosPage({ user }: UsuariosPageProps) {
   const { users, deleteUser, enableUser } = useUsers();
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -42,14 +46,19 @@ export default function UsuariosPage() {
 
   const filteredUsers = useMemo(() => {
     let results = users;
-    if (roleFilter !== "all") {
+
+    if (user.role === "Director") {
+        results = results.filter(u => u.school === user.school && u.role !== "Evaluador");
+    }
+
+    if (roleFilter !== "all" && user.role !== "Director") {
       results = results.filter(user => user.role === roleFilter);
     }
     if (searchTerm) {
       results = results.filter(user => user.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }
     return results;
-  }, [users, roleFilter, searchTerm]);
+  }, [users, roleFilter, searchTerm, user]);
 
   const handleOpenDeleteDialog = (user: User) => {
     setSelectedUser(user);
@@ -126,33 +135,35 @@ export default function UsuariosPage() {
                 </Button>
             </div>
         </div>
-
-        <Card>
-            <CardHeader>
-                <div className="flex items-center gap-2">
-                    <Filter className="h-5 w-5" />
-                    <CardTitle>Filtrar por Rol</CardTitle>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <div className="grid md:grid-cols-4 gap-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="role-filter">Rol</Label>
-                        <Select onValueChange={setRoleFilter} value={roleFilter}>
-                            <SelectTrigger id="role-filter">
-                                <SelectValue placeholder="Seleccionar rol" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todos los Roles</SelectItem>
-                                {uniqueRoles.map(role => (
-                                    <SelectItem key={role} value={role}>{role}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+        
+        {user.role !== "Director" && (
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center gap-2">
+                        <Filter className="h-5 w-5" />
+                        <CardTitle>Filtrar por Rol</CardTitle>
                     </div>
-                </div>
-            </CardContent>
-        </Card>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid md:grid-cols-4 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="role-filter">Rol</Label>
+                            <Select onValueChange={setRoleFilter} value={roleFilter}>
+                                <SelectTrigger id="role-filter">
+                                    <SelectValue placeholder="Seleccionar rol" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todos los Roles</SelectItem>
+                                    {uniqueRoles.map(role => (
+                                        <SelectItem key={role} value={role}>{role}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        )}
 
         <Card>
             <CardHeader>
