@@ -29,26 +29,30 @@ const initialExams: Exam[] = [
 const LOCAL_STORAGE_KEY = 'chubut-evalua-exams';
 
 export function ExamsProvider({ children }: { children: ReactNode }) {
-  const [exams, setExams] = useState<Exam[]>(() => {
-    if (typeof window === 'undefined') {
-        return initialExams;
-    }
-    try {
-      const storedExams = window.localStorage.getItem(LOCAL_STORAGE_KEY);
-      return storedExams ? JSON.parse(storedExams) : initialExams;
-    } catch (error) {
-      console.error("Error reading from localStorage", error);
-      return initialExams;
-    }
-  });
+  const [exams, setExams] = useState<Exam[]>(initialExams);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(exams));
+      const storedExams = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (storedExams) {
+        setExams(JSON.parse(storedExams));
+      }
     } catch (error) {
-      console.error("Error writing to localStorage", error);
+      console.error("Error reading from localStorage", error);
     }
-  }, [exams]);
+    setIsInitialized(true);
+  }, []);
+
+  useEffect(() => {
+    if (isInitialized) {
+      try {
+        window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(exams));
+      } catch (error) {
+        console.error("Error writing to localStorage", error);
+      }
+    }
+  }, [exams, isInitialized]);
 
   const addExam = (exam: Exam) => {
     setExams(prevExams => [...prevExams, exam]);
