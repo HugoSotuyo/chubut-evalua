@@ -50,7 +50,8 @@ function ResultadosPageContent() {
             setFilters(newFilters);
             setAppliedFilters(newFilters);
         }
-    }, [searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const filteredResults = useMemo(() => {
         let results = allResults;
