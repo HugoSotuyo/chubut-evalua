@@ -69,6 +69,8 @@ export default function ExamenesPage() {
     return <div>Cargando...</div>;
   }
 
+  const userCanCreateExams = !["Director", "Docente"].includes(user.role);
+
   return (
     <div className="flex flex-col gap-8">
         <div className="flex items-center justify-between">
@@ -76,7 +78,7 @@ export default function ExamenesPage() {
                 <h1 className="text-3xl font-bold tracking-tight font-headline">Gestión de Exámenes</h1>
                 <p className="text-muted-foreground">Crea, edita y administra las evaluaciones del sistema.</p>
             </div>
-            {user.role !== 'Director' && (
+            {userCanCreateExams && (
                 <Button asChild>
                     <Link href="/dashboard/examenes/crear">
                         <PlusCircle className="mr-2 h-4 w-4" />
@@ -113,7 +115,7 @@ export default function ExamenesPage() {
                             </TableCell>
                             <TableCell>{exam.created}</TableCell>
                             <TableCell>
-                                {user.role === 'Director' ? (
+                                {user.role === 'Director' || user.role === 'Docente' ? (
                                     <Button variant="outline" size="sm" onClick={() => handleViewAnalysis(exam)}>
                                         Ver Análisis
                                     </Button>

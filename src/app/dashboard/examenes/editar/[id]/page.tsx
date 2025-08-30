@@ -1,6 +1,7 @@
 
 "use client"
 
+import { useEffect } from "react"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -20,6 +21,7 @@ import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter, useParams } from "next/navigation"
 import { useExams } from "@/context/exams-context"
+import { useAuth } from "@/context/auth-context"
 
 const questionSchema = z.object({
   consigna: z.string().min(1, "La consigna es requerida."),
@@ -51,9 +53,21 @@ export default function EditarExamenPage() {
   const router = useRouter()
   const params = useParams()
   const { exams, updateExam } = useExams()
+  const { user } = useAuth();
 
   const examId = params.id as string;
   const examToEdit = exams.find(e => e.id === examId);
+
+  useEffect(() => {
+    if (user && user.role === 'Docente') {
+      toast({
+        variant: "destructive",
+        title: "Acceso Denegado",
+        description: "No tienes permiso para editar exámenes.",
+      });
+      router.push("/dashboard/examenes");
+    }
+  }, [user, router, toast]);
 
   const form = useForm<ExamFormValues>({
     resolver: zodResolver(examSchema),
@@ -88,8 +102,8 @@ export default function EditarExamenPage() {
     router.push("/dashboard/examenes")
   }
 
-  if (!examToEdit) {
-      return <div>Cargando examen...</div>
+  if (!user || !examToEdit || user.role === 'Docente') {
+      return <div>Cargando o acceso no permitido...</div>
   }
 
   return (
