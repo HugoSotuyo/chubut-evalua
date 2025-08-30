@@ -20,7 +20,6 @@ import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter, useParams } from "next/navigation"
 import { useExams } from "@/context/exams-context"
-import { useEffect } from "react"
 
 const questionSchema = z.object({
   consigna: z.string().min(1, "La consigna es requerida."),
@@ -39,10 +38,12 @@ const examSchema = z.object({
 
 type ExamFormValues = z.infer<typeof examSchema>
 
-const parseDate = (dateString: string) => {
-    const [year, month, day] = dateString.split('-').map(Number);
-    // new Date() en JS usa meses de 0 a 11
-    return new Date(year, month - 1, day);
+const parseDate = (dateString: string | undefined): Date => {
+    if (!dateString) return new Date();
+    // Ajuste para evitar problemas de zona horaria que restan un día
+    const date = new Date(dateString);
+    const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() + userTimezoneOffset);
 }
 
 export default function EditarExamenPage() {
@@ -57,26 +58,14 @@ export default function EditarExamenPage() {
   const form = useForm<ExamFormValues>({
     resolver: zodResolver(examSchema),
     defaultValues: {
-      tema: "",
-      titulo: "",
-      fechaCarga: new Date(),
-      questions: [],
+      titulo: examToEdit?.name ?? "",
+      tema: examToEdit?.tema ?? "",
+      fechaCarga: parseDate(examToEdit?.created),
+      questions: (examToEdit?.questions && examToEdit.questions.length > 0)
+        ? examToEdit.questions
+        : [{ consigna: "", respuesta: "", puntaje: 10 }],
     },
   })
-  
-  useEffect(() => {
-    if (examToEdit) {
-      form.reset({
-        titulo: examToEdit.name,
-        tema: examToEdit.tema,
-        fechaCarga: parseDate(examToEdit.created),
-        questions: examToEdit.questions && examToEdit.questions.length > 0 
-          ? examToEdit.questions 
-          : [{ consigna: "", respuesta: "", puntaje: 10 }],
-      });
-    }
-  }, [examToEdit, form]);
-
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
