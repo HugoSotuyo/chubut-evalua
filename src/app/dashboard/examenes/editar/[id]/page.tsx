@@ -41,6 +41,7 @@ type ExamFormValues = z.infer<typeof examSchema>
 
 const parseDate = (dateString: string) => {
     const [year, month, day] = dateString.split('-').map(Number);
+    // new Date() en JS usa meses de 0 a 11
     return new Date(year, month - 1, day);
 }
 
@@ -74,7 +75,7 @@ export default function EditarExamenPage() {
           : [{ consigna: "", respuesta: "", puntaje: 10 }],
       });
     }
-  }, [examToEdit, form.reset]);
+  }, [examToEdit, form]);
 
 
   const { fields, append, remove } = useFieldArray({
@@ -83,8 +84,9 @@ export default function EditarExamenPage() {
   })
 
   const onSubmit = (data: ExamFormValues) => {
+    if (!examToEdit) return;
     updateExam({
-      id: examId,
+      id: examToEdit.id,
       name: data.titulo,
       tema: data.tema,
       created: format(data.fechaCarga, "yyyy-MM-dd"),
