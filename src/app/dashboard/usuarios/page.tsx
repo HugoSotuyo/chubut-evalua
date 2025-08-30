@@ -45,6 +45,7 @@ export default function UsuariosPage({ user }: UsuariosPageProps) {
   }, [users]);
 
   const filteredUsers = useMemo(() => {
+    if (!user) return [];
     let results = users;
 
     if (user.role === "Director") {
@@ -116,6 +117,10 @@ export default function UsuariosPage({ user }: UsuariosPageProps) {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+
+  if (!user) {
+    return <div>Cargando...</div>;
+  }
 
   return (
     <div className="flex flex-col gap-8">
