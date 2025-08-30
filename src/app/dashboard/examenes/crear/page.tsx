@@ -60,7 +60,8 @@ export default function CrearExamenPage() {
 
   useEffect(() => {
     const id = searchParams.get('id');
-    if (id) {
+    // Asegurarnos de que exams está cargado
+    if (id && exams.length > 0) {
       const examToEdit = exams.find(e => e.id === id);
       if (examToEdit) {
         setExamId(id);
