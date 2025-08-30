@@ -21,7 +21,7 @@ type Exam = {
 interface ExamsContextType {
   exams: Exam[];
   addExam: (exam: Omit<Exam, 'id' | 'status'>) => void;
-  updateExam: (exam: Omit<Exam, 'status'>) => void;
+  updateExam: (exam: Omit<Exam, 'status' | 'questions'> & { questions: Question[] }) => void;
   deleteExam: (examId: string) => void;
   toggleExamStatus: (examId: string) => void;
 }
@@ -42,6 +42,7 @@ export function ExamsProvider({ children }: { children: ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
+    // This effect runs only on the client after hydration
     try {
       const storedExams = window.localStorage.getItem(LOCAL_STORAGE_KEY);
       if (storedExams) {
@@ -79,6 +80,7 @@ export function ExamsProvider({ children }: { children: ReactNode }) {
     setExams(prevExams =>
       prevExams.map(exam => {
         if (exam.id === updatedExamData.id) {
+          // Merge existing exam with updated data
           return { ...exam, ...updatedExamData };
         }
         return exam;
