@@ -1,6 +1,7 @@
 
 "use client";
 
+import * as React from "react";
 import { getMockUser } from "@/lib/auth";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardNav } from "@/components/dashboard-nav";
