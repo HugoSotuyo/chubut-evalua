@@ -3,13 +3,13 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-type Question = {
+export type Question = {
   consigna: string;
   respuesta: string;
   puntaje: number;
 };
 
-type Exam = {
+export type Exam = {
     id: string;
     name: string;
     tema: string;
@@ -21,7 +21,7 @@ type Exam = {
 interface ExamsContextType {
   exams: Exam[];
   addExam: (exam: Omit<Exam, 'id' | 'status'>) => void;
-  updateExam: (exam: Omit<Exam, 'status' | 'questions'> & { questions: Question[] }) => void;
+  updateExam: (exam: Omit<Exam, 'status'>) => void;
   deleteExam: (examId: string) => void;
   toggleExamStatus: (examId: string) => void;
 }
@@ -29,7 +29,7 @@ interface ExamsContextType {
 const ExamsContext = createContext<ExamsContextType | undefined>(undefined);
 
 const initialExams: Exam[] = [
-    { id: "exm-001", name: "Diagnóstico 2024", tema: "Matemática", created: "2024-03-15", status: "Abierto", questions: [{consigna: "Resolver: 2+2", respuesta: "4", puntaje: 10}] },
+    { id: "exm-001", name: "Diagnóstico 2024", tema: "Matemática", created: "2024-03-15", status: "Abierto", questions: [{consigna: "Resolver: 2+2", respuesta: "4", puntaje: 10}, {consigna: "Capital de Francia", respuesta: "Paris", puntaje: 10}] },
     { id: "exm-002", name: "Comprensión Lectora", tema: "Lengua", created: "2024-04-01", status: "Abierto", questions: [] },
     { id: "exm-003", name: "El Sistema Solar", tema: "Ciencias Naturales", created: "2023-09-10", status: "Cerrado", questions: [] },
     { id: "exm-004", name: "Cierre 2023", tema: "Matemática", created: "2023-11-20", status: "Cerrado", questions: [] },
@@ -42,14 +42,9 @@ export function ExamsProvider({ children }: { children: ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // This effect runs only on the client after hydration
     try {
       const storedExams = window.localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (storedExams) {
-        setExams(JSON.parse(storedExams));
-      } else {
-        setExams(initialExams);
-      }
+      setExams(storedExams ? JSON.parse(storedExams) : initialExams);
     } catch (error) {
       console.error("Error reading from localStorage", error);
       setExams(initialExams);
@@ -80,7 +75,6 @@ export function ExamsProvider({ children }: { children: ReactNode }) {
     setExams(prevExams =>
       prevExams.map(exam => {
         if (exam.id === updatedExamData.id) {
-          // Merge existing exam with updated data
           return { ...exam, ...updatedExamData };
         }
         return exam;

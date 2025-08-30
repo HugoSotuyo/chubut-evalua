@@ -22,14 +22,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-
-type Exam = {
-    id: string;
-    name: string;
-    tema: string;
-    created: string;
-    status: "Abierto" | "Cerrado";
-};
+import type { Exam } from "@/context/exams-context";
 
 export default function ExamenesPage() {
   const { exams, deleteExam, toggleExamStatus } = useExams();
@@ -63,7 +56,7 @@ export default function ExamenesPage() {
   };
   
   const handleEditExam = (exam: Exam) => {
-    router.push(`/dashboard/examenes/crear?id=${exam.id}`);
+    router.push(`/dashboard/examenes/editar/${exam.id}`);
   };
 
   const showToast = (title: string) => {

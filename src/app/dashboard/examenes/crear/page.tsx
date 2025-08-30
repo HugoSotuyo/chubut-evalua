@@ -18,9 +18,8 @@ import { cn } from "@/lib/utils"
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useExams } from "@/context/exams-context"
-import { useEffect, useState } from "react"
 
 const questionSchema = z.object({
   consigna: z.string().min(1, "La consigna es requerida."),
@@ -39,20 +38,10 @@ const examSchema = z.object({
 
 type ExamFormValues = z.infer<typeof examSchema>
 
-// Helper para parsear la fecha sin problemas de timezone
-const parseDate = (dateString: string) => {
-    const [year, month, day] = dateString.split('-').map(Number);
-    return new Date(year, month - 1, day);
-}
-
 export default function CrearExamenPage() {
   const { toast } = useToast()
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const { addExam, updateExam, exams } = useExams()
-
-  const [examId, setExamId] = useState<string | null>(null)
-  const [isEditMode, setIsEditMode] = useState(false)
+  const { addExam } = useExams()
 
   const form = useForm<ExamFormValues>({
     resolver: zodResolver(examSchema),
@@ -64,54 +53,22 @@ export default function CrearExamenPage() {
     },
   })
 
-  useEffect(() => {
-    const id = searchParams.get('id');
-    if (id && exams.length > 0) {
-      const examToEdit = exams.find(e => e.id === id);
-      if (examToEdit) {
-        setExamId(id);
-        setIsEditMode(true);
-        form.reset({
-          titulo: examToEdit.name,
-          tema: examToEdit.tema,
-          fechaCarga: parseDate(examToEdit.created),
-          questions: examToEdit.questions && examToEdit.questions.length > 0 ? examToEdit.questions : [{ consigna: "", respuesta: "", puntaje: 10 }],
-        });
-      }
-    }
-  }, [searchParams, exams, form]);
-
-
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "questions",
   })
 
   const onSubmit = (data: ExamFormValues) => {
-    if (isEditMode && examId) {
-       updateExam({
-        id: examId,
+    addExam({
         name: data.titulo,
         tema: data.tema,
         created: format(data.fechaCarga, "yyyy-MM-dd"),
         questions: data.questions,
-      });
-       toast({
-        title: "Examen Actualizado",
-        description: `El examen "${data.titulo}" ha sido actualizado exitosamente.`,
-      })
-    } else {
-        addExam({
-            name: data.titulo,
-            tema: data.tema,
-            created: format(data.fechaCarga, "yyyy-MM-dd"),
-            questions: data.questions,
-        });
-        toast({
-          title: "Examen Guardado",
-          description: `El examen "${data.titulo}" ha sido guardado exitosamente.`,
-        })
-    }
+    });
+    toast({
+      title: "Examen Guardado",
+      description: `El examen "${data.titulo}" ha sido guardado exitosamente.`,
+    })
     router.push("/dashboard/examenes")
   }
 
@@ -121,10 +78,10 @@ export default function CrearExamenPage() {
         <div className="flex items-center justify-between">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight font-headline">
-                    {isEditMode ? "Editar Examen" : "Crear Nuevo Examen"}
+                    Crear Nuevo Examen
                 </h1>
                 <p className="text-muted-foreground">
-                    {isEditMode ? "Modifica los detalles de la evaluación." : "Completa los detalles para crear una nueva evaluación."}
+                    Completa los detalles para crear una nueva evaluación.
                 </p>
             </div>
              <div className="flex gap-2">
@@ -134,7 +91,7 @@ export default function CrearExamenPage() {
                 </Button>
                 <Button type="submit">
                     <Save className="mr-2 h-4 w-4" />
-                    {isEditMode ? "Guardar Cambios" : "Guardar Examen"}
+                    Guardar Examen
                 </Button>
             </div>
         </div>
