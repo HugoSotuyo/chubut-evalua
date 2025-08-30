@@ -13,6 +13,8 @@ type Exam = {
 interface ExamsContextType {
   exams: Exam[];
   addExam: (exam: Exam) => void;
+  deleteExam: (examId: string) => void;
+  toggleExamStatus: (examId: string) => void;
 }
 
 const ExamsContext = createContext<ExamsContextType | undefined>(undefined);
@@ -52,8 +54,22 @@ export function ExamsProvider({ children }: { children: ReactNode }) {
     setExams(prevExams => [...prevExams, exam]);
   };
 
+  const deleteExam = (examId: string) => {
+    setExams(prevExams => prevExams.filter(exam => exam.id !== examId));
+  };
+
+  const toggleExamStatus = (examId: string) => {
+    setExams(prevExams =>
+      prevExams.map(exam =>
+        exam.id === examId
+          ? { ...exam, status: exam.status === "Abierto" ? "Cerrado" : "Abierto" }
+          : exam
+      )
+    );
+  };
+
   return (
-    <ExamsContext.Provider value={{ exams, addExam }}>
+    <ExamsContext.Provider value={{ exams, addExam, deleteExam, toggleExamStatus }}>
       {children}
     </ExamsContext.Provider>
   );
