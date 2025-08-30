@@ -3,12 +3,19 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+type Question = {
+  consigna: string;
+  respuesta: string;
+  puntaje: number;
+};
+
 type Exam = {
     id: string;
     name: string;
     tema: string;
     created: string;
     status: "Abierto" | "Cerrado";
+    questions: Question[];
 };
 
 interface ExamsContextType {
@@ -22,19 +29,19 @@ interface ExamsContextType {
 const ExamsContext = createContext<ExamsContextType | undefined>(undefined);
 
 const initialExams: Exam[] = [
-    { id: "exm-001", name: "Diagnóstico 2024", tema: "Matemática", created: "2024-03-15", status: "Abierto" },
-    { id: "exm-002", name: "Comprensión Lectora", tema: "Lengua", created: "2024-04-01", status: "Abierto" },
-    { id: "exm-003", name: "El Sistema Solar", tema: "Ciencias Naturales", created: "2023-09-10", status: "Cerrado" },
-    { id: "exm-004", name: "Cierre 2023", tema: "Matemática", created: "2023-11-20", status: "Cerrado" },
+    { id: "exm-001", name: "Diagnóstico 2024", tema: "Matemática", created: "2024-03-15", status: "Abierto", questions: [{consigna: "Resolver: 2+2", respuesta: "4", puntaje: 10}] },
+    { id: "exm-002", name: "Comprensión Lectora", tema: "Lengua", created: "2024-04-01", status: "Abierto", questions: [] },
+    { id: "exm-003", name: "El Sistema Solar", tema: "Ciencias Naturales", created: "2023-09-10", status: "Cerrado", questions: [] },
+    { id: "exm-004", name: "Cierre 2023", tema: "Matemática", created: "2023-11-20", status: "Cerrado", questions: [] },
 ];
 
 const LOCAL_STORAGE_KEY = 'chubut-evalua-exams';
 
 export function ExamsProvider({ children }: { children: ReactNode }) {
-  const [exams, setExams] = useState<Exam[]>(initialExams);
+  const [exams, setExams] = useState<Exam[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
-   useEffect(() => {
+  useEffect(() => {
     try {
       const storedExams = window.localStorage.getItem(LOCAL_STORAGE_KEY);
       if (storedExams) {

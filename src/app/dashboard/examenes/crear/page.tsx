@@ -39,6 +39,12 @@ const examSchema = z.object({
 
 type ExamFormValues = z.infer<typeof examSchema>
 
+// Helper para parsear la fecha sin problemas de timezone
+const parseDate = (dateString: string) => {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+}
+
 export default function CrearExamenPage() {
   const { toast } = useToast()
   const router = useRouter()
@@ -68,10 +74,8 @@ export default function CrearExamenPage() {
         form.reset({
           titulo: examToEdit.name,
           tema: examToEdit.tema,
-          fechaCarga: new Date(examToEdit.created),
-          // En una app real, aquí se fetchearían las preguntas del examen.
-          // Por ahora, iniciamos con una pregunta vacía o de ejemplo.
-          questions: [{ consigna: "", respuesta: "", puntaje: 10 }],
+          fechaCarga: parseDate(examToEdit.created),
+          questions: examToEdit.questions.length > 0 ? examToEdit.questions : [{ consigna: "", respuesta: "", puntaje: 10 }],
         });
       }
     }
@@ -90,6 +94,7 @@ export default function CrearExamenPage() {
         name: data.titulo,
         tema: data.tema,
         created: format(data.fechaCarga, "yyyy-MM-dd"),
+        questions: data.questions,
       });
        toast({
         title: "Examen Actualizado",
@@ -100,6 +105,7 @@ export default function CrearExamenPage() {
             name: data.titulo,
             tema: data.tema,
             created: format(data.fechaCarga, "yyyy-MM-dd"),
+            questions: data.questions,
         });
         toast({
           title: "Examen Guardado",
