@@ -23,21 +23,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useSearch } from "@/context/search-context";
+import { useUsers } from "@/context/users-context";
+import type { User } from "@/context/users-context";
 
-
-const initialUsers = [
-    { id: "usr-001", name: "Ana Gomez", role: "Docente", school: "Escuela N° 101", status: "Activo", avatar: "https://i.pravatar.cc/150?u=user1" },
-    { id: "usr-002", name: "Carlos Diaz", role: "Director", school: "Escuela N° 789", status: "Activo", avatar: "https://i.pravatar.cc/150?u=user2" },
-    { id: "usr-003", name: "Lucia Fernandez", role: "Referente", school: "N/A", status: "Activo", avatar: "https://i.pravatar.cc/150?u=user3" },
-    { id: "usr-004", name: "Marcos Torres", role: "Docente", school: "Escuela N° 101", status: "Pendiente", avatar: "https://i.pravatar.cc/150?u=user4" },
-    { id: "usr-005", name: "Sofia Reyes", role: "Administrador", school: "N/A", status: "Activo", avatar: "https://i.pravatar.cc/150?u=user5" },
-    { id: "usr-006", name: "Evaluador Principal", role: "Evaluador", school: "N/A", status: "Activo", avatar: "https://i.pravatar.cc/150?u=evaluador@chubut.edu.ar" },
-];
-
-type User = typeof initialUsers[0];
 
 export default function UsuariosPage() {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  const { users, deleteUser, enableUser } = useUsers();
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [roleFilter, setRoleFilter] = useState("all");
@@ -45,9 +36,9 @@ export default function UsuariosPage() {
   const { searchTerm } = useSearch();
 
   const uniqueRoles = useMemo(() => {
-    const roles = initialUsers.map(user => user.role);
+    const roles = users.map(user => user.role);
     return [...new Set(roles)];
-  }, []);
+  }, [users]);
 
   const filteredUsers = useMemo(() => {
     let results = users;
@@ -67,7 +58,7 @@ export default function UsuariosPage() {
 
   const handleDeleteUser = () => {
     if (!selectedUser) return;
-    setUsers(users.filter((user) => user.id !== selectedUser.id));
+    deleteUser(selectedUser.id);
     toast({
         title: "Usuario Eliminado",
         description: `El usuario ${selectedUser.name} ha sido eliminado correctamente.`,
@@ -78,15 +69,14 @@ export default function UsuariosPage() {
 
   const handleEnableUser = (userId: string) => {
     const userToEnable = users.find((user) => user.id === userId);
-    setUsers(users.map((user) => 
-      user.id === userId ? { ...user, status: "Activo" } : user
-    ));
-    if (userToEnable) {
-        toast({
-            title: "Usuario Habilitado",
-            description: `El usuario ${userToEnable.name} ha sido habilitado correctamente.`,
-        });
-    }
+    if (!userToEnable) return;
+    
+    enableUser(userId);
+    
+    toast({
+        title: "Usuario Habilitado",
+        description: `El usuario ${userToEnable.name} ha sido habilitado correctamente.`,
+    });
   };
   
   const showToast = (title: string) => {
