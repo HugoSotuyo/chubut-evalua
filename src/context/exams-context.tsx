@@ -6,14 +6,15 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 type Exam = {
     id: string;
     name: string;
+    tema: string;
     created: string;
     status: "Abierto" | "Cerrado";
 };
 
 interface ExamsContextType {
   exams: Exam[];
-  addExam: (exam: Exam) => void;
-  updateExam: (exam: Exam) => void;
+  addExam: (exam: Omit<Exam, 'id' | 'status'>) => void;
+  updateExam: (exam: Omit<Exam, 'status'>) => void;
   deleteExam: (examId: string) => void;
   toggleExamStatus: (examId: string) => void;
 }
@@ -21,19 +22,19 @@ interface ExamsContextType {
 const ExamsContext = createContext<ExamsContextType | undefined>(undefined);
 
 const initialExams: Exam[] = [
-    { id: "exm-001", name: "Matemática Diagnóstico 2024", created: "2024-03-15", status: "Abierto" },
-    { id: "exm-002", name: "Lengua y Literatura 2024", created: "2024-04-01", status: "Abierto" },
-    { id: "exm-003", name: "Ciencias Naturales 2023", created: "2023-09-10", status: "Cerrado" },
-    { id: "exm-004", name: "Matemática Cierre 2023", created: "2023-11-20", status: "Cerrado" },
+    { id: "exm-001", name: "Diagnóstico 2024", tema: "Matemática", created: "2024-03-15", status: "Abierto" },
+    { id: "exm-002", name: "Comprensión Lectora", tema: "Lengua", created: "2024-04-01", status: "Abierto" },
+    { id: "exm-003", name: "El Sistema Solar", tema: "Ciencias Naturales", created: "2023-09-10", status: "Cerrado" },
+    { id: "exm-004", name: "Cierre 2023", tema: "Matemática", created: "2023-11-20", status: "Cerrado" },
 ];
 
 const LOCAL_STORAGE_KEY = 'chubut-evalua-exams';
 
 export function ExamsProvider({ children }: { children: ReactNode }) {
-  const [exams, setExams] = useState<Exam[]>([]);
+  const [exams, setExams] = useState<Exam[]>(initialExams);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  useEffect(() => {
+   useEffect(() => {
     try {
       const storedExams = window.localStorage.getItem(LOCAL_STORAGE_KEY);
       if (storedExams) {
@@ -58,13 +59,23 @@ export function ExamsProvider({ children }: { children: ReactNode }) {
     }
   }, [exams, isInitialized]);
 
-  const addExam = (exam: Exam) => {
-    setExams(prevExams => [...prevExams, exam]);
+  const addExam = (examData: Omit<Exam, 'id' | 'status'>) => {
+    const newExam: Exam = {
+        ...examData,
+        id: `exm-${Date.now()}`,
+        status: "Abierto",
+    }
+    setExams(prevExams => [...prevExams, newExam]);
   };
 
-  const updateExam = (updatedExam: Exam) => {
+  const updateExam = (updatedExamData: Omit<Exam, 'status'>) => {
     setExams(prevExams =>
-      prevExams.map(exam => (exam.id === updatedExam.id ? updatedExam : exam))
+      prevExams.map(exam => {
+        if (exam.id === updatedExamData.id) {
+          return { ...exam, ...updatedExamData };
+        }
+        return exam;
+      })
     );
   };
 

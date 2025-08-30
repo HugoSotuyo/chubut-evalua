@@ -60,19 +60,18 @@ export default function CrearExamenPage() {
 
   useEffect(() => {
     const id = searchParams.get('id');
-    // Asegurarnos de que exams está cargado
     if (id && exams.length > 0) {
       const examToEdit = exams.find(e => e.id === id);
       if (examToEdit) {
         setExamId(id);
         setIsEditMode(true);
-        // Dado que no guardamos el tema ni las preguntas, reseteamos con el título y fecha.
-        // En una app real, aquí se fetchearían todos los datos del examen.
         form.reset({
           titulo: examToEdit.name,
+          tema: examToEdit.tema,
           fechaCarga: new Date(examToEdit.created),
-          tema: examToEdit.name.split(' ')[0] || "", // Suposición simple
-          questions: [{ consigna: "Pregunta de ejemplo", respuesta: "Respuesta de ejemplo", puntaje: 10 }],
+          // En una app real, aquí se fetchearían las preguntas del examen.
+          // Por ahora, iniciamos con una pregunta vacía o de ejemplo.
+          questions: [{ consigna: "", respuesta: "", puntaje: 10 }],
         });
       }
     }
@@ -86,25 +85,22 @@ export default function CrearExamenPage() {
 
   const onSubmit = (data: ExamFormValues) => {
     if (isEditMode && examId) {
-      const updatedExam = {
+       updateExam({
         id: examId,
         name: data.titulo,
+        tema: data.tema,
         created: format(data.fechaCarga, "yyyy-MM-dd"),
-        status: exams.find(e => e.id === examId)?.status || "Abierto", // Mantener status
-      };
-      updateExam(updatedExam);
+      });
        toast({
         title: "Examen Actualizado",
         description: `El examen "${data.titulo}" ha sido actualizado exitosamente.`,
       })
     } else {
-        const newExam = {
-          id: `exm-${Date.now()}`,
-          name: data.titulo,
-          created: format(data.fechaCarga, "yyyy-MM-dd"),
-          status: "Abierto" as const,
-        };
-        addExam(newExam);
+        addExam({
+            name: data.titulo,
+            tema: data.tema,
+            created: format(data.fechaCarga, "yyyy-MM-dd"),
+        });
         toast({
           title: "Examen Guardado",
           description: `El examen "${data.titulo}" ha sido guardado exitosamente.`,
