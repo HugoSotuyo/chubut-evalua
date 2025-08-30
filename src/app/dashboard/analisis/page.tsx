@@ -11,7 +11,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
-import type { User } from "@/lib/auth";
+import { useAuth } from "@/context/auth-context";
 
 // Total de alumnos por grado (simulado)
 const totalAlumnos = { '1er Grado': 100, '2do Grado': 120, '3er Grado': 110, '4to Grado': 95, '5to Grado': 105 };
@@ -53,15 +53,12 @@ const mockResults = [
     { district: "Distrito I", school: "Escuela N° 101", grade: "3er Grado", course: "A", exam: "Matemática 2023" },
 ];
 
-interface AnalisisPageContentProps {
-    user: User;
-}
-
-function AnalisisPageContent({ user }: AnalisisPageContentProps) {
+function AnalisisPageContent() {
+    const { user } = useAuth();
     const searchParams = useSearchParams();
     const [filters, setFilters] = useState({
         district: "all",
-        school: user.role === "Director" ? user.school : "all",
+        school: user?.role === "Director" ? user.school : "all",
         grade: "all",
         course: "all",
         exam: "all",
@@ -103,6 +100,8 @@ function AnalisisPageContent({ user }: AnalisisPageContentProps) {
     }
     
     const { data, dataAprobados, examAnalysisData } = useMemo(() => {
+        if (!user) return { data: [], dataAprobados: [], examAnalysisData: [] };
+
         const schoolFilterActive = user.role === "Director" || (appliedFilters.school !== "all");
         const schoolToFilter = user.role === "Director" ? user.school : appliedFilters.school;
         
@@ -328,6 +327,9 @@ function AnalisisPageContent({ user }: AnalisisPageContentProps) {
         }
     };
 
+    if (!user) {
+        return <div>Cargando...</div>;
+    }
 
     return (
         <div className="flex flex-col gap-8">
@@ -712,20 +714,10 @@ function AnalisisPageContent({ user }: AnalisisPageContentProps) {
     )
 }
 
-interface AnalisisPageProps {
-    user?: User;
-}
-
-export default function AnalisisPage({ user }: AnalisisPageProps) {
-    if (!user) {
-        return <div>Cargando...</div>;
-    }
-    
+export default function AnalisisPage() {
     return (
         <React.Suspense fallback={<div>Cargando...</div>}>
-            <AnalisisPageContent user={user} />
+            <AnalisisPageContent />
         </React.Suspense>
     )
 }
-
-    

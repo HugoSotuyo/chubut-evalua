@@ -20,11 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useSearch } from "@/context/search-context";
-import type { User as AuthUser } from "@/lib/auth";
-
-interface AlumnosPageProps {
-  user: AuthUser;
-}
+import { useAuth } from "@/context/auth-context";
 
 const initialStudents = [
     { id: "alu-001", name: "Juan Pérez", grade: "5to Grado", course: "A", school: "Escuela N° 101" },
@@ -35,12 +31,13 @@ const initialStudents = [
 
 type Student = typeof initialStudents[0];
 
-export default function AlumnosPage({ user }: AlumnosPageProps) {
+export default function AlumnosPage() {
   const [students, setStudents] = useState<Student[]>(initialStudents);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const { toast } = useToast();
   const { searchTerm } = useSearch();
+  const { user } = useAuth();
 
   const filteredStudents = useMemo(() => {
     if (!user) return [];
@@ -94,6 +91,7 @@ export default function AlumnosPage({ user }: AlumnosPageProps) {
       });
     } else {
       // Add new student
+      if (!user) return;
       const newStudent: Student = {
         id: `alu-${Date.now()}`,
         ...studentData,

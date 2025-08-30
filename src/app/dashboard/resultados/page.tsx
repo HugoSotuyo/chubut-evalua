@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useSearch } from "@/context/search-context";
-import type { User } from "@/lib/auth";
+import { useAuth } from "@/context/auth-context";
 
 const allResults = [
     { id: "res-001", studentName: "Juan Pérez", examName: "Diagnóstico 2024", school: "Escuela N° 101", grade: "Aprobado", score: 85 },
@@ -31,16 +31,14 @@ type Filters = {
     status: string;
 }
 
-interface ResultadosPageContentProps {
-  user: User;
-}
-
-function ResultadosPageContent({ user }: ResultadosPageContentProps) {
+function ResultadosPageContent() {
+    const { user } = useAuth();
     const { searchTerm } = useSearch();
     const searchParams = useSearchParams();
+    
     const [filters, setFilters] = useState<Filters>({
         exam: "all",
-        school: user.role === "Director" ? user.school : "all",
+        school: user?.role === "Director" ? user.school : "all",
         studentName: "",
         status: "all",
     });
@@ -59,6 +57,7 @@ function ResultadosPageContent({ user }: ResultadosPageContentProps) {
     }, []);
 
     const filteredResults = useMemo(() => {
+        if (!user) return [];
         let results = allResults;
 
         if (user.role === "Director") {
@@ -117,6 +116,10 @@ function ResultadosPageContent({ user }: ResultadosPageContentProps) {
     const getUniqueValues = (key: 'examName' | 'school') => {
         const values = allResults.map(item => item[key]);
         return [...new Set(values)];
+    }
+    
+    if (!user) {
+        return <div>Cargando...</div>;
     }
 
     return (
@@ -252,18 +255,10 @@ function ResultadosPageContent({ user }: ResultadosPageContentProps) {
     )
 }
 
-interface ResultadosPageProps {
-    user?: User;
-}
-
-export default function ResultadosPage({ user }: ResultadosPageProps) {
-    if (!user) {
-        return <div>Cargando...</div>;
-    }
-
+export default function ResultadosPage() {
     return (
         <React.Suspense fallback={<div>Cargando...</div>}>
-            <ResultadosPageContent user={user}/>
+            <ResultadosPageContent />
         </React.Suspense>
     )
 }

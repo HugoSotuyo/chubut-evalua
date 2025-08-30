@@ -25,19 +25,16 @@ import { useSearch } from "@/context/search-context";
 import { useUsers } from "@/context/users-context";
 import type { User } from "@/context/users-context";
 import { RoleIcon } from "@/components/role-icon";
-import type { User as AuthUser } from "@/lib/auth";
+import { useAuth } from "@/context/auth-context";
 
-interface UsuariosPageProps {
-  user: AuthUser;
-}
-
-export default function UsuariosPage({ user }: UsuariosPageProps) {
+export default function UsuariosPage() {
   const { users, deleteUser, enableUser } = useUsers();
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [roleFilter, setRoleFilter] = useState("all");
   const { toast } = useToast();
   const { searchTerm } = useSearch();
+  const { user } = useAuth();
 
   const uniqueRoles = useMemo(() => {
     const roles = users.map(user => user.role);
