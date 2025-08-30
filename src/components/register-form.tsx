@@ -28,9 +28,11 @@ export function RegisterForm() {
     const formData = new FormData(e.currentTarget);
     const firstName = formData.get("first-name") as string;
     const lastName = formData.get("last-name") as string;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
     const role = formData.get("role") as UserRole;
     
-    if (!firstName || !lastName || !role) {
+    if (!firstName || !lastName || !role || !email || !password) {
         toast({
             title: "Error de validación",
             description: "Por favor, completa todos los campos requeridos.",
@@ -41,6 +43,8 @@ export function RegisterForm() {
 
     addUser({
         name: `${firstName} ${lastName}`,
+        email: email,
+        password: password,
         role: role,
         school: "N/A"
     });
@@ -74,7 +78,7 @@ export function RegisterForm() {
           id="email"
           type="text"
           name="email"
-          placeholder="tu.email@ejemplo.com o tu_usuario"
+          placeholder="tu.dni@chubut.edu.ar"
           required
         />
       </div>
@@ -181,7 +185,7 @@ export function RegisterForm() {
 
       <div className="grid gap-2">
         <Label htmlFor="password">Contraseña</Label>
-        <Input id="password" type="password" required />
+        <Input id="password" name="password" type="password" required />
       </div>
       <Button type="submit" className="w-full">
         Crear cuenta

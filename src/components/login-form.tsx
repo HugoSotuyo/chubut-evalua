@@ -7,42 +7,55 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useUsers } from "@/context/users-context";
+import { setMockUser } from "@/lib/auth";
 
 export function LoginForm() {
   const router = useRouter();
   const { toast } = useToast();
+  const { users } = useUsers();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Lógica especial para el rol de Evaluador
-    if (password === "hdsp6032" && email === "") {
-        toast({
-            title: "Inicio de sesión exitoso",
-            description: "Bienvenido, Evaluador Principal.",
-        });
-        // Aquí podrías guardar el rol de evaluador en el estado global o contexto
-        // para que la app sepa qué dashboard mostrar.
-        // Simulamos que getMockUser se actualiza mágicamente.
-        router.push("/dashboard");
-        return; 
-    }
-    
-    // Lógica para otros usuarios (requiere email y pass)
-    if (email && password) {
-         // Aquí iría la lógica de autenticación real para otros usuarios.
-         // Como no tenemos otros usuarios, mostramos un error genérico.
-         toast({
-            variant: "destructive",
-            title: "Error de autenticación",
-            description: "DNI/email o contraseña incorrectos.",
-        });
-    } else {
+    if (!email || !password) {
         toast({
             variant: "destructive",
             title: "Campos incompletos",
             description: "Por favor, ingresa tu DNI/email y contraseña.",
+        });
+        return;
+    }
+
+    const foundUser = users.find(user => user.email === email && user.password === password);
+
+    if (foundUser) {
+        if (foundUser.status === "Activo") {
+            toast({
+                title: "Inicio de sesión exitoso",
+                description: `Bienvenido, ${foundUser.name}.`,
+            });
+            setMockUser(foundUser);
+            router.push("/dashboard");
+        } else if (foundUser.status === "Pendiente") {
+            toast({
+                variant: "default",
+                title: "Cuenta Pendiente",
+                description: "Tu cuenta está pendiente de activación por parte de un evaluador.",
+            });
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Cuenta Inactiva",
+                description: "Tu cuenta se encuentra inactiva. Contacta al administrador.",
+            });
+        }
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Error de autenticación",
+            description: "DNI/email o contraseña incorrectos.",
         });
     }
   };
@@ -53,10 +66,11 @@ export function LoginForm() {
         <Label htmlFor="email">DNI / Email</Label>
         <Input
           id="email"
-          type="email"
+          type="text"
           placeholder="tu.dni@chubut.edu.ar"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
       </div>
       <div className="grid gap-2">
