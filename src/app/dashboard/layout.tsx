@@ -21,7 +21,7 @@ export default function DashboardLayout({
               <SidebarHeader>
                   <div className="flex items-center gap-2">
                       <GraduationCap className="size-6 text-primary" />
-                      <span className="text-lg font-semibold font-headline">SEE Chubut</span>
+                      <span className="text-lg font-semibold font-headline">Chubut evalúa</span>
                   </div>
               </SidebarHeader>
               <DashboardNav userRole={user.role} />

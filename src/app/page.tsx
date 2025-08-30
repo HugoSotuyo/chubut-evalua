@@ -27,7 +27,7 @@ export default function LoginPage() {
         <div className="flex items-center gap-4 text-primary-foreground mb-4">
           <GraduationCap className="h-12 w-12" />
           <h1 className="text-4xl font-bold font-headline">
-            Sistema Evaluador Educativo
+            Chubut evalúa
           </h1>
         </div>
         <p className="text-xl text-primary-foreground/80 font-medium text-center mb-8">

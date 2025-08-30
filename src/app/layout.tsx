@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'Sistema Evaluador Educativo - Chubut',
+  title: 'Chubut evalúa',
   description: 'Plataforma de evaluación y análisis de resultados para la provincia de Chubut.',
 };
 
