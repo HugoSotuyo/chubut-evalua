@@ -1,6 +1,7 @@
 
 "use client"
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -9,7 +10,7 @@ import { MoreHorizontal, PlusCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 
-const exams = [
+const initialExams = [
     { id: "exm-001", name: "Matemática Diagnóstico 2024", created: "2024-03-15", status: "Abierto" },
     { id: "exm-002", name: "Lengua y Literatura 2024", created: "2024-04-01", status: "Abierto" },
     { id: "exm-003", name: "Ciencias Naturales 2023", created: "2023-09-10", status: "Cerrado" },
@@ -17,6 +18,8 @@ const exams = [
 ]
 
 export default function ExamenesPage() {
+  const [exams, setExams] = useState(initialExams);
+
   return (
     <div className="flex flex-col gap-8">
         <div className="flex items-center justify-between">
