@@ -79,7 +79,7 @@ export default function CrearExamenPage() {
         });
       }
     }
-  }, [searchParams, exams, form]);
+  }, [searchParams, exams]);
 
 
   const { fields, append, remove } = useFieldArray({
