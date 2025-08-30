@@ -1,7 +1,8 @@
 
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -14,12 +15,12 @@ import { Label } from "@/components/ui/label"
 import { useSearch } from "@/context/search-context";
 
 const allResults = [
-    { id: "res-001", studentName: "Juan Pérez", examName: "Matemática Diagnóstico 2024", school: "Escuela N° 101", grade: "Aprobado", score: 85 },
-    { id: "res-002", studentName: "María Rodríguez", examName: "Matemática Diagnóstico 2024", school: "Escuela N° 101", grade: "Desaprobado", score: 55 },
-    { id: "res-003", studentName: "Carlos Sánchez", examName: "Lengua y Literatura 2024", school: "Escuela N° 789", grade: "Aprobado", score: 92 },
-    { id: "res-004", studentName: "Ana López", examName: "Matemática Diagnóstico 2024", school: "Escuela N° 456", grade: "Aprobado", score: 78 },
-    { id: "res-005", studentName: "Luis Martínez", examName: "Ciencias Naturales 2023", school: "Escuela N° 101", grade: "Desaprobado", score: 45 },
-    { id: "res-006", studentName: "Laura García", examName: "Lengua y Literatura 2024", school: "Escuela N° 456", grade: "Aprobado", score: 88 },
+    { id: "res-001", studentName: "Juan Pérez", examName: "Diagnóstico 2024", school: "Escuela N° 101", grade: "Aprobado", score: 85 },
+    { id: "res-002", studentName: "María Rodríguez", examName: "Diagnóstico 2024", school: "Escuela N° 101", grade: "Desaprobado", score: 55 },
+    { id: "res-003", studentName: "Carlos Sánchez", examName: "Comprensión Lectora", school: "Escuela N° 789", grade: "Aprobado", score: 92 },
+    { id: "res-004", studentName: "Ana López", examName: "Diagnóstico 2024", school: "Escuela N° 456", grade: "Aprobado", score: 78 },
+    { id: "res-005", studentName: "Luis Martínez", examName: "El Sistema Solar", school: "Escuela N° 101", grade: "Desaprobado", score: 45 },
+    { id: "res-006", studentName: "Laura García", examName: "Comprensión Lectora", school: "Escuela N° 456", grade: "Aprobado", score: 88 },
 ]
 
 type Filters = {
@@ -29,8 +30,9 @@ type Filters = {
     status: string;
 }
 
-export default function ResultadosPage() {
+function ResultadosPageContent() {
     const { searchTerm } = useSearch();
+    const searchParams = useSearchParams();
     const [filters, setFilters] = useState<Filters>({
         exam: "all",
         school: "all",
@@ -39,6 +41,16 @@ export default function ResultadosPage() {
     });
 
     const [appliedFilters, setAppliedFilters] = useState<Filters>(filters);
+
+    useEffect(() => {
+        const examFromUrl = searchParams.get("exam");
+        if (examFromUrl) {
+            const decodedExamName = decodeURIComponent(examFromUrl);
+            const newFilters = { ...filters, exam: decodedExamName };
+            setFilters(newFilters);
+            setAppliedFilters(newFilters);
+        }
+    }, [searchParams]);
 
     const filteredResults = useMemo(() => {
         let results = allResults;
@@ -127,6 +139,7 @@ export default function ResultadosPage() {
                                 <SelectItem value="all">Todos</SelectItem>
                                 {getUniqueValues("examName").map(exam => (
                                     <SelectItem key={exam as string} value={exam as string}>{exam as string}</SelectItem>
+
                                 ))}
                             </SelectContent>
                         </Select>
@@ -222,5 +235,13 @@ export default function ResultadosPage() {
                 </CardContent>
             </Card>
         </div>
+    )
+}
+
+export default function ResultadosPage() {
+    return (
+        <React.Suspense fallback={<div>Cargando...</div>}>
+            <ResultadosPageContent />
+        </React.Suspense>
     )
 }

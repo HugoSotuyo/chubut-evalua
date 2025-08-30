@@ -59,12 +59,9 @@ export default function ExamenesPage() {
     router.push(`/dashboard/examenes/editar/${exam.id}`);
   };
 
-  const showToast = (title: string) => {
-    toast({
-        title,
-        description: "Esta funcionalidad estará disponible próximamente.",
-    });
-  }
+  const handleViewResults = (exam: Exam) => {
+    router.push(`/dashboard/resultados?exam=${encodeURIComponent(exam.name)}`);
+  };
 
 
   return (
@@ -119,7 +116,7 @@ export default function ExamenesPage() {
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                                         <DropdownMenuItem onSelect={() => handleEditExam(exam)}>Editar</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => showToast('Ver Resultados')}>Ver Resultados</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleViewResults(exam)}>Ver Resultados</DropdownMenuItem>
                                         <DropdownMenuItem onSelect={() => handleToggleStatus(exam)}>
                                             {exam.status === "Abierto" ? "Cerrar Examen" : "Abrir Examen"}
                                         </DropdownMenuItem>
