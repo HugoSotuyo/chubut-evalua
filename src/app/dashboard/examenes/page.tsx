@@ -1,9 +1,13 @@
+
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { MoreHorizontal, PlusCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
 
 const exams = [
     { id: "exm-001", name: "Matemática Diagnóstico 2024", created: "2024-03-15", status: "Abierto" },
@@ -20,9 +24,11 @@ export default function ExamenesPage() {
                 <h1 className="text-3xl font-bold tracking-tight font-headline">Gestión de Exámenes</h1>
                 <p className="text-muted-foreground">Crea, edita y administra las evaluaciones del sistema.</p>
             </div>
-            <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Crear Examen
+            <Button asChild>
+                <Link href="/dashboard/examenes/crear">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Crear Examen
+                </Link>
             </Button>
         </div>
         <Card>
