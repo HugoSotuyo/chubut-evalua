@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useFieldArray, useForm } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { format } from "date-fns"
@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
+import { useExams } from "@/context/exams-context"
 
 const questionSchema = z.object({
   consigna: z.string().min(1, "La consigna es requerida."),
@@ -40,6 +41,7 @@ type ExamFormValues = z.infer<typeof examSchema>
 export default function CrearExamenPage() {
   const { toast } = useToast()
   const router = useRouter()
+  const { addExam } = useExams()
   
   const form = useForm<ExamFormValues>({
     resolver: zodResolver(examSchema),
@@ -57,13 +59,18 @@ export default function CrearExamenPage() {
   })
 
   const onSubmit = (data: ExamFormValues) => {
-    console.log(data)
+    const newExam = {
+      id: `exm-${Date.now()}`,
+      name: data.titulo,
+      created: format(data.fechaCarga, "yyyy-MM-dd"),
+      status: "Abierto",
+    };
+    addExam(newExam);
+    
     toast({
       title: "Examen Guardado",
       description: `El examen "${data.titulo}" ha sido guardado exitosamente.`,
     })
-    // Aquí iría la lógica para guardar en el backend
-    // Por ahora, redirigimos a la lista de exámenes
     router.push("/dashboard/examenes")
   }
 
