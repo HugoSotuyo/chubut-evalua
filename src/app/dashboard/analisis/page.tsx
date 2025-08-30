@@ -497,7 +497,7 @@ function AnalisisPageContent({ user }: AnalisisPageContentProps) {
                                                         {index === firstVisibleRow && 
                                                             <TableCell 
                                                                 rowSpan={['1er Grado', '2do Grado', '3er Grado'].reduce((acc, g) => {
-                                                                    const data = pregunta[g as keyof typeof pregunta] as { correctas: number, incorrectas: number };
+                                                                    const data = pregunta[g as keyof typeof pregunta] as { correctas: number; incorrectas: number };
                                                                     return acc + (data && (data.correctas > 0 || data.incorrectas > 0) ? 1 : 0);
                                                                 }, 0)}
                                                                 className="font-medium align-middle"
@@ -713,13 +713,19 @@ function AnalisisPageContent({ user }: AnalisisPageContentProps) {
 }
 
 interface AnalisisPageProps {
-    user: User;
+    user?: User;
 }
 
 export default function AnalisisPage({ user }: AnalisisPageProps) {
+    if (!user) {
+        return <div>Cargando...</div>;
+    }
+    
     return (
         <React.Suspense fallback={<div>Cargando...</div>}>
             <AnalisisPageContent user={user} />
         </React.Suspense>
     )
 }
+
+    
