@@ -112,8 +112,7 @@ function AnalisisPageContent() {
         if (!user) return { data: [], dataAprobados: [], examAnalysisData: [] };
 
         const schoolFilterValue = user.role === "Director" ? user.school : appliedFilters.school;
-        const schoolFilterActive = schoolFilterValue !== "all";
-
+        
         const hasActiveFilters = Object.values(appliedFilters).some(value => value !== "all" && value !== "") || user.role === "Director";
 
         if (!hasActiveFilters) {
@@ -172,15 +171,16 @@ function AnalisisPageContent() {
             return d;
         });
         
-        let examDataFiltered = originalExamAnalysisData;
-        if(schoolFilterActive) {
-            examDataFiltered = examDataFiltered.filter(d => d.school === schoolFilterValue);
+        let examDataBase = originalExamAnalysisData;
+        if (schoolFilterValue !== 'all') {
+            examDataBase = examDataBase.filter(d => d.school === schoolFilterValue);
         }
 
-        const examDataFilteredByExam = appliedFilters.exam === 'all'
-            ? examDataFiltered
-            : examDataFiltered.filter(d => d.name === appliedFilters.exam);
-        
+        let examDataFilteredByExam = examDataBase;
+        if (appliedFilters.exam !== 'all') {
+            examDataFilteredByExam = examDataBase.filter(d => d.name === appliedFilters.exam);
+        }
+
         const newExamAnalysisData = examDataFilteredByExam.map(d => {
             let filteredData = { ...d };
             const selectedGrade = appliedFilters.grade;
@@ -190,7 +190,7 @@ function AnalisisPageContent() {
             };
             
             if (hasActiveFilters) {
-                 filteredData['1er Grado'] = shouldFilter('1er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['1er Grado']);
+                filteredData['1er Grado'] = shouldFilter('1er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['1er Grado']);
                 filteredData['2do Grado'] = shouldFilter('2do Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['2do Grado']);
                 filteredData['3er Grado'] = shouldFilter('3er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['3er Grado']);
             }
@@ -491,7 +491,7 @@ function AnalisisPageContent() {
                                                 if(correctas === 0 && incorrectas === 0) return null;
 
                                                 const firstVisibleRow = ['1er Grado', '2do Grado', '3er Grado']
-                                                    .map(g => pregunta[g as keyof typeof pregunta] as { correctas: number, incorrectas: number })
+                                                    .map(g => pregunta[g as keyof typeof pregunta] as { correctas: number; incorrectas: number })
                                                     .findIndex(d => d && (d.correctas > 0 || d.incorrectas > 0));
 
                                                 return (
