@@ -58,7 +58,7 @@ function AnalisisPageContent() {
     const searchParams = useSearchParams();
     const [filters, setFilters] = useState({
         district: "all",
-        school: user?.role === "Director" ? user.school : "all",
+        school: "all",
         grade: "all",
         course: "all",
         exam: "all",
@@ -66,6 +66,15 @@ function AnalisisPageContent() {
     });
 
     const [appliedFilters, setAppliedFilters] = useState(filters);
+
+    useEffect(() => {
+        if (user?.role === 'Director') {
+            const newFilters = { ...filters, school: user.school };
+            setFilters(newFilters);
+            setAppliedFilters(newFilters);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
 
     useEffect(() => {
         const examFromUrl = searchParams.get("exam");
@@ -102,13 +111,8 @@ function AnalisisPageContent() {
     const { data, dataAprobados, examAnalysisData } = useMemo(() => {
         if (!user) return { data: [], dataAprobados: [], examAnalysisData: [] };
 
-        const schoolFilterActive = user.role === "Director" || (appliedFilters.school !== "all");
-        const schoolToFilter = user.role === "Director" ? user.school : appliedFilters.school;
-        
-        let filteredMockResults = mockResults;
-        if(schoolFilterActive) {
-            filteredMockResults = mockResults.filter(r => r.school === schoolToFilter);
-        }
+        const schoolFilterValue = user.role === "Director" ? user.school : appliedFilters.school;
+        const schoolFilterActive = schoolFilterValue !== "all";
 
         const hasActiveFilters = Object.values(appliedFilters).some(value => value !== "all" && value !== "") || user.role === "Director";
 
@@ -170,7 +174,7 @@ function AnalisisPageContent() {
         
         let examDataFiltered = originalExamAnalysisData;
         if(schoolFilterActive) {
-            examDataFiltered = examDataFiltered.filter(d => d.school === schoolToFilter);
+            examDataFiltered = examDataFiltered.filter(d => d.school === schoolFilterValue);
         }
 
         const examDataFilteredByExam = appliedFilters.exam === 'all'
@@ -717,3 +721,5 @@ export default function AnalisisPage() {
         </React.Suspense>
     )
 }
+
+    
