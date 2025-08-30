@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -68,12 +69,12 @@ export function RegisterForm() {
         <Input id="dni" name="dni" placeholder="12345678" required />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">Email / Usuario</Label>
         <Input
           id="email"
-          type="email"
+          type="text"
           name="email"
-          placeholder="tu.email@ejemplo.com"
+          placeholder="tu.email@ejemplo.com o tu_usuario"
           required
         />
       </div>
