@@ -43,13 +43,14 @@ export default function AlumnosPage({ user }: AlumnosPageProps) {
   const { searchTerm } = useSearch();
 
   const filteredStudents = useMemo(() => {
+    if (!user) return [];
     let results = students.filter(student => student.school === user.school);
     
     if (searchTerm) {
       results = results.filter(student => student.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }
     return results;
-  }, [students, searchTerm, user.school]);
+  }, [students, searchTerm, user]);
 
   const handleOpenForm = (student: Student | null = null) => {
     setEditingStudent(student);
@@ -114,6 +115,10 @@ export default function AlumnosPage({ user }: AlumnosPageProps) {
         description: "La exportación de alumnos estará disponible próximamente.",
     });
   };
+
+  if (!user) {
+    return <div>Cargando...</div>;
+  }
 
   return (
     <div className="flex flex-col gap-8">
