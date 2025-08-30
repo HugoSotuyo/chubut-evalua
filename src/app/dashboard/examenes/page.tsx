@@ -113,25 +113,31 @@ export default function ExamenesPage() {
                             </TableCell>
                             <TableCell>{exam.created}</TableCell>
                             <TableCell>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                            <span className="sr-only">Toggle menu</span>
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                        <DropdownMenuItem onSelect={() => handleEditExam(exam)}>Editar</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleViewAnalysis(exam)}>Ver Análisis</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleToggleStatus(exam)}>
-                                            {exam.status === "Abierto" ? "Cerrar Examen" : "Abrir Examen"}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(exam)}>
-                                            Eliminar
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                {user.role === 'Director' ? (
+                                    <Button variant="outline" size="sm" onClick={() => handleViewAnalysis(exam)}>
+                                        Ver Análisis
+                                    </Button>
+                                ) : (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                                <span className="sr-only">Toggle menu</span>
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                                            <DropdownMenuItem onSelect={() => handleEditExam(exam)}>Editar</DropdownMenuItem>
+                                            <DropdownMenuItem onSelect={() => handleViewAnalysis(exam)}>Ver Análisis</DropdownMenuItem>
+                                            <DropdownMenuItem onSelect={() => handleToggleStatus(exam)}>
+                                                {exam.status === "Abierto" ? "Cerrar Examen" : "Abrir Examen"}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(exam)}>
+                                                Eliminar
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )}
                             </TableCell>
                         </TableRow>
                         ))}
