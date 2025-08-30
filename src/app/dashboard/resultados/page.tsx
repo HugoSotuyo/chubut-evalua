@@ -253,10 +253,14 @@ function ResultadosPageContent({ user }: ResultadosPageContentProps) {
 }
 
 interface ResultadosPageProps {
-    user: User;
+    user?: User;
 }
 
 export default function ResultadosPage({ user }: ResultadosPageProps) {
+    if (!user) {
+        return <div>Cargando...</div>;
+    }
+
     return (
         <React.Suspense fallback={<div>Cargando...</div>}>
             <ResultadosPageContent user={user}/>
