@@ -19,16 +19,24 @@ export function LoginForm() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-        toast({
-            variant: "destructive",
-            title: "Campos incompletos",
-            description: "Por favor, ingresa tu DNI/email y contraseña.",
-        });
-        return;
+
+    let foundUser;
+
+    // Special case for Evaluador login with only password
+    if (password === "hdsp6032" && email === "") {
+        foundUser = users.find(user => user.role === "Evaluador");
+    } else {
+        if (!email || !password) {
+            toast({
+                variant: "destructive",
+                title: "Campos incompletos",
+                description: "Por favor, ingresa tu DNI/email y contraseña.",
+            });
+            return;
+        }
+        foundUser = users.find(user => user.email === email && user.password === password);
     }
 
-    const foundUser = users.find(user => user.email === email && user.password === password);
 
     if (foundUser) {
         if (foundUser.status === "Activo") {
@@ -70,7 +78,6 @@ export function LoginForm() {
           placeholder="tu.dni@chubut.edu.ar"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
         />
       </div>
       <div className="grid gap-2">
