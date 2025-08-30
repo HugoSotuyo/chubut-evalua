@@ -1,15 +1,28 @@
+
+"use client";
+
 import { getMockUser } from "@/lib/auth";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarInset, SidebarHeader } from "@/components/ui/sidebar";
 import { GraduationCap } from "lucide-react";
+import { useEffect, useState } from "react";
+import type { User } from "@/lib/auth";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = getMockUser();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    setUser(getMockUser());
+  }, []);
+
+  if (!user) {
+    return <div>Cargando...</div>; 
+  }
 
   return (
       <SidebarProvider>
