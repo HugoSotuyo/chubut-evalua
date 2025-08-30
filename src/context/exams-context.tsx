@@ -13,6 +13,7 @@ type Exam = {
 interface ExamsContextType {
   exams: Exam[];
   addExam: (exam: Exam) => void;
+  updateExam: (exam: Exam) => void;
   deleteExam: (examId: string) => void;
   toggleExamStatus: (examId: string) => void;
 }
@@ -29,7 +30,7 @@ const initialExams: Exam[] = [
 const LOCAL_STORAGE_KEY = 'chubut-evalua-exams';
 
 export function ExamsProvider({ children }: { children: ReactNode }) {
-  const [exams, setExams] = useState<Exam[]>(initialExams);
+  const [exams, setExams] = useState<Exam[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -37,9 +38,12 @@ export function ExamsProvider({ children }: { children: ReactNode }) {
       const storedExams = window.localStorage.getItem(LOCAL_STORAGE_KEY);
       if (storedExams) {
         setExams(JSON.parse(storedExams));
+      } else {
+        setExams(initialExams);
       }
     } catch (error) {
       console.error("Error reading from localStorage", error);
+      setExams(initialExams);
     }
     setIsInitialized(true);
   }, []);
@@ -58,6 +62,12 @@ export function ExamsProvider({ children }: { children: ReactNode }) {
     setExams(prevExams => [...prevExams, exam]);
   };
 
+  const updateExam = (updatedExam: Exam) => {
+    setExams(prevExams =>
+      prevExams.map(exam => (exam.id === updatedExam.id ? updatedExam : exam))
+    );
+  };
+
   const deleteExam = (examId: string) => {
     setExams(prevExams => prevExams.filter(exam => exam.id !== examId));
   };
@@ -73,7 +83,7 @@ export function ExamsProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ExamsContext.Provider value={{ exams, addExam, deleteExam, toggleExamStatus }}>
+    <ExamsContext.Provider value={{ exams, addExam, updateExam, deleteExam, toggleExamStatus }}>
       {children}
     </ExamsContext.Provider>
   );

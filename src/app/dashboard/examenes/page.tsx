@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 type Exam = {
     id: string;
@@ -34,6 +35,7 @@ export default function ExamenesPage() {
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleOpenDeleteDialog = (exam: Exam) => {
     setSelectedExam(exam);
@@ -59,6 +61,10 @@ export default function ExamenesPage() {
     });
   };
   
+  const handleEditExam = (exam: Exam) => {
+    router.push(`/dashboard/examenes/crear?id=${exam.id}`);
+  };
+
   const showToast = (title: string) => {
     toast({
         title,
@@ -116,7 +122,7 @@ export default function ExamenesPage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                        <DropdownMenuItem onSelect={() => showToast('Editar Examen')}>Editar</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleEditExam(exam)}>Editar</DropdownMenuItem>
                                         <DropdownMenuItem onSelect={() => showToast('Ver Resultados')}>Ver Resultados</DropdownMenuItem>
                                         <DropdownMenuItem onSelect={() => handleToggleStatus(exam)}>
                                             {exam.status === "Abierto" ? "Cerrar Examen" : "Abrir Examen"}

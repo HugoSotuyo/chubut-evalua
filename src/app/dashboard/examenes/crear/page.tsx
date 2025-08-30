@@ -18,8 +18,9 @@ import { cn } from "@/lib/utils"
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useExams } from "@/context/exams-context"
+import { useEffect, useState } from "react"
 
 const questionSchema = z.object({
   consigna: z.string().min(1, "La consigna es requerida."),
@@ -41,8 +42,12 @@ type ExamFormValues = z.infer<typeof examSchema>
 export default function CrearExamenPage() {
   const { toast } = useToast()
   const router = useRouter()
-  const { addExam } = useExams()
-  
+  const searchParams = useSearchParams()
+  const { addExam, updateExam, exams } = useExams()
+
+  const [examId, setExamId] = useState<string | null>(null)
+  const [isEditMode, setIsEditMode] = useState(false)
+
   const form = useForm<ExamFormValues>({
     resolver: zodResolver(examSchema),
     defaultValues: {
@@ -53,24 +58,57 @@ export default function CrearExamenPage() {
     },
   })
 
+  useEffect(() => {
+    const id = searchParams.get('id');
+    if (id) {
+      const examToEdit = exams.find(e => e.id === id);
+      if (examToEdit) {
+        setExamId(id);
+        setIsEditMode(true);
+        // Dado que no guardamos el tema ni las preguntas, reseteamos con el título y fecha.
+        // En una app real, aquí se fetchearían todos los datos del examen.
+        form.reset({
+          titulo: examToEdit.name,
+          fechaCarga: new Date(examToEdit.created),
+          tema: examToEdit.name.split(' ')[0] || "", // Suposición simple
+          questions: [{ consigna: "Pregunta de ejemplo", respuesta: "Respuesta de ejemplo", puntaje: 10 }],
+        });
+      }
+    }
+  }, [searchParams, exams, form]);
+
+
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "questions",
   })
 
   const onSubmit = (data: ExamFormValues) => {
-    const newExam = {
-      id: `exm-${Date.now()}`,
-      name: data.titulo,
-      created: format(data.fechaCarga, "yyyy-MM-dd"),
-      status: "Abierto",
-    };
-    addExam(newExam);
-    
-    toast({
-      title: "Examen Guardado",
-      description: `El examen "${data.titulo}" ha sido guardado exitosamente.`,
-    })
+    if (isEditMode && examId) {
+      const updatedExam = {
+        id: examId,
+        name: data.titulo,
+        created: format(data.fechaCarga, "yyyy-MM-dd"),
+        status: exams.find(e => e.id === examId)?.status || "Abierto", // Mantener status
+      };
+      updateExam(updatedExam);
+       toast({
+        title: "Examen Actualizado",
+        description: `El examen "${data.titulo}" ha sido actualizado exitosamente.`,
+      })
+    } else {
+        const newExam = {
+          id: `exm-${Date.now()}`,
+          name: data.titulo,
+          created: format(data.fechaCarga, "yyyy-MM-dd"),
+          status: "Abierto" as const,
+        };
+        addExam(newExam);
+        toast({
+          title: "Examen Guardado",
+          description: `El examen "${data.titulo}" ha sido guardado exitosamente.`,
+        })
+    }
     router.push("/dashboard/examenes")
   }
 
@@ -79,17 +117,21 @@ export default function CrearExamenPage() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="flex items-center justify-between">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight font-headline">Crear Nuevo Examen</h1>
-                <p className="text-muted-foreground">Completa los detalles para crear una nueva evaluación.</p>
+                <h1 className="text-3xl font-bold tracking-tight font-headline">
+                    {isEditMode ? "Editar Examen" : "Crear Nuevo Examen"}
+                </h1>
+                <p className="text-muted-foreground">
+                    {isEditMode ? "Modifica los detalles de la evaluación." : "Completa los detalles para crear una nueva evaluación."}
+                </p>
             </div>
              <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => router.back()}>
+                <Button type="button" variant="outline" onClick={() => router.push('/dashboard/examenes')}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Volver
                 </Button>
                 <Button type="submit">
                     <Save className="mr-2 h-4 w-4" />
-                    Guardar Examen
+                    {isEditMode ? "Guardar Cambios" : "Guardar Examen"}
                 </Button>
             </div>
         </div>
@@ -156,9 +198,6 @@ export default function CrearExamenPage() {
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
                         initialFocus
                       />
                     </PopoverContent>
