@@ -75,7 +75,7 @@ export default function CrearExamenPage() {
           titulo: examToEdit.name,
           tema: examToEdit.tema,
           fechaCarga: parseDate(examToEdit.created),
-          questions: examToEdit.questions.length > 0 ? examToEdit.questions : [{ consigna: "", respuesta: "", puntaje: 10 }],
+          questions: examToEdit.questions && examToEdit.questions.length > 0 ? examToEdit.questions : [{ consigna: "", respuesta: "", puntaje: 10 }],
         });
       }
     }
@@ -290,3 +290,5 @@ export default function CrearExamenPage() {
     </Form>
   )
 }
+
+    
