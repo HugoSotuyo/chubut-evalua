@@ -59,8 +59,8 @@ export default function ExamenesPage() {
     router.push(`/dashboard/examenes/editar/${exam.id}`);
   };
 
-  const handleViewResults = (exam: Exam) => {
-    router.push(`/dashboard/resultados?exam=${encodeURIComponent(exam.name)}`);
+  const handleViewAnalysis = (exam: Exam) => {
+    router.push(`/dashboard/analisis?exam=${encodeURIComponent(exam.name)}`);
   };
 
 
@@ -116,7 +116,7 @@ export default function ExamenesPage() {
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                                         <DropdownMenuItem onSelect={() => handleEditExam(exam)}>Editar</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleViewResults(exam)}>Ver Resultados</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleViewAnalysis(exam)}>Ver Análisis</DropdownMenuItem>
                                         <DropdownMenuItem onSelect={() => handleToggleStatus(exam)}>
                                             {exam.status === "Abierto" ? "Cerrar Examen" : "Abrir Examen"}
                                         </DropdownMenuItem>

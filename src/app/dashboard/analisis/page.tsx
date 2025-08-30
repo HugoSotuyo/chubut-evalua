@@ -2,6 +2,7 @@
 "use client"
 
 import React, { useMemo, useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -37,7 +38,7 @@ const originalExamAnalysisData = [
   { name: 'Matemática 2023', '1er Grado': { correctas: 70, incorrectas: 30 }, '2do Grado': { correctas: 80, incorrectas: 40 }, '3er Grado': { correctas: 90, incorrectas: 20 } },
   { name: 'Lengua 2024', '1er Grado': { correctas: 85, incorrectas: 15 }, '2do Grado': { correctas: 95, incorrectas: 25 }, '3er Grado': { correctas: 100, incorrectas: 10 } },
   { name: 'Ciencias 2023', '1er Grado': { correctas: 65, incorrectas: 35 }, '2do Grado': { correctas: 75, incorrectas: 45 }, '3er Grado': { correctas: 85, incorrectas: 25 } },
-  { name: 'Matemática 2024', '1er Grado': { correctas: 80, incorrectas: 20 }, '2do Grado': { correctas: 90, incorrectas: 30 }, '3er Grado': { correctas: 95, incorrectas: 15 } },
+  { name: 'Diagnóstico 2024', '1er Grado': { correctas: 80, incorrectas: 20 }, '2do Grado': { correctas: 90, incorrectas: 30 }, '3er Grado': { correctas: 95, incorrectas: 15 } },
   { name: 'Matemática Cierre 2023', '1er Grado': { correctas: 60, incorrectas: 40 }, '2do Grado': { correctas: 70, incorrectas: 50 }, '3er Grado': { correctas: 80, incorrectas: 30 } },
 ];
 
@@ -46,13 +47,14 @@ const mockResults = [
     { district: "Distrito I", school: "Escuela N° 101", grade: "1er Grado", course: "A", exam: "Matemática 2023" },
     { district: "Distrito I", school: "Escuela N° 456", grade: "2do Grado", course: "B", exam: "Lengua 2024" },
     { district: "Distrito II", school: "Escuela N° 789", grade: "3er Grado", course: "C", exam: "Ciencias 2023" },
-    { district: "Distrito II", school: "Escuela N° 502", grade: "1er Grado", course: "A", exam: "Matemática 2024" },
+    { district: "Distrito II", school: "Escuela N° 502", grade: "1er Grado", course: "A", exam: "Diagnóstico 2024" },
     { district: "Distrito III", school: "Escuela N° 23", grade: "4to Grado", course: "A", exam: "Matemática Cierre 2023" },
     { district: "Distrito I", school: "Escuela N° 101", grade: "3er Grado", course: "A", exam: "Matemática 2023" },
 ];
 
 
-export default function AnalisisPage() {
+function AnalisisPageContent() {
+    const searchParams = useSearchParams();
     const [filters, setFilters] = useState({
         district: "all",
         school: "all",
@@ -64,8 +66,23 @@ export default function AnalisisPage() {
 
     const [appliedFilters, setAppliedFilters] = useState(filters);
 
-    const getUniqueValues = (key: keyof typeof mockResults[0]) => {
-        const values = mockResults.map(item => item[key]);
+    useEffect(() => {
+        const examFromUrl = searchParams.get("exam");
+        if (examFromUrl) {
+            const decodedExamName = decodeURIComponent(examFromUrl);
+            const newFilters = { ...filters, exam: decodedExamName };
+            setFilters(newFilters);
+            setAppliedFilters(newFilters);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
+
+    const getUniqueValues = (key: keyof typeof mockResults[0] | "examName") => {
+        if (key === 'examName') {
+            const values = originalExamAnalysisData.map(item => item.name);
+            return [...new Set(values)];
+        }
+        const values = mockResults.map(item => item[key as keyof typeof mockResults[0]]);
         return [...new Set(values)];
     }
 
@@ -354,7 +371,7 @@ export default function AnalisisPage() {
                             <SelectTrigger id="filtro-examen"><SelectValue placeholder="Examen" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todos</SelectItem>
-                                {getUniqueValues("exam").map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                                {getUniqueValues("examName").map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
@@ -662,5 +679,13 @@ export default function AnalisisPage() {
                 </Button>
             </div>
         </div>
+    )
+}
+
+export default function AnalisisPage() {
+    return (
+        <React.Suspense fallback={<div>Cargando...</div>}>
+            <AnalisisPageContent />
+        </React.Suspense>
     )
 }
