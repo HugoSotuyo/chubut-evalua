@@ -39,7 +39,7 @@ const originalExamAnalysisData = [
   { name: 'Matemática 2023', school: 'Escuela N° 101', '1er Grado': { correctas: 70, incorrectas: 30 }, '2do Grado': { correctas: 80, incorrectas: 40 }, '3er Grado': { correctas: 90, incorrectas: 20 } },
   { name: 'Lengua 2024', school: 'Escuela N° 456', '1er Grado': { correctas: 85, incorrectas: 15 }, '2do Grado': { correctas: 95, incorrectas: 25 }, '3er Grado': { correctas: 100, incorrectas: 10 } },
   { name: 'Ciencias 2023', school: 'Escuela N° 789', '1er Grado': { correctas: 65, incorrectas: 35 }, '2do Grado': { correctas: 75, incorrectas: 45 }, '3er Grado': { correctas: 85, incorrectas: 25 } },
-  { name: 'Diagnóstico 2024', school: 'Escuela N° 502', '1er Grado': { correctas: 80, incorrectas: 20 }, '2do Grado': { correctas: 90, incorrectas: 30 }, '3er Grado': { correctas: 95, incorrectas: 15 } },
+  { name: 'Diagnóstico 2024', school: 'Escuela N° 101', '1er Grado': { correctas: 80, incorrectas: 20 }, '2do Grado': { correctas: 90, incorrectas: 30 }, '3er Grado': { correctas: 95, incorrectas: 15 } },
   { name: 'Matemática Cierre 2023', school: 'Escuela N° 23', '1er Grado': { correctas: 60, incorrectas: 40 }, '2do Grado': { correctas: 70, incorrectas: 50 }, '3er Grado': { correctas: 80, incorrectas: 30 } },
 ];
 
@@ -184,12 +184,8 @@ function AnalisisPageContent() {
             const shouldFilter = (key: '1er Grado' | '2do Grado' | '3er Grado') => {
                 return selectedGrade !== 'all' && key !== selectedGrade;
             };
-
-            if (hasActiveFilters && schoolFilterActive) {
-                filteredData['1er Grado'] = shouldFilter('1er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['1er Grado']);
-                filteredData['2do Grado'] = shouldFilter('2do Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['2do Grado']);
-                filteredData['3er Grado'] = shouldFilter('3er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['3er Grado']);
-            } else if (!schoolFilterActive && hasActiveFilters) {
+            
+            if (hasActiveFilters) {
                  filteredData['1er Grado'] = shouldFilter('1er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['1er Grado']);
                 filteredData['2do Grado'] = shouldFilter('2do Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['2do Grado']);
                 filteredData['3er Grado'] = shouldFilter('3er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['3er Grado']);
