@@ -18,7 +18,8 @@ import { useUsers } from "@/context/users-context";
 import type { UserRole } from "@/lib/auth";
 
 export function RegisterForm() {
-  const [role, setRole] = useState("");
+  const [role, setRole] = useState<UserRole | "">("");
+  const [selectedSchool, setSelectedSchool] = useState("");
   const router = useRouter();
   const { toast } = useToast();
   const { addUser } = useUsers();
@@ -40,13 +41,18 @@ export function RegisterForm() {
         });
         return;
     }
+    
+    let school = "N/A";
+    if (role === "Director") {
+        school = selectedSchool;
+    }
 
     addUser({
         name: `${firstName} ${lastName}`,
         email: email,
         password: password,
         role: role,
-        school: "N/A"
+        school: school
     });
 
     toast({
@@ -84,7 +90,7 @@ export function RegisterForm() {
       </div>
       <div className="grid gap-2">
         <Label htmlFor="role">Rol</Label>
-        <Select onValueChange={setRole} name="role" required>
+        <Select onValueChange={(value) => setRole(value as UserRole)} name="role" required>
           <SelectTrigger>
             <SelectValue placeholder="Selecciona tu rol" />
           </SelectTrigger>
@@ -101,7 +107,7 @@ export function RegisterForm() {
         <>
           <div className="grid gap-2">
             <Label htmlFor="distrito">Distrito</Label>
-            <Select required>
+            <Select name="distrito" required>
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona un distrito" />
               </SelectTrigger>
@@ -113,13 +119,13 @@ export function RegisterForm() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="escuela-director">Escuela</Label>
-            <Select required>
+            <Select name="escuela" onValueChange={setSelectedSchool} required>
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona una escuela" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="101">Escuela N° 101</SelectItem>
-                <SelectItem value="102">Escuela N° 102</SelectItem>
+                <SelectItem value="Escuela N° 101">Escuela N° 101</SelectItem>
+                <SelectItem value="Escuela N° 789">Escuela N° 789</SelectItem>
               </SelectContent>
             </Select>
           </div>
