@@ -381,7 +381,7 @@ export default function EscuelasPage() {
                             <Label htmlFor="school-name" className="text-right">
                                 Nombre
                             </Label>
-                            <Input id="school-name" name="school-name" className="col-span-3" required />
+                            <Input id="school-name" name="school-name" placeholder="Ej: Escuela N° 505" className="col-span-3" required />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="school-district" className="text-right">
@@ -421,7 +421,7 @@ export default function EscuelasPage() {
                             <Label htmlFor="district-name" className="text-right">
                                 Nombre
                             </Label>
-                            <Input id="district-name" name="district-name" className="col-span-3" required />
+                            <Input id="district-name" name="district-name" placeholder="Ej: Distrito IV" className="col-span-3" required />
                         </div>
                     </div>
                     <DialogFooter>
@@ -437,5 +437,3 @@ export default function EscuelasPage() {
     </div>
   )
 }
-
-    
