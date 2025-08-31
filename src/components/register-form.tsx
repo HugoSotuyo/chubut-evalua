@@ -20,6 +20,8 @@ import type { UserRole } from "@/lib/auth";
 export function RegisterForm() {
   const [role, setRole] = useState<UserRole | "">("");
   const [selectedSchool, setSelectedSchool] = useState("");
+  const [selectedGrade, setSelectedGrade] = useState("");
+  const [selectedCourse, setSelectedCourse] = useState("");
   const router = useRouter();
   const { toast } = useToast();
   const { addUser } = useUsers();
@@ -43,8 +45,15 @@ export function RegisterForm() {
     }
     
     let school = "N/A";
+    let grade = undefined;
+    let course = undefined;
+
     if (role === "Director") {
         school = selectedSchool;
+    } else if (role === "Docente") {
+        school = selectedSchool;
+        grade = selectedGrade;
+        course = selectedCourse;
     }
 
     addUser({
@@ -52,7 +61,9 @@ export function RegisterForm() {
         email: email,
         password: password,
         role: role,
-        school: school
+        school: school,
+        grade: grade,
+        course: course,
     });
 
     toast({
@@ -103,7 +114,7 @@ export function RegisterForm() {
         </Select>
       </div>
 
-      {role === "Director" && (
+      {(role === "Director" || role === "Docente") && (
         <>
           <div className="grid gap-2">
             <Label htmlFor="distrito">Distrito</Label>
@@ -126,6 +137,7 @@ export function RegisterForm() {
               <SelectContent>
                 <SelectItem value="Escuela N° 101">Escuela N° 101</SelectItem>
                 <SelectItem value="Escuela N° 789">Escuela N° 789</SelectItem>
+                <SelectItem value="Escuela N° 456">Escuela N° 456</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -134,54 +146,33 @@ export function RegisterForm() {
 
       {role === "Docente" && (
         <>
-          <div className="grid gap-2">
-            <Label htmlFor="distrito-docente">Distrito</Label>
-            <Select required>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona un distrito" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Distrito I</SelectItem>
-                <SelectItem value="2">Distrito II</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="escuela-docente">Escuela</Label>
-            <Select required>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona una escuela" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="101">Escuela N° 101</SelectItem>
-                <SelectItem value="102">Escuela N° 102</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
                 <Label htmlFor="grado">Grado</Label>
-                <Select required>
+                <Select name="grado" onValueChange={setSelectedGrade} required>
                 <SelectTrigger>
                     <SelectValue placeholder="Grado" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="1">1er Grado</SelectItem>
-                    <SelectItem value="2">2do Grado</SelectItem>
-                    <SelectItem value="3">3er Grado</SelectItem>
+                    <SelectItem value="1er Grado">1er Grado</SelectItem>
+                    <SelectItem value="2do Grado">2do Grado</SelectItem>
+                    <SelectItem value="3er Grado">3er Grado</SelectItem>
+                    <SelectItem value="4to Grado">4to Grado</SelectItem>
+                    <SelectItem value="5to Grado">5to Grado</SelectItem>
+                    <SelectItem value="6to Grado">6to Grado</SelectItem>
                 </SelectContent>
                 </Select>
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="curso">Curso</Label>
-                <Select required>
+                <Select name="curso" onValueChange={setSelectedCourse} required>
                 <SelectTrigger>
                     <SelectValue placeholder="Curso" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="a">"A"</SelectItem>
-                    <SelectItem value="b">"B"</SelectItem>
-                    <SelectItem value="c">"C"</SelectItem>
+                    <SelectItem value="A">"A"</SelectItem>
+                    <SelectItem value="B">"B"</SelectItem>
+                    <SelectItem value="C">"C"</SelectItem>
                 </SelectContent>
                 </Select>
             </div>
