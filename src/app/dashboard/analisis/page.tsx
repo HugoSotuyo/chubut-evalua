@@ -13,36 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/auth-context";
 import { useExams } from "@/context/exams-context";
-
-// Total de alumnos por grado (simulado)
-const totalAlumnos = { '1er Grado': 100, '2do Grado': 120, '3er Grado': 110, '4to Grado': 95, '5to Grado': 105 };
-
-// Datos simulados: Cantidad de respuestas correctas e incorrectas por pregunta.
-const originalData = [
-  { name: 'Pregunta 1', '1er Grado': { correctas: 80, incorrectas: 20 }, '2do Grado': { correctas: 84, incorrectas: 36 }, '3er Grado': { correctas: 94, incorrectas: 16 } },
-  { name: 'Pregunta 2', '1er Grado': { correctas: 60, incorrectas: 40 }, '2do Grado': { correctas: 78, incorrectas: 42 }, '3er Grado': { correctas: 77, incorrectas: 33 } },
-  { name: 'Pregunta 3', '1er Grado': { correctas: 90, incorrectas: 10 }, '2do Grado': { correctas: 96, incorrectas: 24 }, '3er Grado': { correctas: 105, incorrectas: 5 } },
-  { name: 'Pregunta 4', '1er Grado': { correctas: 50, incorrectas: 50 }, '2do Grado': { correctas: 72, incorrectas: 48 }, '3er Grado': { correctas: 61, incorrectas: 49 } },
-  { name: 'Pregunta 5', '1er Grado': { correctas: 70, incorrectas: 30 }, '2do Grado': { correctas: 90, incorrectas: 30 }, '3er Grado': { correctas: 88, incorrectas: 22 } },
-];
-
-
-// Datos calculados en base a porcentajes y totales.
-const originalDataAprobados = [
-    { name: '1er Grado', Aprobados: 75, Desaprobados: 25 },
-    { name: '2do Grado', Aprobados: 96, Desaprobados: 24 }, // 80% de 120
-    { name: '3er Grado', Aprobados: 97, Desaprobados: 13 }, // 88% de 110
-    { name: '4to Grado', Aprobados: 67, Desaprobados: 28 }, // 70% de 95
-    { name: '5to Grado', Aprobados: 97, Desaprobados: 8 },  // 92% de 105
-];
-
-const originalExamAnalysisData = [
-  { name: 'Matemática 2023', school: 'Escuela N° 101', '1er Grado': { correctas: 70, incorrectas: 30 }, '2do Grado': { correctas: 80, incorrectas: 40 }, '3er Grado': { correctas: 90, incorrectas: 20 } },
-  { name: 'Lengua 2024', school: 'Escuela N° 456', '1er Grado': { correctas: 85, incorrectas: 15 }, '2do Grado': { correctas: 95, incorrectas: 25 }, '3er Grado': { correctas: 100, incorrectas: 10 } },
-  { name: 'Ciencias 2023', school: 'Escuela N° 789', '1er Grado': { correctas: 65, incorrectas: 35 }, '2do Grado': { correctas: 75, incorrectas: 45 }, '3er Grado': { correctas: 85, incorrectas: 25 } },
-  { name: 'Diagnóstico 2024', school: 'Escuela N° 101', '1er Grado': { correctas: 80, incorrectas: 20 }, '2do Grado': { correctas: 90, incorrectas: 30 }, '3er Grado': { correctas: 95, incorrectas: 15 } },
-  { name: 'Cierre 2023', school: 'Escuela N° 23', '1er Grado': { correctas: 60, incorrectas: 40 }, '2do Grado': { correctas: 70, incorrectas: 50 }, '3er Grado': { correctas: 80, incorrectas: 30 } },
-];
+import { useResults } from "@/context/results-context"
+import type { Result } from "@/context/results-context"
 
 
 const mockResults = [
@@ -57,6 +29,7 @@ const mockResults = [
 function AnalisisPageContent() {
     const { user } = useAuth();
     const { exams } = useExams();
+    const { results } = useResults();
     const searchParams = useSearchParams();
     const [filters, setFilters] = useState({
         district: "all",
@@ -68,6 +41,16 @@ function AnalisisPageContent() {
     });
 
     const [appliedFilters, setAppliedFilters] = useState(filters);
+    
+    // Total de alumnos por grado (simulado) - Podríamos calcularlo desde los alumnos en el futuro
+    const totalAlumnosPorGrado = useMemo(() => {
+        const counts: Record<string, number> = {};
+        results.forEach(r => {
+            if (!counts[r.grade]) counts[r.grade] = 0;
+            counts[r.grade]++;
+        })
+        return counts;
+    }, [results])
 
     useEffect(() => {
         const userFilters = { ...filters };
@@ -101,15 +84,14 @@ function AnalisisPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
 
-    const getUniqueValues = (key: keyof typeof mockResults[0] | "examName" | "schoolName") => {
+    const getUniqueValues = (key: keyof Result | "examName" | "schoolName") => {
         if (key === 'examName') {
             return [...new Set(exams.map(e => e.name))];
         }
         if (key === 'schoolName') {
-            const values = originalExamAnalysisData.map(item => item.school);
-            return [...new Set(values)];
+             return [...new Set(results.map(r => r.school))];
         }
-        const values = mockResults.map(item => item[key as keyof typeof mockResults[0]]);
+        const values = results.map(item => item[key as keyof Result]);
         return [...new Set(values)];
     }
 
@@ -121,131 +103,91 @@ function AnalisisPageContent() {
         setAppliedFilters(filters);
     }
     
-    const { data, dataAprobados, examAnalysisData } = useMemo(() => {
-        if (!user) return { data: [], dataAprobados: [], examAnalysisData: [] };
+    const { dataAprobados, examAnalysisData } = useMemo(() => {
+        let filteredData = results;
 
-        const schoolFilterValue = user.role === "Director" || user.role === "Docente" ? user.school : appliedFilters.school;
-        const gradeFilterValue = user.role === "Docente" ? user.grade : appliedFilters.grade;
-
-        const hasActiveFilters = Object.values(appliedFilters).some(value => value !== "all" && value !== "") || user.role === "Director" || user.role === "Docente";
-
-        if (!hasActiveFilters) {
-             return { data: originalData, dataAprobados: originalDataAprobados, examAnalysisData: originalExamAnalysisData };
-        }
-        
-        const alterData = (data: { correctas: number; incorrectas: number }) => {
-            const total = data.correctas + data.incorrectas;
-            const randomFactor = user.role === 'Docente' ? (Math.random() * (0.4 - 0.2) + 0.2) : (Math.random() * (1.2 - 0.8) + 0.8);
-            const newCorrectas = Math.floor(data.correctas * randomFactor);
-            return {
-                correctas: Math.min(total, newCorrectas),
-                incorrectas: Math.max(0, total - Math.min(total, newCorrectas)),
-            };
-        };
-
-        const questionDataFilteredByQuestion = appliedFilters.question === 'all'
-            ? originalData
-            : originalData.filter(d => d.name === appliedFilters.question);
-
-        const newQuestionData = questionDataFilteredByQuestion.map(d => {
-            let filteredData = { ...d };
-            const selectedGrade = gradeFilterValue;
-
-            const shouldFilter = (key: '1er Grado' | '2do Grado' | '3er Grado') => {
-                return selectedGrade !== 'all' && key !== selectedGrade;
-            };
-            
-            if (hasActiveFilters) {
-                filteredData['1er Grado'] = shouldFilter('1er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['1er Grado']);
-                filteredData['2do Grado'] = shouldFilter('2do Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['2do Grado']);
-                filteredData['3er Grado'] = shouldFilter('3er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['3er Grado']);
-            } else {
-                return d;
-            }
-
-            return filteredData;
-        });
-
-        const newApprovalData = originalDataAprobados.map(d => {
-            const selectedGrade = gradeFilterValue;
-            
-            if (selectedGrade !== "all" && d.name !== selectedGrade) {
-                 return { ...d, Aprobados: 0, Desaprobados: 0 };
-            }
-
-            if (hasActiveFilters) {
-                const total = (totalAlumnos[d.name as keyof typeof totalAlumnos] || 100);
-                const randomFactor = user.role === 'Docente' ? (Math.random() * (0.4 - 0.2) + 0.2) : (Math.random() * (1.2 - 0.8) + 0.8);
-                const newAprobados = Math.floor(d.Aprobados * randomFactor);
-                
-                return {
-                    ...d,
-                    Aprobados: Math.min(total, newAprobados),
-                    Desaprobados: Math.max(0, total - Math.min(total, newAprobados)),
-                };
-            }
-            return d;
-        });
-        
-        let examDataBase = originalExamAnalysisData;
-        if (schoolFilterValue !== 'all') {
-            examDataBase = examDataBase.filter(d => d.school === schoolFilterValue);
+        if (user?.role === 'Director') {
+            filteredData = filteredData.filter(r => r.school === user.school);
+        } else if (user?.role === 'Docente') {
+            filteredData = filteredData.filter(r => 
+                r.school === user.school &&
+                r.grade === user.grade &&
+                r.course === user.course
+            );
         }
 
-        let examDataFilteredByExam = examDataBase;
         if (appliedFilters.exam !== 'all') {
-            examDataFilteredByExam = examDataBase.filter(d => d.name === appliedFilters.exam);
+            filteredData = filteredData.filter(r => r.examName === appliedFilters.exam);
+        }
+        if (appliedFilters.school !== 'all') {
+            filteredData = filteredData.filter(r => r.school === appliedFilters.school);
+        }
+        if (appliedFilters.grade !== 'all') {
+            filteredData = filteredData.filter(r => r.grade === appliedFilters.grade);
+        }
+        if (appliedFilters.course !== 'all') {
+            filteredData = filteredData.filter(r => r.course === appliedFilters.course);
         }
 
-        const newExamAnalysisData = examDataFilteredByExam.map(d => {
-            let filteredData = { ...d };
-            const selectedGrade = gradeFilterValue;
+        // Procesamiento para Aprobados/Desaprobados
+        const aprobadosPorGrado: Record<string, { Aprobados: number, Desaprobados: number }> = {};
+        filteredData.forEach(r => {
+            if (!aprobadosPorGrado[r.grade]) {
+                aprobadosPorGrado[r.grade] = { Aprobados: 0, Desaprobados: 0 };
+            }
+            if (r.status === 'Aprobado') {
+                aprobadosPorGrado[r.grade].Aprobados++;
+            } else {
+                aprobadosPorGrado[r.grade].Desaprobados++;
+            }
+        });
+        const dataAprobados = Object.entries(aprobadosPorGrado).map(([grade, counts]) => ({
+            name: grade,
+            ...counts
+        }));
 
-            const shouldFilter = (key: '1er Grado' | '2do Grado' | '3er Grado') => {
-                return selectedGrade !== 'all' && key !== selectedGrade;
-            };
+        // Procesamiento para Análisis por Examen
+        const examAnalysis: Record<string, {
+            name: string;
+            school: string;
+            [grade: string]: any;
+        }> = {};
+
+        filteredData.forEach(r => {
+            const examKey = r.examName;
+            if (!examAnalysis[examKey]) {
+                examAnalysis[examKey] = { name: r.examName, school: r.school };
+            }
+            if (!examAnalysis[examKey][r.grade]) {
+                examAnalysis[examKey][r.grade] = { correctas: 0, incorrectas: 0 };
+            }
             
-            if (hasActiveFilters) {
-                filteredData['1er Grado'] = shouldFilter('1er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['1er Grado']);
-                filteredData['2do Grado'] = shouldFilter('2do Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['2do Grado']);
-                filteredData['3er Grado'] = shouldFilter('3er Grado') ? { correctas: 0, incorrectas: 0 } : alterData(d['3er Grado']);
-            }
-            else {
-                return d;
-            }
+            // Simulación de correctas e incorrectas basado en el score
+            // Esto es una aproximación. Lo ideal sería tener las respuestas individuales.
+            const correctas = Math.round(r.totalScore);
+            const incorrectas = Math.round(r.maxScore - r.totalScore);
 
-            return filteredData;
+            examAnalysis[examKey][r.grade].correctas += correctas;
+            examAnalysis[examKey][r.grade].incorrectas += incorrectas;
         });
 
-        return { data: newQuestionData, dataAprobados: newApprovalData, examAnalysisData: newExamAnalysisData };
+        const examAnalysisData = Object.values(examAnalysis);
 
-    }, [appliedFilters, user]);
+        return { dataAprobados, examAnalysisData };
+
+    }, [appliedFilters, user, results]);
+    
+    // TODO: La data de preguntas no está disponible en los resultados, por lo que no se puede implementar el gráfico de análisis por pregunta.
+    const data = [] as any[];
+
 
     const handleExport = () => {
         let csvContent = "";
         const bom = "\uFEFF";
         
         // Headers
-        const headersAnalisis = ["Pregunta", "Grado", "Correctas", "Incorrectas"];
         const headersAprobados = ["Grado", "Aprobados", "Desaprobados"];
         const headersExamen = ["Examen", "Grado", "Correctas", "Incorrectas"];
-
-        // Análisis por Pregunta
-        csvContent += "Análisis por Pregunta (Cantidad de Respuestas)\n";
-        csvContent += headersAnalisis.join(';') + '\n';
-        data.forEach(row => {
-            Object.keys(row).forEach(key => {
-                if (key !== 'name') {
-                    const gradeData = row[key as keyof typeof row] as { correctas: number, incorrectas: number };
-                     if (gradeData.correctas > 0 || gradeData.incorrectas > 0) {
-                        const rowData = [row.name, key, gradeData.correctas, gradeData.incorrectas];
-                        csvContent += rowData.join(';') + '\n';
-                    }
-                }
-            });
-        });
-
-        csvContent += '\n\n';
 
         // Aprobados vs. Desaprobados
         csvContent += "Aprobados vs. Desaprobados (Cantidad de Alumnos)\n";
@@ -260,7 +202,7 @@ function AnalisisPageContent() {
         csvContent += '\n\n';
 
         // Análisis por Examen
-        csvContent += "Análisis por Examen (Cantidad de Respuestas)\n";
+        csvContent += "Análisis por Examen (Puntaje Agregado)\n";
         csvContent += headersExamen.join(';') + '\n';
         examAnalysisData.forEach(row => {
              Object.keys(row).forEach(key => {
@@ -381,7 +323,7 @@ function AnalisisPageContent() {
                                     <SelectTrigger id="filtro-distrito"><SelectValue placeholder="Distrito" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos</SelectItem>
-                                        {getUniqueValues("district").map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                                        {getUniqueValues("district" as any).map((d: any) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -391,7 +333,7 @@ function AnalisisPageContent() {
                                     <SelectTrigger id="filtro-escuela"><SelectValue placeholder="Escuela" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todas</SelectItem>
-                                        {getUniqueValues("schoolName").map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                        {getUniqueValues("schoolName").map(s => <SelectItem key={s as string} value={s as string}>{s as string}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -405,7 +347,7 @@ function AnalisisPageContent() {
                                     <SelectTrigger id="filtro-grado"><SelectValue placeholder="Grado" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos</SelectItem>
-                                        {getUniqueValues("grade").map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                                        {getUniqueValues("grade").map(g => <SelectItem key={g as string} value={g as string}>{g as string}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -415,7 +357,7 @@ function AnalisisPageContent() {
                                     <SelectTrigger id="filtro-curso"><SelectValue placeholder="Curso" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos</SelectItem>
-                                        {getUniqueValues("course").map(c => <SelectItem key={c} value={c}>"{c}"</SelectItem>)}
+                                        {getUniqueValues("course").map(c => <SelectItem key={c as string} value={c as string}>"{c}"</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -427,17 +369,16 @@ function AnalisisPageContent() {
                             <SelectTrigger id="filtro-examen"><SelectValue placeholder="Examen" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todos</SelectItem>
-                                {getUniqueValues("examName").map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                                {getUniqueValues("examName").map(e => <SelectItem key={e as string} value={e as string}>{e as string}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="filtro-pregunta">Pregunta</Label>
                         <Select onValueChange={(v) => handleFilterChange('question', v)} value={filters.question}>
-                            <SelectTrigger id="filtro-pregunta"><SelectValue placeholder="Pregunta" /></SelectTrigger>
+                            <SelectTrigger id="filtro-pregunta" disabled><SelectValue placeholder="Pregunta (No disp.)" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todas</SelectItem>
-                                {originalData.map(q => <SelectItem key={q.name} value={q.name}>{q.name}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
@@ -449,7 +390,7 @@ function AnalisisPageContent() {
                     <CardHeader className="flex flex-row items-start justify-between">
                         <div>
                             <CardTitle>Análisis por Pregunta</CardTitle>
-                            <CardDescription>Respuestas correctas vs. incorrectas por pregunta y grado.</CardDescription>
+                            <CardDescription>Esta funcionalidad requiere almacenar respuestas individuales (próximamente).</CardDescription>
                         </div>
                         <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('analisis-pregunta-card')}>
                             <Printer className="h-4 w-4" />
@@ -457,93 +398,9 @@ function AnalisisPageContent() {
                         </Button>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={data} margin={{ top: 20 }}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Legend />
-                                <Bar name="1er Grado - Correctas" dataKey="1er Grado.correctas" fill="hsl(var(--chart-5))">
-                                    <LabelList dataKey="1er Grado.correctas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
-                                </Bar>
-                                <Bar name="1er Grado - Incorrectas" dataKey="1er Grado.incorrectas" fill="hsl(var(--chart-5)/0.4)">
-                                    <LabelList dataKey="1er Grado.incorrectas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
-                                </Bar>
-                                 <Bar name="2do Grado - Correctas" dataKey="2do Grado.correctas" fill="hsl(var(--chart-4))">
-                                    <LabelList dataKey="2do Grado.correctas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
-                                </Bar>
-                                <Bar name="2do Grado - Incorrectas" dataKey="2do Grado.incorrectas" fill="hsl(var(--chart-4)/0.4)">
-                                    <LabelList dataKey="2do Grado.incorrectas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
-                                </Bar>
-                                 <Bar name="3er Grado - Correctas" dataKey="3er Grado.correctas" fill="hsl(var(--chart-3))">
-                                    <LabelList dataKey="3er Grado.correctas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
-                                </Bar>
-                                <Bar name="3er Grado - Incorrectas" dataKey="3er Grado.incorrectas" fill="hsl(var(--chart-3)/0.4)">
-                                    <LabelList dataKey="3er Grado.incorrectas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                        <Separator />
-                        <CardDescription>Datos detallados por pregunta.</CardDescription>
-                        <div className="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="font-bold">Preg.</TableHead>
-                                        <TableHead className="font-bold text-center">Grado</TableHead>
-                                        <TableHead className="text-center">Corr.</TableHead>
-                                        <TableHead className="text-center">% Corr.</TableHead>
-                                        <TableHead className="text-center">Incorr.</TableHead>
-                                        <TableHead className="text-center">% Incorr.</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {data.map((pregunta) => (
-                                        <React.Fragment key={pregunta.name}>
-                                            {['1er Grado', '2do Grado', '3er Grado'].map((grado, index) => {
-                                                const gradoKey = grado as keyof typeof totalAlumnos;
-                                                const total = totalAlumnos[gradoKey];
-                                                const { correctas, incorrectas } = pregunta[gradoKey as keyof typeof pregunta] as { correctas: number, incorrectas: number };
-                                                const correctasPercent = total > 0 ? ((correctas / total) * 100).toFixed(1) : 0;
-                                                const incorrectasPercent = total > 0 ? ((incorrectas / total) * 100).toFixed(1) : 0;
-                                                
-                                                if (correctas === 0 && incorrectas === 0 && appliedFilters.grade !== 'all' && appliedFilters.grade !== gradoKey) {
-                                                    return null;
-                                                }
-                                                
-                                                if(correctas === 0 && incorrectas === 0) return null;
-
-                                                const firstVisibleRow = ['1er Grado', '2do Grado', '3er Grado']
-                                                    .map(g => pregunta[g as keyof typeof pregunta] as { correctas: number; incorrectas: number })
-                                                    .findIndex(d => d && (d.correctas > 0 || d.incorrectas > 0));
-
-                                                return (
-                                                    <TableRow key={grado}>
-                                                        {index === firstVisibleRow && 
-                                                            <TableCell 
-                                                                rowSpan={['1er Grado', '2do Grado', '3er Grado'].reduce((acc, g) => {
-                                                                    const data = pregunta[g as keyof typeof pregunta] as { correctas: number; incorrectas: number };
-                                                                    return acc + (data && (data.correctas > 0 || data.incorrectas > 0) ? 1 : 0);
-                                                                }, 0)}
-                                                                className="font-medium align-middle"
-                                                            >
-                                                                {pregunta.name}
-                                                            </TableCell>
-                                                        }
-                                                        <TableCell className="text-center">{grado}</TableCell>
-                                                        <TableCell className="text-center">{correctas}</TableCell>
-                                                        <TableCell className="text-center">{correctasPercent}%</TableCell>
-                                                        <TableCell className="text-center">{incorrectas}</TableCell>
-                                                        <TableCell className="text-center">{incorrectasPercent}%</TableCell>
-                                                    </TableRow>
-                                                )
-                                            })}
-                                        </React.Fragment>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
+                       <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                            Gráfico no disponible
+                       </div>
                     </CardContent>
                 </Card>
                 <Card id="aprobados-desaprobados-card">
@@ -588,16 +445,11 @@ function AnalisisPageContent() {
                                 </TableHeader>
                                 <TableBody>
                                     {dataAprobados.map((item) => {
-                                        const gradoKey = item.name as keyof typeof totalAlumnos;
-                                        const total = totalAlumnos[gradoKey];
+                                        const total = item.Aprobados + item.Desaprobados
                                         const aprobadosPercent = total > 0 ? ((item.Aprobados / total) * 100).toFixed(1) : "0.0";
                                         const desaprobadosPercent = total > 0 ? ((item.Desaprobados / total) * 100).toFixed(1) : "0.0";
                                         
-                                        if (item.Aprobados === 0 && item.Desaprobados === 0 && appliedFilters.grade !== 'all' && appliedFilters.grade !== gradoKey) {
-                                            return null;
-                                        }
-                                        
-                                        if(item.Aprobados === 0 && item.Desaprobados === 0) return null;
+                                        if (item.Aprobados === 0 && item.Desaprobados === 0) return null;
 
                                         return (
                                             <TableRow key={item.name}>
@@ -635,24 +487,18 @@ function AnalisisPageContent() {
                             <YAxis />
                             <Tooltip content={<CustomTooltip />} />
                             <Legend />
-                            <Bar name="1er Grado - Correctas" dataKey="1er Grado.correctas" fill="hsl(var(--chart-5))">
-                                <LabelList dataKey="1er Grado.correctas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
-                            </Bar>
-                            <Bar name="1er Grado - Incorrectas" dataKey="1er Grado.incorrectas" fill="hsl(var(--chart-5)/0.4)">
-                                <LabelList dataKey="1er Grado.incorrectas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
-                            </Bar>
-                             <Bar name="2do Grado - Correctas" dataKey="2do Grado.correctas" fill="hsl(var(--chart-4))">
-                                <LabelList dataKey="2do Grado.correctas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
-                            </Bar>
-                            <Bar name="2do Grado - Incorrectas" dataKey="2do Grado.incorrectas" fill="hsl(var(--chart-4)/0.4)">
-                                <LabelList dataKey="2do Grado.incorrectas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
-                            </Bar>
-                             <Bar name="3er Grado - Correctas" dataKey="3er Grado.correctas" fill="hsl(var(--chart-3))">
-                                <LabelList dataKey="3er Grado.correctas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
-                            </Bar>
-                            <Bar name="3er Grado - Incorrectas" dataKey="3er Grado.incorrectas" fill="hsl(var(--chart-3)/0.4)">
-                                <LabelList dataKey="3er Grado.incorrectas" position="top" formatter={(value: number) => value > 0 ? value : ''} />
-                            </Bar>
+                            {/* Bucle para crear las barras dinámicamente */}
+                             {Object.keys(getUniqueValues('grade')).map((gradeIndex) => {
+                                const grade = getUniqueValues('grade')[gradeIndex as any] as string;
+                                const colorKey = `chart-${(parseInt(gradeIndex) % 5) + 1}` as const;
+                                return (
+                                    <React.Fragment key={grade}>
+                                        <Bar name={`${grade} - Puntaje`} dataKey={`${grade}.correctas`} fill={`hsl(var(--${colorKey}))`} >
+                                            <LabelList dataKey={`${grade}.correctas`} position="top" formatter={(value: number) => value > 0 ? value : ''} />
+                                        </Bar>
+                                    </React.Fragment>
+                                );
+                            })}
                         </BarChart>
                     </ResponsiveContainer>
                     <Separator />
@@ -663,47 +509,36 @@ function AnalisisPageContent() {
                                 <TableRow>
                                     <TableHead className="font-bold">Examen</TableHead>
                                     <TableHead className="font-bold text-center">Grado</TableHead>
-                                    <TableHead className="text-center">Corr.</TableHead>
-                                    <TableHead className="text-center">% Corr.</TableHead>
-                                    <TableHead className="text-center">Incorr.</TableHead>
-                                    <TableHead className="text-center">% Incorr.</TableHead>
+                                    <TableHead className="text-center">Puntaje Total</TableHead>
+                                    <TableHead className="text-center">Puntaje Máx Total</TableHead>
+                                    <TableHead className="text-center">% Rendimiento</TableHead>
                                 </TableRow>
                             </TableHeader>
                              <TableBody>
-                                {examAnalysisData
-                                    .filter(examen => {
-                                        if (appliedFilters.exam === 'all') return true;
-                                        return examen.name === appliedFilters.exam;
-                                    })
-                                    .map((examen) => (
+                                {examAnalysisData.map((examen) => (
                                     <React.Fragment key={examen.name}>
-                                        {['1er Grado', '2do Grado', '3er Grado'].map((grado, index) => {
-                                            const gradoKey = grado as keyof typeof totalAlumnos;
-                                            const total = totalAlumnos[gradoKey];
-                                            const examenData = examen[gradoKey as keyof typeof examen] as { correctas: number; incorrectas: number } | undefined;
+                                        {Object.keys(examen).filter(key => key !== 'name' && key !== 'school').map((grade, index) => {
+                                            const examenData = examen[grade as keyof typeof examen] as { correctas: number; incorrectas: number } | undefined;
                                             
                                             if (!examenData) return null;
 
                                             const { correctas, incorrectas } = examenData;
-                                            const correctasPercent = total > 0 ? ((correctas / total) * 100).toFixed(1) : "0.0";
-                                            const incorrectasPercent = total > 0 ? ((incorrectas / total) * 100).toFixed(1) : "0.0";
+                                            const maxScore = correctas + incorrectas;
+                                            const rendimiento = maxScore > 0 ? ((correctas / maxScore) * 100).toFixed(1) : "0.0";
                                             
                                             const shouldShowRow = !(correctas === 0 && incorrectas === 0);
+                                            if (!shouldShowRow) return null;
                                             
-                                            if (!shouldShowRow) {
-                                                return null;
-                                            }
+                                            const firstVisibleRow = Object.keys(examen).filter(key => key !== 'name' && key !== 'school').findIndex(g => {
+                                                const data = examen[g as keyof typeof examen] as { correctas: number; incorrectas: number };
+                                                return data && (data.correctas > 0 || data.incorrectas > 0);
+                                            });
                                             
-                                            const firstVisibleRow = ['1er Grado', '2do Grado', '3er Grado']
-                                                .map(g => examen[g as keyof typeof examen] as { correctas: number; incorrectas: number })
-                                                .findIndex(d => d && (d.correctas > 0 || d.incorrectas > 0));
-
-
                                             return (
-                                                <TableRow key={grado}>
+                                                <TableRow key={grade}>
                                                     {index === firstVisibleRow && (
                                                         <TableCell 
-                                                            rowSpan={['1er Grado', '2do Grado', '3er Grado'].reduce((acc, g) => {
+                                                             rowSpan={Object.keys(examen).filter(key => key !== 'name' && key !== 'school').reduce((acc, g) => {
                                                                 const data = examen[g as keyof typeof examen] as { correctas: number; incorrectas: number };
                                                                 return acc + (data && (data.correctas > 0 || data.incorrectas > 0) ? 1 : 0);
                                                             }, 0)} 
@@ -712,11 +547,10 @@ function AnalisisPageContent() {
                                                             {examen.name}
                                                         </TableCell>
                                                     )}
-                                                    <TableCell className="text-center">{grado}</TableCell>
+                                                    <TableCell className="text-center">{grade}</TableCell>
                                                     <TableCell className="text-center">{correctas}</TableCell>
-                                                    <TableCell className="text-center">{correctasPercent}%</TableCell>
-                                                    <TableCell className="text-center">{incorrectas}</TableCell>
-                                                    <TableCell className="text-center">{incorrectasPercent}%</TableCell>
+                                                    <TableCell className="text-center">{maxScore}</TableCell>
+                                                    <TableCell className="text-center">{rendimiento}%</TableCell>
                                                 </TableRow>
                                             )
                                         })}
@@ -745,9 +579,5 @@ export default function AnalisisPage() {
         </React.Suspense>
     )
 }
-
-    
-
-    
 
     
