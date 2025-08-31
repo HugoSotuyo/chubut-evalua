@@ -115,11 +115,11 @@ export default function ExamenesPage() {
                             </TableCell>
                             <TableCell>{exam.created}</TableCell>
                             <TableCell>
-                                {user.role === 'Director' ? (
+                                {user.role === 'Director' || user.role === 'Docente' ? (
                                     <Button variant="outline" size="sm" onClick={() => handleViewAnalysis(exam)}>
                                         Ver Análisis
                                     </Button>
-                                ) : user.role !== 'Docente' ? (
+                                ) : (
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button aria-haspopup="true" size="icon" variant="ghost">
@@ -139,7 +139,7 @@ export default function ExamenesPage() {
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
-                                ) : null}
+                                )}
                             </TableCell>
                         </TableRow>
                         ))}
