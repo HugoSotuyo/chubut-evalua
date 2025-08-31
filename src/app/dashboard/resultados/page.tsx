@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { useSearch } from "@/context/search-context";
 import { useAuth } from "@/context/auth-context";
 import { useResults } from "@/context/results-context";
+import { useExams } from "@/context/exams-context"
 
 type Filters = {
     exam: string;
@@ -26,6 +27,7 @@ type Filters = {
 function ResultadosPageContent() {
     const { user } = useAuth();
     const { results: allResults } = useResults();
+    const { exams } = useExams();
     const { searchTerm } = useSearch();
     const searchParams = useSearchParams();
     
@@ -112,7 +114,7 @@ function ResultadosPageContent() {
         URL.revokeObjectURL(url);
     };
 
-    const getUniqueValues = (key: 'examName' | 'school') => {
+    const getUniqueValues = (key: 'school') => {
         const values = allResults.map(item => item[key]);
         return [...new Set(values)];
     }
@@ -151,9 +153,8 @@ function ResultadosPageContent() {
                             <SelectTrigger id="filtro-examen"><SelectValue placeholder="Examen" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todos</SelectItem>
-                                {getUniqueValues("examName").map(exam => (
-                                    <SelectItem key={exam as string} value={exam as string}>{exam as string}</SelectItem>
-
+                                {exams.map(exam => (
+                                    <SelectItem key={exam.id} value={exam.name}>{exam.name}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -261,3 +262,5 @@ export default function ResultadosPage() {
         </React.Suspense>
     )
 }
+
+    

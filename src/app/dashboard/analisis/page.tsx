@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/auth-context";
+import { useExams } from "@/context/exams-context";
 
 // Total de alumnos por grado (simulado)
 const totalAlumnos = { '1er Grado': 100, '2do Grado': 120, '3er Grado': 110, '4to Grado': 95, '5to Grado': 105 };
@@ -40,7 +41,7 @@ const originalExamAnalysisData = [
   { name: 'Lengua 2024', school: 'Escuela N° 456', '1er Grado': { correctas: 85, incorrectas: 15 }, '2do Grado': { correctas: 95, incorrectas: 25 }, '3er Grado': { correctas: 100, incorrectas: 10 } },
   { name: 'Ciencias 2023', school: 'Escuela N° 789', '1er Grado': { correctas: 65, incorrectas: 35 }, '2do Grado': { correctas: 75, incorrectas: 45 }, '3er Grado': { correctas: 85, incorrectas: 25 } },
   { name: 'Diagnóstico 2024', school: 'Escuela N° 101', '1er Grado': { correctas: 80, incorrectas: 20 }, '2do Grado': { correctas: 90, incorrectas: 30 }, '3er Grado': { correctas: 95, incorrectas: 15 } },
-  { name: 'Matemática Cierre 2023', school: 'Escuela N° 23', '1er Grado': { correctas: 60, incorrectas: 40 }, '2do Grado': { correctas: 70, incorrectas: 50 }, '3er Grado': { correctas: 80, incorrectas: 30 } },
+  { name: 'Cierre 2023', school: 'Escuela N° 23', '1er Grado': { correctas: 60, incorrectas: 40 }, '2do Grado': { correctas: 70, incorrectas: 50 }, '3er Grado': { correctas: 80, incorrectas: 30 } },
 ];
 
 
@@ -49,12 +50,13 @@ const mockResults = [
     { district: "Distrito I", school: "Escuela N° 456", grade: "2do Grado", course: "B", exam: "Lengua 2024" },
     { district: "Distrito II", school: "Escuela N° 789", grade: "3er Grado", course: "C", exam: "Ciencias 2023" },
     { district: "Distrito II", school: "Escuela N° 502", grade: "1er Grado", course: "A", exam: "Diagnóstico 2024" },
-    { district: "Distrito III", school: "Escuela N° 23", grade: "4to Grado", course: "A", exam: "Matemática Cierre 2023" },
+    { district: "Distrito III", school: "Escuela N° 23", grade: "4to Grado", course: "A", exam: "Cierre 2023" },
     { district: "Distrito I", school: "Escuela N° 101", grade: "3er Grado", course: "A", exam: "Matemática 2023" },
 ];
 
 function AnalisisPageContent() {
     const { user } = useAuth();
+    const { exams } = useExams();
     const searchParams = useSearchParams();
     const [filters, setFilters] = useState({
         district: "all",
@@ -101,8 +103,7 @@ function AnalisisPageContent() {
 
     const getUniqueValues = (key: keyof typeof mockResults[0] | "examName" | "schoolName") => {
         if (key === 'examName') {
-            const values = originalExamAnalysisData.map(item => item.name);
-            return [...new Set(values)];
+            return [...new Set(exams.map(e => e.name))];
         }
         if (key === 'schoolName') {
             const values = originalExamAnalysisData.map(item => item.school);
@@ -744,6 +745,8 @@ export default function AnalisisPage() {
         </React.Suspense>
     )
 }
+
+    
 
     
 
