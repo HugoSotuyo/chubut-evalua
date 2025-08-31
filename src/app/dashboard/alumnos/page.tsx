@@ -41,18 +41,30 @@ export default function AlumnosPage() {
     if (!user) return [];
     
     let studentList = students
-      .filter(student => student.school === user.school && student.grade === user.grade && student.course === user.course)
       .map(student => ({
         ...student,
         results: results.filter(r => r.studentId === student.id)
       }));
+
+    // Filter by role permissions
+    if (user.role === 'Docente') {
+      studentList = studentList.filter(student => 
+          student.school === user.school && 
+          student.grade === user.grade && 
+          student.course === user.course
+      );
+    } else if (user.role === 'Director') {
+      studentList = studentList.filter(student => student.school === user.school);
+    }
     
+    // Filter by search term
     if (searchTerm) {
       studentList = studentList.filter(student => 
         student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         student.dni.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+
     return studentList;
   }, [students, results, searchTerm, user]);
 
@@ -149,10 +161,10 @@ export default function AlumnosPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            <CardTitle>Alumnos de {user.school} - {user.grade} {user.course}</CardTitle>
+            <CardTitle>Alumnos {user.role === 'Docente' ? `de ${user.grade} ${user.course}` : `de ${user.school}`}</CardTitle>
           </div>
           <CardDescription>
-            Lista de todos los alumnos registrados en tu curso.
+            {user.role === 'Docente' ? 'Lista de todos los alumnos registrados en tu curso.' : 'Lista de todos los alumnos registrados en tu escuela.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
