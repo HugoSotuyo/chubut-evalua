@@ -45,7 +45,15 @@ export default function AlumnosPage() {
         results: results.filter(r => r.studentId === student.id)
     }));
 
-    // 1. First, filter by role permissions
+    // 1. First, filter by search term if it exists
+    if (searchTerm) {
+      studentList = studentList.filter(student => 
+        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (student.dni && student.dni.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+    
+    // 2. Then, filter by role permissions
     if (user.role === 'Docente') {
       studentList = studentList.filter(student => 
           student.school === user.school && 
@@ -54,14 +62,6 @@ export default function AlumnosPage() {
       );
     } else if (user.role === 'Director') {
       studentList = studentList.filter(student => student.school === user.school);
-    }
-    
-    // 2. Then, filter by search term
-    if (searchTerm) {
-      studentList = studentList.filter(student => 
-        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.dni.toLowerCase().includes(searchTerm.toLowerCase())
-      );
     }
     
     return studentList;
@@ -261,7 +261,7 @@ export default function AlumnosPage() {
               ) : (
                 <TableRow>
                     <TableCell colSpan={4} className="text-center">
-                        No se encontraron alumnos.
+                        No se encontraron alumnos que coincidan con los filtros.
                     </TableCell>
                 </TableRow>
               )}
