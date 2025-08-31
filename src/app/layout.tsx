@@ -5,6 +5,7 @@ import { UsersProvider } from '@/context/users-context';
 import { ExamsProvider } from '@/context/exams-context';
 import { SearchProvider } from '@/context/search-context';
 import { StudentsProvider } from '@/context/students-context';
+import { ResultsProvider } from '@/context/results-context';
 
 export const metadata: Metadata = {
   title: 'Chubut evalúa',
@@ -28,8 +29,10 @@ export default function RootLayout({
           <SearchProvider>
             <ExamsProvider>
               <StudentsProvider>
-                {children}
-                <Toaster />
+                <ResultsProvider>
+                  {children}
+                  <Toaster />
+                </ResultsProvider>
               </StudentsProvider>
             </ExamsProvider>
           </SearchProvider>

@@ -14,15 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useSearch } from "@/context/search-context";
 import { useAuth } from "@/context/auth-context";
-
-const allResults = [
-    { id: "res-001", studentName: "Juan Pérez", examName: "Diagnóstico 2024", school: "Escuela N° 101", grade: "5to Grado", course: "A", status: "Aprobado", score: 85 },
-    { id: "res-002", studentName: "María Rodríguez", examName: "Diagnóstico 2024", school: "Escuela N° 101", grade: "5to Grado", course: "A", status: "Desaprobado", score: 55 },
-    { id: "res-003", studentName: "Carlos Sánchez", examName: "Comprensión Lectora", school: "Escuela N° 789", grade: "4to Grado", course: "B", status: "Aprobado", score: 92 },
-    { id: "res-004", studentName: "Ana López", examName: "Diagnóstico 2024", school: "Escuela N° 456", grade: "6to Grado", course: "C", status: "Aprobado", score: 78 },
-    { id: "res-005", studentName: "Luis Martínez", examName: "El Sistema Solar", school: "Escuela N° 101", grade: "5to Grado", course: "A", status: "Desaprobado", score: 45 },
-    { id: "res-006", studentName: "Laura García", examName: "Comprensión Lectora", school: "Escuela N° 456", grade: "6to Grado", course: "C", status: "Aprobado", score: 88 },
-]
+import { useResults } from "@/context/results-context";
 
 type Filters = {
     exam: string;
@@ -33,6 +25,7 @@ type Filters = {
 
 function ResultadosPageContent() {
     const { user } = useAuth();
+    const { results: allResults } = useResults();
     const { searchTerm } = useSearch();
     const searchParams = useSearchParams();
     
@@ -87,7 +80,7 @@ function ResultadosPageContent() {
         }
 
         return results;
-    }, [appliedFilters, searchTerm, user]);
+    }, [appliedFilters, searchTerm, user, allResults]);
 
     const handleFilterChange = <K extends keyof Filters>(filterName: K, value: Filters[K]) => {
         setFilters(prev => ({...prev, [filterName]: value}));
@@ -231,7 +224,7 @@ function ResultadosPageContent() {
                                 <TableCell className="font-medium">{result.studentName}</TableCell>
                                 <TableCell>{result.examName}</TableCell>
                                 <TableCell>{result.school}</TableCell>
-                                <TableCell>{result.score}/100</TableCell>
+                                <TableCell>{result.score.toFixed(0)}/100</TableCell>
                                 <TableCell>
                                     <Badge variant={result.status === "Desaprobado" ? "destructive" : "default"}>{result.status}</Badge>
                                 </TableCell>
@@ -268,5 +261,3 @@ export default function ResultadosPage() {
         </React.Suspense>
     )
 }
-
-    

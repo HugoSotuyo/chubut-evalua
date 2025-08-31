@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { useExams } from "@/context/exams-context";
 import { useStudents } from "@/context/students-context";
+import { useResults } from "@/context/results-context";
 import { ArrowLeft, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -21,6 +22,7 @@ export default function CargarResultadosPage() {
     const { user } = useAuth();
     const { exams } = useExams();
     const { students } = useStudents();
+    const { addResult } = useResults();
     const { toast } = useToast();
     const studentId = params.studentId as string;
 
@@ -71,16 +73,26 @@ export default function CargarResultadosPage() {
             toast({ variant: "destructive", title: "Error", description: "Por favor, selecciona un examen."});
             return;
         }
+
+        const scorePercentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
         
-        console.log({
-            studentId,
+        addResult({
+            studentId: student.id,
+            studentName: student.name,
             examId: selectedExam.id,
+            examName: selectedExam.name,
+            school: student.school,
+            grade: student.grade,
+            course: student.course,
+            score: scorePercentage,
+            status: scorePercentage >= 60 ? "Aprobado" : "Desaprobado", // Asumiendo 60 como nota de corte
             scores,
             totalScore,
+            maxScore
         });
 
         toast({
-            title: "Resultados Guardados (Simulación)",
+            title: "Resultados Guardados",
             description: `Se han guardado las notas de ${student.name} para el examen ${selectedExam.name}.`
         })
         
