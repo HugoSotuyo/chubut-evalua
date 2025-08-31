@@ -22,18 +22,11 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useSearch } from "@/context/search-context";
 import { useAuth } from "@/context/auth-context";
-
-const initialStudents = [
-    { id: "alu-001", name: "Juan Pérez", dni: "45.123.456", grade: "5to Grado", course: "A", school: "Escuela N° 101" },
-    { id: "alu-002", name: "María García", dni: "46.789.012", grade: "5to Grado", course: "A", school: "Escuela N° 101" },
-    { id: "alu-003", name: "Pedro Rodríguez", dni: "44.555.666", grade: "4to Grado", course: "B", school: "Escuela N° 789" },
-    { id: "alu-004", name: "Ana Martínez", dni: "45.987.654", grade: "6to Grado", course: "C", school: "Escuela N° 101" },
-];
-
-type Student = typeof initialStudents[0];
+import { useStudents } from "@/context/students-context";
+import type { Student } from "@/context/students-context";
 
 export default function AlumnosPage() {
-  const [students, setStudents] = useState<Student[]>(initialStudents);
+  const { students, addStudent, deleteStudent } = useStudents();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const { toast } = useToast();
@@ -68,7 +61,7 @@ export default function AlumnosPage() {
     const studentToDelete = students.find(s => s.id === studentId);
     if (!studentToDelete) return;
 
-    setStudents(students.filter(s => s.id !== studentId));
+    deleteStudent(studentId);
     toast({
       title: "Alumno Eliminado",
       description: `El alumno ${studentToDelete.name} ha sido eliminado.`,
@@ -84,30 +77,22 @@ export default function AlumnosPage() {
     };
 
     if (editingStudent) {
-      // Update existing student
-      const updatedStudents = students.map(s => 
-        s.id === editingStudent.id ? { ...editingStudent, ...studentData } : s
-      );
-      setStudents(updatedStudents);
+      // TODO: Implement updateStudent in context
+      // For now, we'll just log it.
+       console.log("Updating student:", { ...editingStudent, ...studentData });
       toast({
-        title: "Alumno Actualizado",
+        title: "Alumno Actualizado (Simulación)",
         description: `Los datos de ${studentData.name} han sido actualizados.`,
       });
     } else {
-      // Add new student
       if (!user) return;
-      const newStudent: Student = {
-        id: `alu-${Date.now()}`,
+      addStudent({
         name: studentData.name,
         dni: studentData.dni,
         school: user.school,
-        // Assuming the user object for a teacher has grade and course properties.
-        // If not, this needs to be adjusted based on the actual User type.
-        // For now, let's use placeholder or existing mock data structure.
-        grade: "5to Grado", // Example, should come from user
-        course: "A",     // Example, should come from user
-      };
-      setStudents([...students, newStudent]);
+        grade: user.grade ?? "Sin Grado",
+        course: user.course ?? "Sin Curso",
+      });
       toast({
         title: "Alumno Agregado",
         description: `${studentData.name} ha sido agregado a la lista.`,
@@ -198,6 +183,7 @@ export default function AlumnosPage() {
                           className="text-destructive"
                           onSelect={() => handleDeleteStudent(student.id)}
                         >
+                          <Trash2 className="mr-2 h-4 w-4" />
                           Eliminar
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -263,4 +249,3 @@ export default function AlumnosPage() {
     </div>
   );
 }
-

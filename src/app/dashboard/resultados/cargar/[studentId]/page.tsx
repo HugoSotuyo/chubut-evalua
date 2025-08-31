@@ -5,6 +5,7 @@ import { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { useExams } from "@/context/exams-context";
+import { useStudents } from "@/context/students-context";
 import { ArrowLeft, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -13,30 +14,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import type { Exam, Question } from "@/context/exams-context";
-
-// Mock data - in a real app, you'd fetch this
-const allStudents = [
-    { id: "alu-001", name: "Juan Pérez", dni: "45.123.456", grade: "5to Grado", course: "A", school: "Escuela N° 101" },
-    { id: "alu-002", name: "María García", dni: "46.789.012", grade: "5to Grado", course: "A", school: "Escuela N° 101" },
-    { id: "alu-003", name: "Pedro Rodríguez", dni: "44.555.666", grade: "4to Grado", course: "B", school: "Escuela N° 789" },
-    { id: "alu-004", name: "Ana Martínez", dni: "45.987.654", grade: "6to Grado", course: "C", school: "Escuela N° 101" },
-];
-
 
 export default function CargarResultadosPage() {
     const params = useParams();
     const router = useRouter();
     const { user } = useAuth();
     const { exams } = useExams();
+    const { students } = useStudents();
     const { toast } = useToast();
     const studentId = params.studentId as string;
 
     const [selectedExamId, setSelectedExamId] = useState<string>("");
     const [scores, setScores] = useState<Record<number, number>>({});
 
-    // Find the student from mock data
-    const student = allStudents.find(s => s.id === studentId);
+    const student = useMemo(() => {
+        return students.find(s => s.id === studentId);
+    }, [students, studentId]);
 
     const selectedExam = useMemo(() => {
         return exams.find(e => e.id === selectedExamId);
@@ -91,7 +84,7 @@ export default function CargarResultadosPage() {
             description: `Se han guardado las notas de ${student.name} para el examen ${selectedExam.name}.`
         })
         
-        router.push("/dashboard/resultados");
+        router.push("/dashboard/alumnos");
     };
 
     return (
@@ -188,4 +181,3 @@ export default function CargarResultadosPage() {
         </form>
     );
 }
-

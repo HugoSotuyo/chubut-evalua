@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { UsersProvider } from '@/context/users-context';
 import { ExamsProvider } from '@/context/exams-context';
 import { SearchProvider } from '@/context/search-context';
+import { StudentsProvider } from '@/context/students-context';
 
 export const metadata: Metadata = {
   title: 'Chubut evalúa',
@@ -26,8 +27,10 @@ export default function RootLayout({
         <UsersProvider>
           <SearchProvider>
             <ExamsProvider>
+              <StudentsProvider>
                 {children}
                 <Toaster />
+              </StudentsProvider>
             </ExamsProvider>
           </SearchProvider>
         </UsersProvider>
