@@ -24,6 +24,7 @@ type NewResult = Omit<Result, 'id'>;
 interface ResultsContextType {
   results: Result[];
   addResult: (result: NewResult) => void;
+  resultExists: (studentId: string, examId: string) => boolean;
 }
 
 const ResultsContext = createContext<ResultsContextType | undefined>(undefined);
@@ -67,9 +68,13 @@ export function ResultsProvider({ children }: { children: ReactNode }) {
     }
     setResults(prevResults => [...prevResults, newResult]);
   };
+  
+  const resultExists = (studentId: string, examId: string): boolean => {
+    return results.some(r => r.studentId === studentId && r.examId === examId);
+  }
 
   return (
-    <ResultsContext.Provider value={{ results, addResult }}>
+    <ResultsContext.Provider value={{ results, addResult, resultExists }}>
       {children}
     </ResultsContext.Provider>
   );

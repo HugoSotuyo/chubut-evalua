@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MoreHorizontal, PlusCircle, User, FileDown, Trash2, FileSignature } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -23,10 +24,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useSearch } from "@/context/search-context";
 import { useAuth } from "@/context/auth-context";
 import { useStudents } from "@/context/students-context";
+import { useResults } from "@/context/results-context";
 import type { Student } from "@/context/students-context";
 
 export default function AlumnosPage() {
   const { students, addStudent, deleteStudent } = useStudents();
+  const { results } = useResults();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const { toast } = useToast();
@@ -36,16 +39,23 @@ export default function AlumnosPage() {
 
   const filteredStudents = useMemo(() => {
     if (!user) return [];
-    let results = students.filter(student => student.school === user.school);
+    
+    let studentList = students
+      .filter(student => student.school === user.school && student.grade === user.grade && student.course === user.course)
+      .map(student => ({
+        ...student,
+        results: results.filter(r => r.studentId === student.id)
+      }));
     
     if (searchTerm) {
-      results = results.filter(student => 
+      studentList = studentList.filter(student => 
         student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         student.dni.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    return results;
-  }, [students, searchTerm, user]);
+    return studentList;
+  }, [students, results, searchTerm, user]);
+
 
   const handleOpenForm = (student: Student | null = null) => {
     setEditingStudent(student);
@@ -78,7 +88,6 @@ export default function AlumnosPage() {
 
     if (editingStudent) {
       // TODO: Implement updateStudent in context
-      // For now, we'll just log it.
        console.log("Updating student:", { ...editingStudent, ...studentData });
       toast({
         title: "Alumno Actualizado (Simulación)",
@@ -140,7 +149,7 @@ export default function AlumnosPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            <CardTitle>Alumnos de {user.school}</CardTitle>
+            <CardTitle>Alumnos de {user.school} - {user.grade} {user.course}</CardTitle>
           </div>
           <CardDescription>
             Lista de todos los alumnos registrados en tu curso.
@@ -152,6 +161,7 @@ export default function AlumnosPage() {
               <TableRow>
                 <TableHead>Nombre Completo</TableHead>
                 <TableHead>DNI</TableHead>
+                <TableHead>Exámenes Cargados</TableHead>
                 <TableHead>
                   <span className="sr-only">Acciones</span>
                 </TableHead>
@@ -162,6 +172,13 @@ export default function AlumnosPage() {
                 <TableRow key={student.id}>
                   <TableCell className="font-medium">{student.name}</TableCell>
                   <TableCell>{student.dni}</TableCell>
+                   <TableCell>
+                    {student.results && student.results.length > 0 ? (
+                      <Badge variant="secondary">{student.results.length} cargado(s)</Badge>
+                    ) : (
+                      <Badge variant="outline">Ninguno</Badge>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

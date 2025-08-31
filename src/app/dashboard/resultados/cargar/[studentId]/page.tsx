@@ -22,7 +22,7 @@ export default function CargarResultadosPage() {
     const { user } = useAuth();
     const { exams } = useExams();
     const { students } = useStudents();
-    const { addResult } = useResults();
+    const { addResult, resultExists } = useResults();
     const { toast } = useToast();
     const studentId = params.studentId as string;
 
@@ -71,6 +71,11 @@ export default function CargarResultadosPage() {
         e.preventDefault();
         if (!selectedExam) {
             toast({ variant: "destructive", title: "Error", description: "Por favor, selecciona un examen."});
+            return;
+        }
+
+        if (resultExists(student.id, selectedExam.id)) {
+            toast({ variant: "destructive", title: "Error", description: "Este alumno ya tiene un resultado cargado para este examen."});
             return;
         }
 
@@ -136,11 +141,14 @@ export default function CargarResultadosPage() {
                                     <SelectValue placeholder="Elige una evaluación" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {exams.filter(e => e.status === 'Abierto').map(exam => (
-                                        <SelectItem key={exam.id} value={exam.id}>
-                                            {exam.name}
-                                        </SelectItem>
-                                    ))}
+                                    {exams.filter(e => e.status === 'Abierto').map(exam => {
+                                        const isLoaded = resultExists(student.id, exam.id);
+                                        return (
+                                            <SelectItem key={exam.id} value={exam.id} disabled={isLoaded}>
+                                                {exam.name} {isLoaded && "(Cargado)"}
+                                            </SelectItem>
+                                        )
+                                    })}
                                 </SelectContent>
                             </Select>
                         </div>

@@ -2,6 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import type { Result } from './results-context';
 
 export type Student = {
   id: string;
@@ -10,6 +11,7 @@ export type Student = {
   grade: string;
   course: string;
   school: string;
+  results?: Result[];
 };
 
 type NewStudent = Omit<Student, 'id'>;
