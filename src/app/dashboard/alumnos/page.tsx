@@ -45,15 +45,7 @@ export default function AlumnosPage() {
         results: results.filter(r => r.studentId === student.id)
     }));
 
-    // 1. Filter by search term first
-    if (searchTerm) {
-      studentList = studentList.filter(student => 
-        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.dni.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    // 2. Then, filter by role permissions
+    // 1. First, filter by role permissions
     if (user.role === 'Docente') {
       studentList = studentList.filter(student => 
           student.school === user.school && 
@@ -62,6 +54,14 @@ export default function AlumnosPage() {
       );
     } else if (user.role === 'Director') {
       studentList = studentList.filter(student => student.school === user.school);
+    }
+    
+    // 2. Then, filter by search term
+    if (searchTerm) {
+      studentList = studentList.filter(student => 
+        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.dni.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
     
     // For Evaluador, Admin, etc., no role-based filtering is applied, so they see all students.
@@ -112,8 +112,8 @@ export default function AlumnosPage() {
         name: studentData.name,
         dni: studentData.dni,
         school: user.school,
-        grade: user.grade ?? "Sin Grado",
-        course: user.course ?? "Sin Curso",
+        grade: user.grade || "Sin Grado",
+        course: user.course || "Sin Curso",
       });
       toast({
         title: "Alumno Agregado",

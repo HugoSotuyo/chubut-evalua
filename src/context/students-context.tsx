@@ -14,7 +14,7 @@ export type Student = {
   results?: Result[];
 };
 
-type NewStudent = Omit<Student, 'id'>;
+type NewStudent = Omit<Student, 'id' | 'results'>;
 
 interface StudentsContextType {
   students: Student[];
