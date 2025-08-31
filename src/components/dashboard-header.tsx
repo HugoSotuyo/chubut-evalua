@@ -84,7 +84,9 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Mi Perfil</DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/perfil">Mi Perfil</Link>
+          </DropdownMenuItem>
           <DropdownMenuItem>Configuración</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>

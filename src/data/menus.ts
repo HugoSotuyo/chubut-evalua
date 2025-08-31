@@ -9,6 +9,7 @@ import {
   GraduationCap as StudentIcon,
   Shield,
   FileSignature,
+  User as UserIcon,
 } from "lucide-react";
 
 export type NavItem = {
@@ -29,4 +30,5 @@ export const navItems: NavItem[] = [
   { href: "/dashboard/escuelas", icon: Building, label: "Escuelas", roles: ["Evaluador", "Administrador", "Referente"], showInMenu: true },
   { href: "/dashboard/alumnos", icon: StudentIcon, label: "Alumnos", roles: ["Director", "Docente"], showInMenu: true },
   { href: "/dashboard/admin", icon: Shield, label: "Admin General", roles: ["Evaluador"], showInMenu: true },
+  { href: "/dashboard/perfil", icon: UserIcon, label: "Mi Perfil", roles: ["Evaluador", "Referente", "Administrador", "Director", "Docente"], showInMenu: false },
 ];
