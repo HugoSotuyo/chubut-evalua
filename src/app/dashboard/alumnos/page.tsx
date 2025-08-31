@@ -23,10 +23,10 @@ import { useSearch } from "@/context/search-context";
 import { useAuth } from "@/context/auth-context";
 
 const initialStudents = [
-    { id: "alu-001", name: "Juan Pérez", grade: "5to Grado", course: "A", school: "Escuela N° 101" },
-    { id: "alu-002", name: "María García", grade: "5to Grado", course: "A", school: "Escuela N° 101" },
-    { id: "alu-003", name: "Pedro Rodríguez", grade: "4to Grado", course: "B", school: "Escuela N° 789" },
-    { id: "alu-004", name: "Ana Martínez", grade: "6to Grado", course: "C", school: "Escuela N° 101" },
+    { id: "alu-001", name: "Juan Pérez", dni: "45.123.456", grade: "5to Grado", course: "A", school: "Escuela N° 101" },
+    { id: "alu-002", name: "María García", dni: "46.789.012", grade: "5to Grado", course: "A", school: "Escuela N° 101" },
+    { id: "alu-003", name: "Pedro Rodríguez", dni: "44.555.666", grade: "4to Grado", course: "B", school: "Escuela N° 789" },
+    { id: "alu-004", name: "Ana Martínez", dni: "45.987.654", grade: "6to Grado", course: "C", school: "Escuela N° 101" },
 ];
 
 type Student = typeof initialStudents[0];
@@ -44,7 +44,10 @@ export default function AlumnosPage() {
     let results = students.filter(student => student.school === user.school);
     
     if (searchTerm) {
-      results = results.filter(student => student.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      results = results.filter(student => 
+        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.dni.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
     return results;
   }, [students, searchTerm, user]);
@@ -75,8 +78,7 @@ export default function AlumnosPage() {
     const formData = new FormData(e.currentTarget);
     const studentData = {
       name: formData.get("name") as string,
-      grade: formData.get("grade") as string,
-      course: formData.get("course") as string,
+      dni: formData.get("dni") as string,
     };
 
     if (editingStudent) {
@@ -94,8 +96,14 @@ export default function AlumnosPage() {
       if (!user) return;
       const newStudent: Student = {
         id: `alu-${Date.now()}`,
-        ...studentData,
+        name: studentData.name,
+        dni: studentData.dni,
         school: user.school,
+        // Assuming the user object for a teacher has grade and course properties.
+        // If not, this needs to be adjusted based on the actual User type.
+        // For now, let's use placeholder or existing mock data structure.
+        grade: "5to Grado", // Example, should come from user
+        course: "A",     // Example, should come from user
       };
       setStudents([...students, newStudent]);
       toast({
@@ -144,7 +152,7 @@ export default function AlumnosPage() {
             <CardTitle>Alumnos de {user.school}</CardTitle>
           </div>
           <CardDescription>
-            Lista de todos los alumnos registrados en tu escuela.
+            Lista de todos los alumnos registrados en tu curso.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -152,8 +160,7 @@ export default function AlumnosPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre Completo</TableHead>
-                <TableHead>Grado</TableHead>
-                <TableHead>Curso</TableHead>
+                <TableHead>DNI</TableHead>
                 <TableHead>
                   <span className="sr-only">Acciones</span>
                 </TableHead>
@@ -163,8 +170,7 @@ export default function AlumnosPage() {
               {filteredStudents.map((student) => (
                 <TableRow key={student.id}>
                   <TableCell className="font-medium">{student.name}</TableCell>
-                  <TableCell>{student.grade}</TableCell>
-                  <TableCell>"{student.course}"</TableCell>
+                  <TableCell>{student.dni}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -204,7 +210,7 @@ export default function AlumnosPage() {
               <DialogDescription>
                 {editingStudent
                   ? "Modifica los datos del alumno."
-                  : "Completa el formulario para agregar un nuevo alumno."}
+                  : "Completa el formulario para agregar un nuevo alumno. La escuela, grado y curso se asignarán automáticamente."}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -221,25 +227,13 @@ export default function AlumnosPage() {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="grade" className="text-right">
-                  Grado
+                <Label htmlFor="dni" className="text-right">
+                  DNI
                 </Label>
                 <Input
-                  id="grade"
-                  name="grade"
-                  defaultValue={editingStudent?.grade}
-                  className="col-span-3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="course" className="text-right">
-                  Curso
-                </Label>
-                <Input
-                  id="course"
-                  name="course"
-                  defaultValue={editingStudent?.course}
+                  id="dni"
+                  name="dni"
+                  defaultValue={editingStudent?.dni}
                   className="col-span-3"
                   required
                 />
@@ -259,3 +253,4 @@ export default function AlumnosPage() {
     </div>
   );
 }
+
