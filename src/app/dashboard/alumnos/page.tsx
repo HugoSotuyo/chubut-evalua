@@ -2,11 +2,12 @@
 "use client"
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MoreHorizontal, PlusCircle, User, FileDown, Trash2 } from "lucide-react";
+import { MoreHorizontal, PlusCircle, User, FileDown, Trash2, FileSignature } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +39,7 @@ export default function AlumnosPage() {
   const { toast } = useToast();
   const { searchTerm } = useSearch();
   const { user } = useAuth();
+  const router = useRouter();
 
   const filteredStudents = useMemo(() => {
     if (!user) return [];
@@ -122,6 +124,10 @@ export default function AlumnosPage() {
     });
   };
 
+  const handleCargarExamen = (studentId: string) => {
+    router.push(`/dashboard/resultados/cargar/${studentId}`);
+  };
+
   if (!user) {
     return <div>Cargando...</div>;
   }
@@ -181,6 +187,10 @@ export default function AlumnosPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                        <DropdownMenuItem onSelect={() => handleCargarExamen(student.id)}>
+                            <FileSignature className="mr-2 h-4 w-4" />
+                            Cargar Examen
+                        </DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => handleOpenForm(student)}>
                           Editar
                         </DropdownMenuItem>
