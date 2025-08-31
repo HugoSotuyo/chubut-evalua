@@ -64,8 +64,6 @@ export default function AlumnosPage() {
       );
     }
     
-    // For Evaluador, Admin, etc., no role-based filtering is applied, so they see all students.
-
     return studentList;
   }, [students, results, searchTerm, user]);
 
@@ -103,6 +101,17 @@ export default function AlumnosPage() {
       name: formData.get("name") as string,
       dni: formData.get("dni") as string,
     };
+    
+    // Validation: Check if DNI already exists
+    if (!editingStudent && students.some(s => s.dni === studentData.dni)) {
+      toast({
+        title: "DNI Duplicado",
+        description: `Ya existe un alumno con el DNI ${studentData.dni}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
 
     if (editingStudent) {
       // TODO: Implement updateStudent in context
@@ -297,6 +306,7 @@ export default function AlumnosPage() {
                   defaultValue={editingStudent?.dni}
                   className="col-span-3"
                   required
+                  readOnly={!!editingStudent}
                 />
               </div>
             </div>
@@ -313,5 +323,4 @@ export default function AlumnosPage() {
       </Dialog>
     </div>
   );
-
-    
+}
