@@ -11,6 +11,8 @@ export interface User {
   email: string;
   role: UserRole;
   school: string;
+  grade?: string;
+  course?: string;
 }
 
 const defaultUser: User = {
@@ -51,3 +53,5 @@ export const setMockUser = (user: User | null) => {
         }
     }
 }
+
+    

@@ -16,12 +16,12 @@ import { useSearch } from "@/context/search-context";
 import { useAuth } from "@/context/auth-context";
 
 const allResults = [
-    { id: "res-001", studentName: "Juan Pérez", examName: "Diagnóstico 2024", school: "Escuela N° 101", grade: "Aprobado", score: 85 },
-    { id: "res-002", studentName: "María Rodríguez", examName: "Diagnóstico 2024", school: "Escuela N° 101", grade: "Desaprobado", score: 55 },
-    { id: "res-003", studentName: "Carlos Sánchez", examName: "Comprensión Lectora", school: "Escuela N° 789", grade: "Aprobado", score: 92 },
-    { id: "res-004", studentName: "Ana López", examName: "Diagnóstico 2024", school: "Escuela N° 456", grade: "Aprobado", score: 78 },
-    { id: "res-005", studentName: "Luis Martínez", examName: "El Sistema Solar", school: "Escuela N° 101", grade: "Desaprobado", score: 45 },
-    { id: "res-006", studentName: "Laura García", examName: "Comprensión Lectora", school: "Escuela N° 456", grade: "Aprobado", score: 88 },
+    { id: "res-001", studentName: "Juan Pérez", examName: "Diagnóstico 2024", school: "Escuela N° 101", grade: "5to Grado", course: "A", status: "Aprobado", score: 85 },
+    { id: "res-002", studentName: "María Rodríguez", examName: "Diagnóstico 2024", school: "Escuela N° 101", grade: "5to Grado", course: "A", status: "Desaprobado", score: 55 },
+    { id: "res-003", studentName: "Carlos Sánchez", examName: "Comprensión Lectora", school: "Escuela N° 789", grade: "4to Grado", course: "B", status: "Aprobado", score: 92 },
+    { id: "res-004", studentName: "Ana López", examName: "Diagnóstico 2024", school: "Escuela N° 456", grade: "6to Grado", course: "C", status: "Aprobado", score: 78 },
+    { id: "res-005", studentName: "Luis Martínez", examName: "El Sistema Solar", school: "Escuela N° 101", grade: "5to Grado", course: "A", status: "Desaprobado", score: 45 },
+    { id: "res-006", studentName: "Laura García", examName: "Comprensión Lectora", school: "Escuela N° 456", grade: "6to Grado", course: "C", status: "Aprobado", score: 88 },
 ]
 
 type Filters = {
@@ -38,7 +38,7 @@ function ResultadosPageContent() {
     
     const [filters, setFilters] = useState<Filters>({
         exam: "all",
-        school: user?.role === "Director" ? user.school : "all",
+        school: user?.role === "Director" || user?.role === "Docente" ? user.school : "all",
         studentName: "",
         status: "all",
     });
@@ -62,19 +62,25 @@ function ResultadosPageContent() {
 
         if (user.role === "Director") {
             results = results.filter(r => r.school === user.school);
+        } else if (user.role === "Docente") {
+            results = results.filter(r => 
+                r.school === user.school &&
+                r.grade === user.grade &&
+                r.course === user.course
+            );
         }
 
         if (appliedFilters.exam !== "all") {
             results = results.filter(r => r.examName === appliedFilters.exam);
         }
-        if (appliedFilters.school !== "all" && user.role !== "Director") {
+        if (appliedFilters.school !== "all" && user.role !== "Director" && user.role !== "Docente") {
             results = results.filter(r => r.school === appliedFilters.school);
         }
         if (appliedFilters.studentName) {
             results = results.filter(r => r.studentName.toLowerCase().includes(appliedFilters.studentName.toLowerCase()));
         }
         if (appliedFilters.status !== "all") {
-            results = results.filter(r => r.grade.toLowerCase() === appliedFilters.status);
+            results = results.filter(r => r.status.toLowerCase() === appliedFilters.status);
         }
         if (searchTerm) {
             results = results.filter(r => r.studentName.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -95,7 +101,7 @@ function ResultadosPageContent() {
     
     const handleExport = () => {
         const headers = ["ID", "Alumno", "Examen", "Escuela", "Nota", "Estado"];
-        const rows = filteredResults.map(res => [res.id, res.studentName, res.examName, res.school, res.score, res.grade].join(';'));
+        const rows = filteredResults.map(res => [res.id, res.studentName, res.examName, res.school, res.score, res.status].join(';'));
         
         // BOM para compatibilidad con Excel
         const bom = "\uFEFF";
@@ -159,7 +165,7 @@ function ResultadosPageContent() {
                             </SelectContent>
                         </Select>
                     </div>
-                    {user.role !== 'Director' && (
+                    {user.role !== 'Director' && user.role !== 'Docente' && (
                         <div className="grid gap-2">
                             <Label htmlFor="filtro-escuela">Escuela</Label>
                             <Select onValueChange={(value) => handleFilterChange("school", value)} value={filters.school}>
@@ -227,7 +233,7 @@ function ResultadosPageContent() {
                                 <TableCell>{result.school}</TableCell>
                                 <TableCell>{result.score}/100</TableCell>
                                 <TableCell>
-                                    <Badge variant={result.grade === "Desaprobado" ? "destructive" : "default"}>{result.grade}</Badge>
+                                    <Badge variant={result.status === "Desaprobado" ? "destructive" : "default"}>{result.status}</Badge>
                                 </TableCell>
                                 <TableCell>
                                     <DropdownMenu>
@@ -262,3 +268,5 @@ export default function ResultadosPage() {
         </React.Suspense>
     )
 }
+
+    

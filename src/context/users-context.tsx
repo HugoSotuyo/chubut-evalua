@@ -12,6 +12,8 @@ export type User = {
   role: UserRole;
   school: string;
   status: "Activo" | "Pendiente" | "Inactivo";
+  grade?: string;
+  course?: string;
 };
 
 type NewUser = Omit<User, 'id' | 'status' | 'avatar'> & {
@@ -28,10 +30,10 @@ interface UsersContextType {
 const UsersContext = createContext<UsersContextType | undefined>(undefined);
 
 const initialUsers: User[] = [
-    { id: "usr-001", name: "Ana Gomez", email: "ana.gomez@example.com", password: "password123", role: "Docente", school: "Escuela N° 101", status: "Activo" },
+    { id: "usr-001", name: "Ana Gomez", email: "ana.gomez@example.com", password: "password123", role: "Docente", school: "Escuela N° 101", status: "Activo", grade: "5to Grado", course: "A" },
     { id: "usr-002", name: "Carlos Diaz", email: "carlos.diaz@example.com", password: "password123", role: "Director", school: "Escuela N° 789", status: "Activo" },
     { id: "usr-003", name: "Lucia Fernandez", email: "lucia.fernandez@example.com", password: "password123", role: "Referente", school: "N/A", status: "Activo" },
-    { id: "usr-004", name: "Marcos Torres", email: "marcos.torres@example.com", password: "password123", role: "Docente", school: "Escuela N° 101", status: "Pendiente" },
+    { id: "usr-004", name: "Marcos Torres", email: "marcos.torres@example.com", password: "password123", role: "Docente", school: "Escuela N° 101", status: "Pendiente", grade: "6to Grado", course: "B" },
     { id: "usr-005", name: "Sofia Reyes", email: "sofia.reyes@example.com", password: "password123", role: "Administrador", school: "N/A", status: "Activo" },
     { id: "usr-006", name: "Evaluador Principal", email: "evaluador@chubut.edu.ar", password: "hdsp6032", role: "Evaluador", school: "N/A", status: "Activo" },
 ];
@@ -101,3 +103,5 @@ export function useUsers() {
   }
   return context;
 }
+
+    
