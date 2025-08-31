@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { MoreHorizontal, PlusCircle, Building, Filter, FileDown } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Building, Filter, FileDown, Map } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
   AlertDialog,
@@ -44,12 +44,15 @@ const initialSchools = [
 
 type School = typeof initialSchools[0];
 
-const districts = ["Distrito I", "Distrito II", "Distrito III", "Distrito IV", "Distrito V"];
+const initialDistricts = ["Distrito I", "Distrito II", "Distrito III", "Distrito IV", "Distrito V"];
 
 export default function EscuelasPage() {
   const [schools, setSchools] = useState<School[]>(initialSchools);
+  const [districts, setDistricts] = useState<string[]>(initialDistricts);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAddSchoolDialogOpen, setIsAddSchoolDialogOpen] = useState(false);
+  const [isAddDistrictDialogOpen, setIsAddDistrictDialogOpen] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
   const [districtFilter, setDistrictFilter] = useState("all");
@@ -57,9 +60,9 @@ export default function EscuelasPage() {
   const { searchTerm } = useSearch();
 
   const uniqueDistricts = useMemo(() => {
-    const districts = initialSchools.map(school => school.district);
-    return [...new Set(districts)];
-  }, []);
+    const districtsFromSchools = schools.map(school => school.district);
+    return [...new Set([...districtsFromSchools, ...districts])];
+  }, [schools, districts]);
 
   const filteredSchools = useMemo(() => {
     let results = schools;
@@ -125,11 +128,47 @@ export default function EscuelasPage() {
     setEditingSchool(null);
   };
   
-  const showToast = (title: string) => {
-    toast({
-        title,
-        description: "Esta funcionalidad estará disponible próximamente.",
-    });
+  const handleAddSchool = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const name = formData.get("school-name") as string;
+    const district = formData.get("school-district") as string;
+
+    if (!name || !district) {
+        toast({ title: "Error", description: "El nombre y el distrito son requeridos.", variant: "destructive"});
+        return;
+    }
+
+    const newSchool: School = {
+        id: `esc-${Date.now()}`,
+        name,
+        district,
+        status: "Activa"
+    };
+
+    setSchools([...schools, newSchool]);
+    toast({ title: "Escuela Agregada", description: `La escuela ${name} ha sido agregada.` });
+    setIsAddSchoolDialogOpen(false);
+  };
+
+  const handleAddDistrict = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const name = formData.get("district-name") as string;
+    
+    if (!name) {
+        toast({ title: "Error", description: "El nombre del distrito es requerido.", variant: "destructive"});
+        return;
+    }
+    
+    if (districts.includes(name)) {
+        toast({ title: "Error", description: "El distrito ya existe.", variant: "destructive"});
+        return;
+    }
+
+    setDistricts([...districts, name]);
+    toast({ title: "Distrito Agregado", description: `El distrito ${name} ha sido agregado.` });
+    setIsAddDistrictDialogOpen(false);
   }
 
   const handleExport = () => {
@@ -138,7 +177,6 @@ export default function EscuelasPage() {
         [school.id, school.name, school.district, school.status].join(';')
     );
     
-    // BOM para compatibilidad con Excel
     const bom = "\uFEFF";
     const csvContent = bom + [headers.join(';'), ...rows].join("\n");
     
@@ -160,10 +198,14 @@ export default function EscuelasPage() {
         <div className="flex items-center justify-between">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight font-headline">Gestión de Escuelas</h1>
-                <p className="text-muted-foreground">Administra las escuelas del sistema.</p>
+                <p className="text-muted-foreground">Administra las escuelas y distritos del sistema.</p>
             </div>
             <div className="flex items-center gap-2">
-                <Button onClick={() => showToast('Agregar Escuela')}>
+                <Button onClick={() => setIsAddDistrictDialogOpen(true)} variant="outline">
+                    <Map className="mr-2 h-4 w-4" />
+                    Agregar Distrito
+                </Button>
+                <Button onClick={() => setIsAddSchoolDialogOpen(true)}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Agregar Escuela
                 </Button>
@@ -306,7 +348,7 @@ export default function EscuelasPage() {
                                     <SelectValue placeholder="Selecciona un distrito" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {districts.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                                    {uniqueDistricts.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -324,7 +366,76 @@ export default function EscuelasPage() {
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+        
+        <Dialog open={isAddSchoolDialogOpen} onOpenChange={setIsAddSchoolDialogOpen}>
+            <DialogContent className="sm:max-w-[425px]">
+                 <form onSubmit={handleAddSchool}>
+                    <DialogHeader>
+                        <DialogTitle>Agregar Nueva Escuela</DialogTitle>
+                        <DialogDescription>
+                            Completa los datos para registrar una nueva escuela en el sistema.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="school-name" className="text-right">
+                                Nombre
+                            </Label>
+                            <Input id="school-name" name="school-name" className="col-span-3" required />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="school-district" className="text-right">
+                                Distrito
+                            </Label>
+                            <Select name="school-district" required>
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue placeholder="Selecciona un distrito" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {uniqueDistricts.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="secondary">Cancelar</Button>
+                        </DialogClose>
+                        <Button type="submit">Guardar Escuela</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+
+        <Dialog open={isAddDistrictDialogOpen} onOpenChange={setIsAddDistrictDialogOpen}>
+            <DialogContent className="sm:max-w-[425px]">
+                <form onSubmit={handleAddDistrict}>
+                    <DialogHeader>
+                        <DialogTitle>Agregar Nuevo Distrito</DialogTitle>
+                        <DialogDescription>
+                            Escribe el nombre del nuevo distrito para agregarlo al sistema.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="district-name" className="text-right">
+                                Nombre
+                            </Label>
+                            <Input id="district-name" name="district-name" className="col-span-3" required />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                           <Button type="button" variant="secondary">Cancelar</Button>
+                        </DialogClose>
+                        <Button type="submit">Guardar Distrito</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
 
     </div>
   )
 }
+
+    
