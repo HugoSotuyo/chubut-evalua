@@ -68,10 +68,22 @@ function AnalisisPageContent() {
     const [appliedFilters, setAppliedFilters] = useState(filters);
 
     useEffect(() => {
+        const userFilters = { ...filters };
+        let filtersChanged = false;
+
         if (user?.role === 'Director') {
-            const newFilters = { ...filters, school: user.school };
-            setFilters(newFilters);
-            setAppliedFilters(newFilters);
+            userFilters.school = user.school;
+            filtersChanged = true;
+        } else if (user?.role === 'Docente') {
+            userFilters.school = user.school;
+            userFilters.grade = user.grade ?? 'all';
+            userFilters.course = user.course ?? 'all';
+            filtersChanged = true;
+        }
+        
+        if (filtersChanged) {
+            setFilters(userFilters);
+            setAppliedFilters(userFilters);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
@@ -111,9 +123,10 @@ function AnalisisPageContent() {
     const { data, dataAprobados, examAnalysisData } = useMemo(() => {
         if (!user) return { data: [], dataAprobados: [], examAnalysisData: [] };
 
-        const schoolFilterValue = user.role === "Director" ? user.school : appliedFilters.school;
-        
-        const hasActiveFilters = Object.values(appliedFilters).some(value => value !== "all" && value !== "") || user.role === "Director";
+        const schoolFilterValue = user.role === "Director" || user.role === "Docente" ? user.school : appliedFilters.school;
+        const gradeFilterValue = user.role === "Docente" ? user.grade : appliedFilters.grade;
+
+        const hasActiveFilters = Object.values(appliedFilters).some(value => value !== "all" && value !== "") || user.role === "Director" || user.role === "Docente";
 
         if (!hasActiveFilters) {
              return { data: originalData, dataAprobados: originalDataAprobados, examAnalysisData: originalExamAnalysisData };
@@ -121,7 +134,8 @@ function AnalisisPageContent() {
         
         const alterData = (data: { correctas: number; incorrectas: number }) => {
             const total = data.correctas + data.incorrectas;
-            const newCorrectas = Math.floor(data.correctas * (Math.random() * (1.2 - 0.8) + 0.8));
+            const randomFactor = user.role === 'Docente' ? (Math.random() * (0.4 - 0.2) + 0.2) : (Math.random() * (1.2 - 0.8) + 0.8);
+            const newCorrectas = Math.floor(data.correctas * randomFactor);
             return {
                 correctas: Math.min(total, newCorrectas),
                 incorrectas: Math.max(0, total - Math.min(total, newCorrectas)),
@@ -134,7 +148,7 @@ function AnalisisPageContent() {
 
         const newQuestionData = questionDataFilteredByQuestion.map(d => {
             let filteredData = { ...d };
-            const selectedGrade = appliedFilters.grade;
+            const selectedGrade = gradeFilterValue;
 
             const shouldFilter = (key: '1er Grado' | '2do Grado' | '3er Grado') => {
                 return selectedGrade !== 'all' && key !== selectedGrade;
@@ -152,7 +166,7 @@ function AnalisisPageContent() {
         });
 
         const newApprovalData = originalDataAprobados.map(d => {
-            const selectedGrade = appliedFilters.grade;
+            const selectedGrade = gradeFilterValue;
             
             if (selectedGrade !== "all" && d.name !== selectedGrade) {
                  return { ...d, Aprobados: 0, Desaprobados: 0 };
@@ -160,7 +174,8 @@ function AnalisisPageContent() {
 
             if (hasActiveFilters) {
                 const total = (totalAlumnos[d.name as keyof typeof totalAlumnos] || 100);
-                const newAprobados = Math.floor(d.Aprobados * (Math.random() * (1.2 - 0.8) + 0.8));
+                const randomFactor = user.role === 'Docente' ? (Math.random() * (0.4 - 0.2) + 0.2) : (Math.random() * (1.2 - 0.8) + 0.8);
+                const newAprobados = Math.floor(d.Aprobados * randomFactor);
                 
                 return {
                     ...d,
@@ -183,7 +198,7 @@ function AnalisisPageContent() {
 
         const newExamAnalysisData = examDataFilteredByExam.map(d => {
             let filteredData = { ...d };
-            const selectedGrade = appliedFilters.grade;
+            const selectedGrade = gradeFilterValue;
 
             const shouldFilter = (key: '1er Grado' | '2do Grado' | '3er Grado') => {
                 return selectedGrade !== 'all' && key !== selectedGrade;
@@ -331,6 +346,10 @@ function AnalisisPageContent() {
         return <div>Cargando...</div>;
     }
 
+    const showGeneralFilters = user.role !== 'Director' && user.role !== 'Docente';
+    const showGradeCourseFilters = user.role !== 'Docente';
+
+
     return (
         <div className="flex flex-col gap-8">
             <div>
@@ -353,7 +372,7 @@ function AnalisisPageContent() {
                     <CardDescription>Selecciona los criterios para acotar tu búsqueda. Los gráficos se actualizarán automáticamente.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                    {user.role !== 'Director' && (
+                    {showGeneralFilters && (
                         <>
                             <div className="grid gap-2">
                                 <Label htmlFor="filtro-distrito">Distrito</Label>
@@ -377,26 +396,30 @@ function AnalisisPageContent() {
                             </div>
                         </>
                     )}
-                     <div className="grid gap-2">
-                        <Label htmlFor="filtro-grado">Grado</Label>
-                        <Select onValueChange={(v) => handleFilterChange('grade', v)} value={filters.grade}>
-                            <SelectTrigger id="filtro-grado"><SelectValue placeholder="Grado" /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todos</SelectItem>
-                                {getUniqueValues("grade").map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                     <div className="grid gap-2">
-                        <Label htmlFor="filtro-curso">Curso</Label>
-                        <Select onValueChange={(v) => handleFilterChange('course', v)} value={filters.course}>
-                            <SelectTrigger id="filtro-curso"><SelectValue placeholder="Curso" /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todos</SelectItem>
-                                {getUniqueValues("course").map(c => <SelectItem key={c} value={c}>"{c}"</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                     {showGradeCourseFilters && (
+                        <>
+                             <div className="grid gap-2">
+                                <Label htmlFor="filtro-grado">Grado</Label>
+                                <Select onValueChange={(v) => handleFilterChange('grade', v)} value={filters.grade}>
+                                    <SelectTrigger id="filtro-grado"><SelectValue placeholder="Grado" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todos</SelectItem>
+                                        {getUniqueValues("grade").map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="filtro-curso">Curso</Label>
+                                <Select onValueChange={(v) => handleFilterChange('course', v)} value={filters.course}>
+                                    <SelectTrigger id="filtro-curso"><SelectValue placeholder="Curso" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todos</SelectItem>
+                                        {getUniqueValues("course").map(c => <SelectItem key={c} value={c}>"{c}"</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </>
+                     )}
                      <div className="grid gap-2">
                         <Label htmlFor="filtro-examen">Examen</Label>
                         <Select onValueChange={(v) => handleFilterChange('exam', v)} value={filters.exam}>
@@ -721,5 +744,7 @@ export default function AnalisisPage() {
         </React.Suspense>
     )
 }
+
+    
 
     
