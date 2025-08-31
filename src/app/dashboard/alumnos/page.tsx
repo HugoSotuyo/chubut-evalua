@@ -93,6 +93,11 @@ export default function AlumnosPage() {
 
   const handleSaveStudent = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!user) {
+        toast({ title: "Error", description: "No se ha podido identificar al usuario.", variant: "destructive"});
+        return;
+    }
+
     const formData = new FormData(e.currentTarget);
     const studentData = {
       name: formData.get("name") as string,
@@ -107,7 +112,6 @@ export default function AlumnosPage() {
         description: `Los datos de ${studentData.name} han sido actualizados.`,
       });
     } else {
-      if (!user) return;
       addStudent({
         name: studentData.name,
         dni: studentData.dni,
@@ -143,7 +147,7 @@ export default function AlumnosPage() {
     switch (user.role) {
       case 'Docente':
         return {
-          title: `Alumnos de ${user.grade} ${user.course}`,
+          title: `Alumnos de ${user.grade || 'Grado sin asignar'} ${user.course || 'Curso sin asignar'}`,
           description: 'Lista de todos los alumnos registrados en tu curso.',
         };
       case 'Director':
@@ -204,46 +208,54 @@ export default function AlumnosPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredStudents.map((student) => (
-                <TableRow key={student.id}>
-                  <TableCell className="font-medium">{student.name}</TableCell>
-                  <TableCell>{student.dni}</TableCell>
-                   <TableCell>
-                    {student.results && student.results.length > 0 ? (
-                      <Badge variant="secondary">{student.results.length} cargado(s)</Badge>
-                    ) : (
-                      <Badge variant="outline">Ninguno</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                        <DropdownMenuItem onSelect={() => handleCargarExamen(student.id)}>
-                            <FileSignature className="mr-2 h-4 w-4" />
-                            Cargar Examen
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleOpenForm(student)}>
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onSelect={() => handleDeleteStudent(student.id)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+              {filteredStudents.length > 0 ? (
+                filteredStudents.map((student) => (
+                  <TableRow key={student.id}>
+                    <TableCell className="font-medium">{student.name}</TableCell>
+                    <TableCell>{student.dni}</TableCell>
+                    <TableCell>
+                      {student.results && student.results.length > 0 ? (
+                        <Badge variant="secondary">{student.results.length} cargado(s)</Badge>
+                      ) : (
+                        <Badge variant="outline">Ninguno</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button aria-haspopup="true" size="icon" variant="ghost">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                          <DropdownMenuItem onSelect={() => handleCargarExamen(student.id)}>
+                              <FileSignature className="mr-2 h-4 w-4" />
+                              Cargar Examen
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleOpenForm(student)}>
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onSelect={() => handleDeleteStudent(student.id)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                    <TableCell colSpan={4} className="text-center">
+                        No se encontraron alumnos.
+                    </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -301,4 +313,5 @@ export default function AlumnosPage() {
       </Dialog>
     </div>
   );
-}
+
+    
