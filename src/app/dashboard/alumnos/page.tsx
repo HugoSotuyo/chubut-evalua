@@ -39,14 +39,21 @@ export default function AlumnosPage() {
 
   const filteredStudents = useMemo(() => {
     if (!user) return [];
-    
-    let studentList = students
-      .map(student => ({
+
+    let studentList = students.map(student => ({
         ...student,
         results: results.filter(r => r.studentId === student.id)
-      }));
+    }));
 
-    // Filter by role permissions
+    // 1. Filter by search term first
+    if (searchTerm) {
+      studentList = studentList.filter(student => 
+        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.dni.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // 2. Then, filter by role permissions
     if (user.role === 'Docente') {
       studentList = studentList.filter(student => 
           student.school === user.school && 
@@ -57,13 +64,7 @@ export default function AlumnosPage() {
       studentList = studentList.filter(student => student.school === user.school);
     }
     
-    // Filter by search term
-    if (searchTerm) {
-      studentList = studentList.filter(student => 
-        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.dni.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+    // For Evaluador, Admin, etc., no role-based filtering is applied, so they see all students.
 
     return studentList;
   }, [students, results, searchTerm, user]);
@@ -137,6 +138,29 @@ export default function AlumnosPage() {
   if (!user) {
     return <div>Cargando...</div>;
   }
+  
+  const getCardTexts = () => {
+    switch (user.role) {
+      case 'Docente':
+        return {
+          title: `Alumnos de ${user.grade} ${user.course}`,
+          description: 'Lista de todos los alumnos registrados en tu curso.',
+        };
+      case 'Director':
+        return {
+          title: `Alumnos de ${user.school}`,
+          description: 'Lista de todos los alumnos registrados en tu escuela.',
+        };
+      default:
+        return {
+          title: 'Alumnos Registrados',
+          description: 'Lista de todos los alumnos del sistema.',
+        };
+    }
+  };
+
+  const { title: cardTitle, description: cardDescription } = getCardTexts();
+
 
   return (
     <div className="flex flex-col gap-8">
@@ -161,10 +185,10 @@ export default function AlumnosPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            <CardTitle>Alumnos {user.role === 'Docente' ? `de ${user.grade} ${user.course}` : `de ${user.school}`}</CardTitle>
+            <CardTitle>{cardTitle}</CardTitle>
           </div>
           <CardDescription>
-            {user.role === 'Docente' ? 'Lista de todos los alumnos registrados en tu curso.' : 'Lista de todos los alumnos registrados en tu escuela.'}
+            {cardDescription}
           </CardDescription>
         </CardHeader>
         <CardContent>
