@@ -33,6 +33,14 @@ export default function CargarResultadosPage() {
         return students.find(s => s.id === studentId);
     }, [students, studentId]);
 
+    const availableExams = useMemo(() => {
+        const openExams = exams.filter(e => e.status === 'Abierto');
+        if (user?.role === 'Docente') {
+            return openExams.filter(e => e.grade === user.grade);
+        }
+        return openExams;
+    }, [exams, user]);
+
     const selectedExam = useMemo(() => {
         return exams.find(e => e.id === selectedExamId);
     }, [selectedExamId, exams]);
@@ -141,7 +149,7 @@ export default function CargarResultadosPage() {
                                     <SelectValue placeholder="Elige una evaluación" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {exams.filter(e => e.status === 'Abierto').map(exam => {
+                                    {availableExams.map(exam => {
                                         const isLoaded = resultExists(student.id, exam.id);
                                         return (
                                             <SelectItem key={exam.id} value={exam.id} disabled={isLoaded}>
