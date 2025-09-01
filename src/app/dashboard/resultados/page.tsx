@@ -275,7 +275,6 @@ function ResultadosPageContent() {
                                                 <Eye className="mr-2 h-4 w-4" />
                                                 Ver Detalles
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem disabled>Editar</DropdownMenuItem>
                                             <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(result)}>
                                                 <Trash2 className="mr-2 h-4 w-4" />
                                                 Anular Resultado
@@ -359,3 +358,5 @@ export default function ResultadosPage() {
         </React.Suspense>
     )
 }
+
+    
