@@ -74,6 +74,13 @@ function AnalisisPageContent() {
         return [...new Set(values)];
     }
 
+    const availableExams = useMemo(() => {
+        if (user?.role === 'Docente') {
+            return exams.filter(e => e.grade === user.grade);
+        }
+        return exams;
+    }, [exams, user]);
+
     const handleFilterChange = (filterName: keyof typeof filters, value: string) => {
         setFilters(prev => ({...prev, [filterName]: value}));
     }
@@ -390,7 +397,7 @@ function AnalisisPageContent() {
                             <SelectTrigger id="filtro-examen"><SelectValue placeholder="Examen" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todos</SelectItem>
-                                {(getUniqueValues("examName") as string[]).map((e, i) => <SelectItem key={`${e}-${i}`} value={e}>{e}</SelectItem>)}
+                                {availableExams.map((e, i) => <SelectItem key={`${e.id}-${i}`} value={e.name}>{e.name}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
