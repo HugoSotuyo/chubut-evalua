@@ -108,6 +108,7 @@ export default function ExamenesPage() {
                         <TableRow>
                             <TableHead>Título del Examen</TableHead>
                             <TableHead>Tema/Materia</TableHead>
+                            <TableHead>Grado</TableHead>
                             <TableHead>Estado</TableHead>
                             <TableHead>Fecha de Creación</TableHead>
                             <TableHead>
@@ -120,6 +121,7 @@ export default function ExamenesPage() {
                         <TableRow key={exam.id}>
                             <TableCell className="font-medium">{exam.name}</TableCell>
                             <TableCell>{exam.tema}</TableCell>
+                            <TableCell>{exam.grade}</TableCell>
                             <TableCell>
                                 <Badge variant={exam.status === "Cerrado" ? "destructive" : "default"}>{exam.status}</Badge>
                             </TableCell>

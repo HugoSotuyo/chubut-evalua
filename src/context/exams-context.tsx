@@ -13,6 +13,7 @@ export type Exam = {
     id: string;
     name: string;
     tema: string;
+    grade: string;
     created: string;
     status: "Abierto" | "Cerrado";
     questions: Question[];
@@ -31,10 +32,10 @@ interface ExamsContextType {
 const ExamsContext = createContext<ExamsContextType | undefined>(undefined);
 
 const initialExams: Exam[] = [
-    { id: "exm-001", name: "Diagnóstico 2024", tema: "Matemática", created: "2024-03-15", status: "Abierto", questions: [{consigna: "Resolver: 2+2", respuesta: "4", puntaje: 10}, {consigna: "Capital de Francia", respuesta: "Paris", puntaje: 10}] },
-    { id: "exm-002", name: "Comprensión Lectora", tema: "Lengua", created: "2024-04-01", status: "Abierto", questions: [] },
-    { id: "exm-003", name: "El Sistema Solar", tema: "Ciencias Naturales", created: "2023-09-10", status: "Cerrado", questions: [] },
-    { id: "exm-004", name: "Cierre 2023", tema: "Matemática", created: "2023-11-20", status: "Cerrado", questions: [] },
+    { id: "exm-001", name: "Diagnóstico 2024", tema: "Matemática", grade: "5to Grado", created: "2024-03-15", status: "Abierto", questions: [{consigna: "Resolver: 2+2", respuesta: "4", puntaje: 10}, {consigna: "Capital de Francia", respuesta: "Paris", puntaje: 10}] },
+    { id: "exm-002", name: "Comprensión Lectora", tema: "Lengua", grade: "4to Grado", created: "2024-04-01", status: "Abierto", questions: [] },
+    { id: "exm-003", name: "El Sistema Solar", tema: "Ciencias Naturales", grade: "3er Grado", created: "2023-09-10", status: "Cerrado", questions: [] },
+    { id: "exm-004", name: "Cierre 2023", tema: "Matemática", grade: "6to Grado", created: "2023-11-20", status: "Cerrado", questions: [] },
 ];
 
 const LOCAL_STORAGE_KEY = 'chubut-evalua-exams';

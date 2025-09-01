@@ -5,7 +5,7 @@ import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { format } from "date-fns"
-import { CalendarIcon, PlusCircle, Trash2, Save, ArrowLeft, Paperclip } from "lucide-react"
+import { CalendarIcon, PlusCircle, Trash2, Save, ArrowLeft } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -20,6 +20,7 @@ import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { useExams } from "@/context/exams-context"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const questionSchema = z.object({
   consigna: z.string().min(1, "La consigna es requerida."),
@@ -30,6 +31,7 @@ const questionSchema = z.object({
 const examSchema = z.object({
   tema: z.string().min(1, "El tema es requerido."),
   titulo: z.string().min(1, "El título es requerido."),
+  grade: z.string().min(1, "El grado es requerido."),
   fechaCarga: z.date({
     required_error: "La fecha de carga es requerida.",
   }),
@@ -58,6 +60,7 @@ export default function CrearExamenPage() {
     defaultValues: {
       tema: "",
       titulo: "",
+      grade: "",
       fechaCarga: new Date(),
       questions: [{ consigna: "", respuesta: "", puntaje: 10 }],
     },
@@ -81,6 +84,7 @@ export default function CrearExamenPage() {
     addExam({
         name: data.titulo,
         tema: data.tema,
+        grade: data.grade,
         created: format(data.fechaCarga, "yyyy-MM-dd"),
         questions: data.questions,
         fileDataUrl,
@@ -122,7 +126,7 @@ export default function CrearExamenPage() {
             <CardTitle>Información General</CardTitle>
             <CardDescription>Datos principales del examen y archivo adjunto (opcional).</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <FormField
               control={form.control}
               name="tema"
@@ -149,6 +153,31 @@ export default function CrearExamenPage() {
                 </FormItem>
               )}
             />
+             <FormField
+              control={form.control}
+              name="grade"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Grado</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un grado" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectItem value="1er Grado">1er Grado</SelectItem>
+                        <SelectItem value="2do Grado">2do Grado</SelectItem>
+                        <SelectItem value="3er Grado">3er Grado</SelectItem>
+                        <SelectItem value="4to Grado">4to Grado</SelectItem>
+                        <SelectItem value="5to Grado">5to Grado</SelectItem>
+                        <SelectItem value="6to Grado">6to Grado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="fechaCarga"
@@ -161,7 +190,7 @@ export default function CrearExamenPage() {
                         <Button
                           variant={"outline"}
                           className={cn(
-                            "w-[240px] pl-3 text-left font-normal",
+                            "w-full pl-3 text-left font-normal",
                             !field.value && "text-muted-foreground"
                           )}
                         >

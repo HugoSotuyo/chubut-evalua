@@ -6,7 +6,7 @@ import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { format } from "date-fns"
-import { CalendarIcon, PlusCircle, Trash2, Save, ArrowLeft, Paperclip, Download } from "lucide-react"
+import { CalendarIcon, PlusCircle, Trash2, Save, ArrowLeft, Paperclip } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useRouter, useParams } from "next/navigation"
 import { useExams } from "@/context/exams-context"
 import { useAuth } from "@/context/auth-context"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const questionSchema = z.object({
   consigna: z.string().min(1, "La consigna es requerida."),
@@ -32,6 +33,7 @@ const questionSchema = z.object({
 const examSchema = z.object({
   tema: z.string().min(1, "El tema es requerido."),
   titulo: z.string().min(1, "El título es requerido."),
+  grade: z.string().min(1, "El grado es requerido."),
   fechaCarga: z.date({
     required_error: "La fecha de carga es requerida.",
   }),
@@ -84,6 +86,7 @@ export default function EditarExamenPage() {
     defaultValues: {
       titulo: examToEdit?.name ?? "",
       tema: examToEdit?.tema ?? "",
+      grade: examToEdit?.grade ?? "",
       fechaCarga: parseDate(examToEdit?.created),
       questions: (examToEdit?.questions && examToEdit.questions.length > 0)
         ? examToEdit.questions
@@ -112,6 +115,7 @@ export default function EditarExamenPage() {
       id: examToEdit.id,
       name: data.titulo,
       tema: data.tema,
+      grade: data.grade,
       created: format(data.fechaCarga, "yyyy-MM-dd"),
       questions: data.questions,
       fileDataUrl,
@@ -157,7 +161,7 @@ export default function EditarExamenPage() {
             <CardTitle>Información General</CardTitle>
             <CardDescription>Datos principales del examen y archivo adjunto.</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <FormField
               control={form.control}
               name="tema"
@@ -186,6 +190,31 @@ export default function EditarExamenPage() {
             />
             <FormField
               control={form.control}
+              name="grade"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Grado</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un grado" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectItem value="1er Grado">1er Grado</SelectItem>
+                        <SelectItem value="2do Grado">2do Grado</SelectItem>
+                        <SelectItem value="3er Grado">3er Grado</SelectItem>
+                        <SelectItem value="4to Grado">4to Grado</SelectItem>
+                        <SelectItem value="5to Grado">5to Grado</SelectItem>
+                        <SelectItem value="6to Grado">6to Grado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="fechaCarga"
               render={({ field }) => (
                 <FormItem className="flex flex-col pt-2.5">
@@ -196,7 +225,7 @@ export default function EditarExamenPage() {
                         <Button
                           variant={"outline"}
                           className={cn(
-                            "w-[240px] pl-3 text-left font-normal",
+                            "w-full pl-3 text-left font-normal",
                             !field.value && "text-muted-foreground"
                           )}
                         >
@@ -236,7 +265,7 @@ export default function EditarExamenPage() {
                 )}
                 />
             {currentFileName && (
-                <div className="flex items-center space-x-2 text-sm">
+                <div className="flex items-center space-x-2 text-sm col-span-full">
                     <Paperclip className="h-4 w-4" />
                     <span>Archivo actual: {currentFileName}</span>
                 </div>
