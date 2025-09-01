@@ -40,27 +40,48 @@ export default function Dashboard() {
     const { exams } = useExams();
     const { results } = useResults();
 
+    const filteredData = useMemo(() => {
+        if (!user) return { users: [], students: [], exams: [], results: [] };
+
+        if (user.role === 'Director') {
+            const schoolStudents = students.filter(s => s.school === user.school);
+            const schoolResults = results.filter(r => r.school === user.school);
+            const schoolExams = exams.filter(e => schoolResults.some(r => r.examId === e.id));
+            const schoolTeachers = users.filter(u => u.school === user.school);
+            return { users: schoolTeachers, students: schoolStudents, exams: schoolExams, results: schoolResults };
+        }
+
+        if (user.role === 'Docente') {
+            const courseStudents = students.filter(s => s.school === user.school && s.grade === user.grade && s.course === user.course);
+            const courseResults = results.filter(r => r.school === user.school && r.grade === user.grade && r.course === user.course);
+            const courseExams = exams.filter(e => e.grade === user.grade);
+             return { users, students: courseStudents, exams: courseExams, results: courseResults };
+        }
+
+        return { users, students, exams, results };
+    }, [user, users, students, exams, results]);
+
     const stats = useMemo(() => {
-        const activeTeachers = users.filter(u => u.role === 'Docente' && u.status === 'Activo').length;
-        const closedExams = exams.filter(e => e.status === 'Cerrado').length;
-        const pendingExams = exams.filter(e => e.status === 'Abierto').length;
+        const activeTeachers = filteredData.users.filter(u => u.role === 'Docente' && u.status === 'Activo').length;
+        const closedExams = filteredData.exams.filter(e => e.status === 'Cerrado').length;
+        const pendingExams = filteredData.exams.filter(e => e.status === 'Abierto').length;
 
         return {
-            totalStudents: students.length,
+            totalStudents: filteredData.students.length,
             activeTeachers,
             closedExams,
             pendingExams,
         }
-    }, [users, students, exams]);
+    }, [filteredData]);
     
     const recentResults = useMemo(() => {
-        return [...results].reverse().slice(0, 5);
-    }, [results]);
+        return [...filteredData.results].reverse().slice(0, 5);
+    }, [filteredData.results]);
 
     const performanceByGrade = useMemo(() => {
         const gradeData: Record<string, { totalScore: number, count: number }> = {};
         
-        results.forEach(result => {
+        filteredData.results.forEach(result => {
             if (!gradeData[result.grade]) {
                 gradeData[result.grade] = { totalScore: 0, count: 0 };
             }
@@ -72,7 +93,7 @@ export default function Dashboard() {
             name: grade,
             Rendimiento: data.count > 0 ? data.totalScore / data.count : 0,
         })).sort((a, b) => a.name.localeCompare(b.name));
-    }, [results]);
+    }, [filteredData.results]);
     
     const chartConfig = {
         Rendimiento: {
@@ -229,4 +250,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
