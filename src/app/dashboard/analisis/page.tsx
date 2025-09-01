@@ -282,6 +282,19 @@ function AnalisisPageContent() {
             }
         }
     };
+    
+    const gradeDataKeys = useMemo(() => {
+        const keys = new Set<string>();
+        examAnalysisData.forEach(exam => {
+            Object.keys(exam).forEach(key => {
+                if (key.endsWith('_correctas')) {
+                    keys.add(key);
+                }
+            });
+        });
+        return Array.from(keys);
+    }, [examAnalysisData]);
+
 
     if (!user) {
         return <div>Cargando...</div>;
@@ -489,15 +502,18 @@ function AnalisisPageContent() {
                             <YAxis />
                             <Tooltip content={<CustomTooltip />} />
                             <Legend />
-                            {Array.from(new Set(results.map(r => r.grade))).map((grade, gradeIndex) => {
-                                const colorKey = `chart-${(gradeIndex % 5) + 1}` as const;
-                                const dataKey = `${grade}_correctas`;
+                            {gradeDataKeys.map((dataKey, index) => {
+                                const gradeName = dataKey.replace('_correctas', '');
+                                const colorKey = `chart-${(index % 5) + 1}` as const;
                                 return (
-                                    <React.Fragment key={grade}>
-                                        <Bar name={`${grade} - Puntaje`} dataKey={dataKey} fill={`hsl(var(--${colorKey}))`} >
-                                            <LabelList dataKey={dataKey} position="top" formatter={(value: number) => value > 0 ? value : ''} />
-                                        </Bar>
-                                    </React.Fragment>
+                                    <Bar 
+                                        key={dataKey}
+                                        name={`${gradeName} - Puntaje`} 
+                                        dataKey={dataKey} 
+                                        fill={`hsl(var(--${colorKey}))`} 
+                                    >
+                                        <LabelList dataKey={dataKey} position="top" formatter={(value: number) => value > 0 ? value : ''} />
+                                    </Bar>
                                 );
                             })}
                         </BarChart>
@@ -578,5 +594,3 @@ export default function AnalisisPage() {
         </React.Suspense>
     )
 }
-
-    
