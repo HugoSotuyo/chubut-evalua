@@ -199,7 +199,7 @@ export default function Dashboard() {
                             unit="%"
                         />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="Rendimiento" radius={8}>
+                        <Bar dataKey="Rendimiento" fill="hsl(var(--chart-1))" radius={8}>
                             <LabelList
                                 position="top"
                                 offset={12}
