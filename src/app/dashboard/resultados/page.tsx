@@ -59,6 +59,13 @@ function ResultadosPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const availableExams = useMemo(() => {
+        if (user?.role === 'Docente') {
+            return exams.filter(e => e.grade === user.grade);
+        }
+        return exams;
+    }, [exams, user]);
+
     const filteredResults = useMemo(() => {
         if (!user) return [];
         let results = allResults;
@@ -185,7 +192,7 @@ function ResultadosPageContent() {
                             <SelectTrigger id="filtro-examen"><SelectValue placeholder="Examen" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todos</SelectItem>
-                                {exams.map(exam => (
+                                {availableExams.map(exam => (
                                     <SelectItem key={exam.id} value={exam.name}>{exam.name}</SelectItem>
                                 ))}
                             </SelectContent>
@@ -358,5 +365,3 @@ export default function ResultadosPage() {
         </React.Suspense>
     )
 }
-
-    

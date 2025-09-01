@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
@@ -32,6 +32,14 @@ export default function ExamenesPage() {
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useAuth();
+
+  const filteredExams = useMemo(() => {
+    if (!user) return [];
+    if (user.role === 'Docente') {
+      return exams.filter(exam => exam.grade === user.grade);
+    }
+    return exams;
+  }, [exams, user]);
 
   const handleOpenDeleteDialog = (exam: Exam) => {
     setSelectedExam(exam);
@@ -117,7 +125,7 @@ export default function ExamenesPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {exams.map((exam) => (
+                        {filteredExams.map((exam) => (
                         <TableRow key={exam.id}>
                             <TableCell className="font-medium">{exam.name}</TableCell>
                             <TableCell>{exam.tema}</TableCell>
