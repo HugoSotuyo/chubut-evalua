@@ -5,7 +5,7 @@ import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { format } from "date-fns"
-import { CalendarIcon, PlusCircle, Trash2, Save, ArrowLeft } from "lucide-react"
+import { CalendarIcon, PlusCircle, Trash2, Save, ArrowLeft, Paperclip } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -34,9 +34,19 @@ const examSchema = z.object({
     required_error: "La fecha de carga es requerida.",
   }),
   questions: z.array(questionSchema).min(1, "Debes agregar al menos una pregunta."),
+  file: z.instanceof(FileList).optional(),
 })
 
 type ExamFormValues = z.infer<typeof examSchema>
+
+const fileToDataUrl = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+};
 
 export default function CrearExamenPage() {
   const { toast } = useToast()
@@ -58,12 +68,23 @@ export default function CrearExamenPage() {
     name: "questions",
   })
 
-  const onSubmit = (data: ExamFormValues) => {
+  const onSubmit = async (data: ExamFormValues) => {
+    let fileDataUrl: string | undefined = undefined;
+    let fileName: string | undefined = undefined;
+
+    if (data.file && data.file.length > 0) {
+        const file = data.file[0];
+        fileDataUrl = await fileToDataUrl(file);
+        fileName = file.name;
+    }
+
     addExam({
         name: data.titulo,
         tema: data.tema,
         created: format(data.fechaCarga, "yyyy-MM-dd"),
         questions: data.questions,
+        fileDataUrl,
+        fileName,
     });
     toast({
       title: "Examen Guardado",
@@ -99,7 +120,7 @@ export default function CrearExamenPage() {
         <Card>
           <CardHeader>
             <CardTitle>Información General</CardTitle>
-            <CardDescription>Datos principales del examen.</CardDescription>
+            <CardDescription>Datos principales del examen y archivo adjunto (opcional).</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <FormField
@@ -166,6 +187,19 @@ export default function CrearExamenPage() {
                 </FormItem>
               )}
             />
+             <FormField
+                control={form.control}
+                name="file"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Adjuntar Archivo (PDF, Word)</FormLabel>
+                     <FormControl>
+                        <Input type="file" {...form.register("file")} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
           </CardContent>
         </Card>
 

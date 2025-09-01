@@ -4,9 +4,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { MoreHorizontal, PlusCircle } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Download } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { useExams } from "@/context/exams-context"
@@ -65,6 +65,16 @@ export default function ExamenesPage() {
     router.push(`/dashboard/analisis?exam=${encodeURIComponent(exam.name)}`);
   };
 
+  const handleDownloadFile = (exam: Exam) => {
+    if (!exam.fileDataUrl || !exam.fileName) return;
+    const link = document.createElement("a");
+    link.href = exam.fileDataUrl;
+    link.download = exam.fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (!user) {
     return <div>Cargando...</div>;
   }
@@ -116,9 +126,24 @@ export default function ExamenesPage() {
                             <TableCell>{exam.created}</TableCell>
                             <TableCell>
                                 {user.role === 'Director' || user.role === 'Docente' ? (
-                                    <Button variant="outline" size="sm" onClick={() => handleViewAnalysis(exam)}>
-                                        Ver Análisis
-                                    </Button>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                                <span className="sr-only">Toggle menu</span>
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                                            <DropdownMenuItem onSelect={() => handleViewAnalysis(exam)}>Ver Análisis</DropdownMenuItem>
+                                             {exam.fileDataUrl && (
+                                                <DropdownMenuItem onSelect={() => handleDownloadFile(exam)}>
+                                                    <Download className="mr-2 h-4 w-4"/>
+                                                    Descargar Examen
+                                                </DropdownMenuItem>
+                                            )}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 ) : (
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
@@ -131,9 +156,17 @@ export default function ExamenesPage() {
                                             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                                             <DropdownMenuItem onSelect={() => handleEditExam(exam)}>Editar</DropdownMenuItem>
                                             <DropdownMenuItem onSelect={() => handleViewAnalysis(exam)}>Ver Análisis</DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            {exam.fileDataUrl && (
+                                                <DropdownMenuItem onSelect={() => handleDownloadFile(exam)}>
+                                                    <Download className="mr-2 h-4 w-4"/>
+                                                    Descargar Examen
+                                                </DropdownMenuItem>
+                                            )}
                                             <DropdownMenuItem onSelect={() => handleToggleStatus(exam)}>
                                                 {exam.status === "Abierto" ? "Cerrar Examen" : "Abrir Examen"}
                                             </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
                                             <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(exam)}>
                                                 Eliminar
                                             </DropdownMenuItem>

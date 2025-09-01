@@ -1,12 +1,12 @@
 
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { format } from "date-fns"
-import { CalendarIcon, PlusCircle, Trash2, Save, ArrowLeft } from "lucide-react"
+import { CalendarIcon, PlusCircle, Trash2, Save, ArrowLeft, Paperclip, Download } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -36,13 +36,22 @@ const examSchema = z.object({
     required_error: "La fecha de carga es requerida.",
   }),
   questions: z.array(questionSchema).min(1, "Debes agregar al menos una pregunta."),
+  file: z.instanceof(FileList).optional(),
 })
 
 type ExamFormValues = z.infer<typeof examSchema>
 
+const fileToDataUrl = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+};
+
 const parseDate = (dateString: string | undefined): Date => {
     if (!dateString) return new Date();
-    // Ajuste para evitar problemas de zona horaria que restan un día
     const date = new Date(dateString);
     const userTimezoneOffset = date.getTimezoneOffset() * 60000;
     return new Date(date.getTime() + userTimezoneOffset);
@@ -57,6 +66,7 @@ export default function EditarExamenPage() {
 
   const examId = params.id as string;
   const examToEdit = exams.find(e => e.id === examId);
+  const [currentFileName, setCurrentFileName] = useState(examToEdit?.fileName || "");
 
   useEffect(() => {
     if (user && user.role === 'Docente') {
@@ -86,14 +96,26 @@ export default function EditarExamenPage() {
     name: "questions",
   })
 
-  const onSubmit = (data: ExamFormValues) => {
+  const onSubmit = async (data: ExamFormValues) => {
     if (!examToEdit) return;
+
+    let fileDataUrl = examToEdit.fileDataUrl;
+    let fileName = examToEdit.fileName;
+
+    if (data.file && data.file.length > 0) {
+        const file = data.file[0];
+        fileDataUrl = await fileToDataUrl(file);
+        fileName = file.name;
+    }
+    
     updateExam({
       id: examToEdit.id,
       name: data.titulo,
       tema: data.tema,
       created: format(data.fechaCarga, "yyyy-MM-dd"),
       questions: data.questions,
+      fileDataUrl,
+      fileName,
     });
     toast({
       title: "Examen Actualizado",
@@ -133,7 +155,7 @@ export default function EditarExamenPage() {
         <Card>
           <CardHeader>
             <CardTitle>Información General</CardTitle>
-            <CardDescription>Datos principales del examen.</CardDescription>
+            <CardDescription>Datos principales del examen y archivo adjunto.</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <FormField
@@ -200,6 +222,25 @@ export default function EditarExamenPage() {
                 </FormItem>
               )}
             />
+             <FormField
+                control={form.control}
+                name="file"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Adjuntar Archivo Nuevo</FormLabel>
+                         <FormControl>
+                            <Input type="file" {...form.register("file")} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+                />
+            {currentFileName && (
+                <div className="flex items-center space-x-2 text-sm">
+                    <Paperclip className="h-4 w-4" />
+                    <span>Archivo actual: {currentFileName}</span>
+                </div>
+            )}
           </CardContent>
         </Card>
 

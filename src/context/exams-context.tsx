@@ -16,6 +16,8 @@ export type Exam = {
     created: string;
     status: "Abierto" | "Cerrado";
     questions: Question[];
+    fileDataUrl?: string;
+    fileName?: string;
 };
 
 interface ExamsContextType {
