@@ -61,7 +61,10 @@ function ResultadosPageContent() {
 
     const availableExams = useMemo(() => {
         if (user?.role === 'Docente') {
-            return exams.filter(e => e.grade === user.grade);
+            return exams.filter(e => e.grade === user.grade && e.status === 'Cerrado');
+        }
+        if (user?.role === 'Director') {
+            return exams.filter(e => e.status === 'Cerrado');
         }
         return exams;
     }, [exams, user]);

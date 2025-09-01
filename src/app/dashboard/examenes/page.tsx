@@ -35,10 +35,15 @@ export default function ExamenesPage() {
 
   const filteredExams = useMemo(() => {
     if (!user) return [];
+    let userExams = exams;
+
     if (user.role === 'Docente') {
-      return exams.filter(exam => exam.grade === user.grade);
+      userExams = exams.filter(exam => exam.grade === user.grade && exam.status === 'Cerrado');
+    } else if (user.role === 'Director') {
+      userExams = exams.filter(exam => exam.status === 'Cerrado');
     }
-    return exams;
+    
+    return userExams;
   }, [exams, user]);
 
   const handleOpenDeleteDialog = (exam: Exam) => {
@@ -131,7 +136,7 @@ export default function ExamenesPage() {
                             <TableCell>{exam.tema}</TableCell>
                             <TableCell>{exam.grade}</TableCell>
                             <TableCell>
-                                <Badge variant={exam.status === "Cerrado" ? "destructive" : "default"}>{exam.status}</Badge>
+                                <Badge variant={exam.status === "Cerrado" ? "default" : "destructive"}>{exam.status}</Badge>
                             </TableCell>
                             <TableCell>{exam.created}</TableCell>
                             <TableCell>

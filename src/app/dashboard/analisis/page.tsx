@@ -76,7 +76,10 @@ function AnalisisPageContent() {
 
     const availableExams = useMemo(() => {
         if (user?.role === 'Docente') {
-            return exams.filter(e => e.grade === user.grade);
+            return exams.filter(e => e.grade === user.grade && e.status === 'Cerrado');
+        }
+        if (user?.role === 'Director') {
+            return exams.filter(e => e.status === 'Cerrado');
         }
         return exams;
     }, [exams, user]);
@@ -477,7 +480,7 @@ function AnalisisPageContent() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {dataAprobados.map((item) => {
+                                    {dataAprobados.map((item, index) => {
                                         const total = item.Aprobados + item.Desaprobados
                                         const aprobadosPercent = total > 0 ? ((item.Aprobados / total) * 100).toFixed(1) : "0.0";
                                         const desaprobadosPercent = total > 0 ? ((item.Desaprobados / total) * 100).toFixed(1) : "0.0";
@@ -485,7 +488,7 @@ function AnalisisPageContent() {
                                         if (item.Aprobados === 0 && item.Desaprobados === 0) return null;
 
                                         return (
-                                            <TableRow key={item.name}>
+                                            <TableRow key={`${item.name}-${index}`}>
                                                 <TableCell className="font-medium">{item.name}</TableCell>
                                                 <TableCell className="text-center">{item.Aprobados}</TableCell>
                                                 <TableCell className="text-center">{aprobadosPercent}%</TableCell>
@@ -550,7 +553,7 @@ function AnalisisPageContent() {
                                 </TableRow>
                             </TableHeader>
                              <TableBody>
-                                {examAnalysisData.map((examen) => {
+                                {examAnalysisData.map((examen, index) => {
                                     const grades = [...new Set(Object.keys(examen).filter(k => k.includes('_')).map(k => k.split('_')[0]))];
                                     const visibleGrades = grades.filter(grade => {
                                         const correctas = examen[`${grade}_correctas`] || 0;
@@ -559,7 +562,7 @@ function AnalisisPageContent() {
                                     });
                                     let firstVisibleRowRendered = false;
 
-                                    return visibleGrades.map((grade, index) => {
+                                    return visibleGrades.map((grade, gradeIndex) => {
                                         const correctasKey = `${grade}_correctas`;
                                         const totalMaxScoreKey = `${grade}_totalMaxScore`;
                                         const correctas = examen[correctasKey];
@@ -572,7 +575,7 @@ function AnalisisPageContent() {
                                         }
 
                                         return (
-                                            <TableRow key={`${examen.name}-${grade}`}>
+                                            <TableRow key={`${examen.name}-${grade}-${gradeIndex}`}>
                                                 {isFirstVisibleRow && (
                                                     <TableCell 
                                                         rowSpan={visibleGrades.length} 

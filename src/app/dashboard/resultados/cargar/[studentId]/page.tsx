@@ -34,11 +34,12 @@ export default function CargarResultadosPage() {
     }, [students, studentId]);
 
     const availableExams = useMemo(() => {
-        const openExams = exams.filter(e => e.status === 'Abierto');
+        // Teachers can only see closed exams for their specific grade.
         if (user?.role === 'Docente') {
-            return openExams.filter(e => e.grade === user.grade);
+            return exams.filter(e => e.status === 'Cerrado' && e.grade === user.grade);
         }
-        return openExams;
+        // Other roles (like evaluator) can see all open exams.
+        return exams.filter(e => e.status === 'Abierto');
     }, [exams, user]);
 
     const selectedExam = useMemo(() => {
