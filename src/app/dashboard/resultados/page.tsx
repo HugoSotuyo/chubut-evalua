@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { MoreHorizontal, FileDown, Filter } from "lucide-react"
+import { MoreHorizontal, FileDown, Filter, Trash2, Eye } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
@@ -15,7 +15,11 @@ import { Label } from "@/components/ui/label"
 import { useSearch } from "@/context/search-context";
 import { useAuth } from "@/context/auth-context";
 import { useResults } from "@/context/results-context";
+import type { Result } from "@/context/results-context";
 import { useExams } from "@/context/exams-context"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { useToast } from "@/hooks/use-toast"
 
 type Filters = {
     exam: string;
@@ -26,10 +30,11 @@ type Filters = {
 
 function ResultadosPageContent() {
     const { user } = useAuth();
-    const { results: allResults } = useResults();
+    const { results: allResults, deleteResult } = useResults();
     const { exams } = useExams();
     const { searchTerm } = useSearch();
     const searchParams = useSearchParams();
+    const { toast } = useToast();
     
     const [filters, setFilters] = useState<Filters>({
         exam: "all",
@@ -39,6 +44,9 @@ function ResultadosPageContent() {
     });
 
     const [appliedFilters, setAppliedFilters] = useState<Filters>(filters);
+    const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+    const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+    const [selectedResult, setSelectedResult] = useState<Result | null>(null);
 
     useEffect(() => {
         const examFromUrl = searchParams.get("exam");
@@ -88,8 +96,6 @@ function ResultadosPageContent() {
         setFilters(prev => ({...prev, [filterName]: value}));
     }
 
-
-
     const handleApplyFilters = () => {
         setAppliedFilters(filters);
     }
@@ -98,7 +104,6 @@ function ResultadosPageContent() {
         const headers = ["ID", "Alumno", "Examen", "Escuela", "Nota", "Estado"];
         const rows = filteredResults.map(res => [res.id, res.studentName, res.examName, res.school, res.score, res.status].join(';'));
         
-        // BOM para compatibilidad con Excel
         const bom = "\uFEFF";
         const csvContent = bom + [headers.join(';'), ...rows].join("\n");
         
@@ -114,11 +119,38 @@ function ResultadosPageContent() {
         URL.revokeObjectURL(url);
     };
 
+    const handleOpenDeleteDialog = (result: Result) => {
+        setSelectedResult(result);
+        setIsDeleteAlertOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
+        if (selectedResult) {
+            deleteResult(selectedResult.id);
+            toast({
+                title: "Resultado Anulado",
+                description: `El resultado del examen para ${selectedResult.studentName} ha sido eliminado.`,
+            });
+        }
+        setIsDeleteAlertOpen(false);
+        setSelectedResult(null);
+    };
+
+    const handleOpenDetailsDialog = (result: Result) => {
+        setSelectedResult(result);
+        setIsDetailsDialogOpen(true);
+    };
+    
     const getUniqueValues = (key: 'school') => {
         const values = allResults.map(item => item[key]);
         return [...new Set(values)];
     }
     
+    const examForDetails = useMemo(() => {
+        if (!selectedResult) return null;
+        return exams.find(e => e.id === selectedResult.examId) ?? null;
+    }, [selectedResult, exams]);
+
     if (!user) {
         return <div>Cargando...</div>;
     }
@@ -239,9 +271,15 @@ function ResultadosPageContent() {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                            <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
-                                            <DropdownMenuItem>Editar</DropdownMenuItem>
-                                            <DropdownMenuItem className="text-destructive">Anular Resultado</DropdownMenuItem>
+                                            <DropdownMenuItem onSelect={() => handleOpenDetailsDialog(result)}>
+                                                <Eye className="mr-2 h-4 w-4" />
+                                                Ver Detalles
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem disabled>Editar</DropdownMenuItem>
+                                            <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(result)}>
+                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                Anular Resultado
+                                            </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
@@ -251,6 +289,65 @@ function ResultadosPageContent() {
                     </Table>
                 </CardContent>
             </Card>
+            
+            <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>¿Estás seguro de que quieres anular este resultado?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Esta acción no se puede deshacer. Se eliminará permanentemente el resultado del examen
+                            <span className="font-bold"> {selectedResult?.examName}</span> para el alumno <span className="font-bold">{selectedResult?.studentName}</span>.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setSelectedResult(null)}>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmDelete}>Confirmar</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            
+            <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+                <DialogContent className="sm:max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Detalle del Resultado</DialogTitle>
+                        <DialogDescription>
+                            Examen: <span className="font-semibold">{selectedResult?.examName}</span><br/>
+                            Alumno: <span className="font-semibold">{selectedResult?.studentName}</span>
+                        </DialogDescription>
+                    </DialogHeader>
+                    {examForDetails && selectedResult && (
+                    <div className="max-h-[60vh] overflow-y-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[60%]">Consigna</TableHead>
+                                    <TableHead>Respuesta Esperada</TableHead>
+                                    <TableHead className="text-center">Puntaje Obtenido</TableHead>
+                                    <TableHead className="text-center">Puntaje Máximo</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {examForDetails.questions.map((q, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>{q.consigna}</TableCell>
+                                        <TableCell>{q.respuesta}</TableCell>
+                                        <TableCell className="text-center font-semibold">{selectedResult.scores[index] ?? 0}</TableCell>
+                                        <TableCell className="text-center">{q.puntaje}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    )}
+                     <DialogFooter className="sm:justify-between items-center pt-4">
+                        <div className="text-lg font-bold">
+                            Total: {selectedResult?.totalScore} / {selectedResult?.maxScore}
+                        </div>
+                        <Button type="button" onClick={() => setIsDetailsDialogOpen(false)}>Cerrar</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
         </div>
     )
 }
@@ -262,5 +359,3 @@ export default function ResultadosPage() {
         </React.Suspense>
     )
 }
-
-    
