@@ -150,7 +150,18 @@ function AnalisisPageContent() {
             examAnalysis[examKey][correctasKey] += r.totalScore;
             examAnalysis[examKey][totalMaxScoreKey] += r.maxScore;
         });
-        const examAnalysisData = Object.values(examAnalysis);
+        
+        const examAnalysisData = Object.values(examAnalysis).map(exam => {
+            const newExamData = { ...exam };
+            const grades = [...new Set(Object.keys(exam).filter(k => k.includes('_')).map(k => k.split('_')[0]))];
+            grades.forEach(grade => {
+                const correctas = exam[`${grade}_correctas`] || 0;
+                const totalMaxScore = exam[`${grade}_totalMaxScore`] || 0;
+                const rendimientoKey = `${grade}_rendimiento`;
+                newExamData[rendimientoKey] = totalMaxScore > 0 ? (correctas / totalMaxScore) * 100 : 0;
+            });
+            return newExamData;
+        });
 
         // --- Data Análisis por Pregunta ---
         const questionAnalysis: Record<string, { totalScore: number, totalMaxScore: number, count: number }> = {};
@@ -287,7 +298,7 @@ function AnalisisPageContent() {
         const keys = new Set<string>();
         examAnalysisData.forEach(exam => {
             Object.keys(exam).forEach(key => {
-                if (key.endsWith('_correctas')) {
+                if (key.endsWith('_rendimiento')) {
                     keys.add(key);
                 }
             });
@@ -487,7 +498,7 @@ function AnalisisPageContent() {
                 <CardHeader className="flex flex-row items-start justify-between">
                     <div>
                         <CardTitle>Análisis por Examen</CardTitle>
-                        <CardDescription>Resultados por examen, desglosado por grado.</CardDescription>
+                        <CardDescription>Rendimiento por examen, desglosado por grado.</CardDescription>
                     </div>
                      <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('analisis-examen-card')}>
                         <Printer className="h-4 w-4" />
@@ -499,20 +510,20 @@ function AnalisisPageContent() {
                         <BarChart data={examAnalysisData} margin={{ top: 20 }}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="name" />
-                            <YAxis />
+                            <YAxis domain={[0, 100]} unit="%" />
                             <Tooltip content={<CustomTooltip />} />
                             <Legend />
                             {gradeDataKeys.map((dataKey, index) => {
-                                const gradeName = dataKey.replace('_correctas', '');
+                                const gradeName = dataKey.replace('_rendimiento', '');
                                 const colorKey = `chart-${(index % 5) + 1}` as const;
                                 return (
                                     <Bar 
                                         key={dataKey}
-                                        name={`${gradeName} - Puntaje`} 
+                                        name={`${gradeName} - Rendimiento`} 
                                         dataKey={dataKey} 
                                         fill={`hsl(var(--${colorKey}))`} 
                                     >
-                                        <LabelList dataKey={dataKey} position="top" formatter={(value: number) => value > 0 ? value : ''} />
+                                        <LabelList dataKey={dataKey} position="top" formatter={(value: number) => `${value.toFixed(1)}%`} />
                                     </Bar>
                                 );
                             })}
