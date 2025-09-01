@@ -21,7 +21,6 @@ export function RegisterForm() {
   const [role, setRole] = useState<UserRole | "">("");
   const [selectedSchool, setSelectedSchool] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("");
-  const [selectedCourse, setSelectedCourse] = useState("");
   const router = useRouter();
   const { toast } = useToast();
   const { addUser } = useUsers();
@@ -49,11 +48,11 @@ export function RegisterForm() {
     let course = undefined;
 
     if (role === "Director") {
-        school = selectedSchool;
+        school = formData.get("escuela") as string;
     } else if (role === "Docente") {
-        school = selectedSchool;
-        grade = selectedGrade;
-        course = selectedCourse;
+        school = formData.get("escuela") as string;
+        grade = formData.get("grado") as string;
+        course = formData.get("curso") as string;
     }
 
     addUser({
@@ -165,16 +164,7 @@ export function RegisterForm() {
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="curso">Curso</Label>
-                <Select name="curso" onValueChange={setSelectedCourse} required>
-                <SelectTrigger>
-                    <SelectValue placeholder="Curso" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="A">"A"</SelectItem>
-                    <SelectItem value="B">"B"</SelectItem>
-                    <SelectItem value="C">"C"</SelectItem>
-                </SelectContent>
-                </Select>
+                <Input id="curso" name="curso" placeholder="A" required />
             </div>
           </div>
         </>
