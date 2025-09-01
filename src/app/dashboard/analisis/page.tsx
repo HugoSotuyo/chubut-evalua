@@ -136,12 +136,19 @@ function AnalisisPageContent() {
             if (!examAnalysis[examKey]) {
                 examAnalysis[examKey] = { name: r.examName, school: r.school };
             }
-            if (!examAnalysis[examKey][r.grade]) {
-                examAnalysis[examKey][r.grade] = { correctas: 0, incorrectas: 0, totalMaxScore: 0 };
+            const gradeKey = r.grade;
+            const correctasKey = `${gradeKey}_correctas`;
+            const totalMaxScoreKey = `${gradeKey}_totalMaxScore`;
+
+            if (!examAnalysis[examKey][correctasKey]) {
+                 examAnalysis[examKey][correctasKey] = 0;
             }
-            examAnalysis[examKey][r.grade].correctas += r.totalScore;
-            examAnalysis[examKey][r.grade].totalMaxScore += r.maxScore;
-            examAnalysis[examKey][r.grade].incorrectas += (r.maxScore - r.totalScore);
+            if (!examAnalysis[examKey][totalMaxScoreKey]) {
+                 examAnalysis[examKey][totalMaxScoreKey] = 0;
+            }
+
+            examAnalysis[examKey][correctasKey] += r.totalScore;
+            examAnalysis[examKey][totalMaxScoreKey] += r.maxScore;
         });
         const examAnalysisData = Object.values(examAnalysis);
 
@@ -196,14 +203,16 @@ function AnalisisPageContent() {
         csvContent += "Análisis por Examen (Puntaje Agregado)\n";
         csvContent += ["Examen", "Grado", "Puntaje Total Obtenido", "Puntaje Máximo Total"].join(';') + '\n';
         examAnalysisData.forEach(row => {
-             Object.keys(row).forEach(key => {
-                if (key !== 'name' && key !== 'school') {
-                    const gradeData = row[key as keyof typeof row] as { correctas: number, totalMaxScore: number };
-                    if (gradeData.correctas > 0 || gradeData.totalMaxScore > 0) {
-                         csvContent += [row.name, key, gradeData.correctas, gradeData.totalMaxScore].join(';') + '\n';
-                    }
-                }
-            });
+             const grades = [...new Set(Object.keys(row).filter(k => k.includes('_')).map(k => k.split('_')[0]))];
+             grades.forEach(grade => {
+                const correctasKey = `${grade}_correctas`;
+                const totalMaxScoreKey = `${grade}_totalMaxScore`;
+                const correctas = row[correctasKey] || 0;
+                const totalMaxScore = row[totalMaxScoreKey] || 0;
+                 if(correctas > 0 || totalMaxScore > 0){
+                    csvContent += [row.name, grade, correctas, totalMaxScore].join(';') + '\n';
+                 }
+             })
         });
         csvContent += '\n\n';
         
@@ -480,13 +489,13 @@ function AnalisisPageContent() {
                             <YAxis />
                             <Tooltip content={<CustomTooltip />} />
                             <Legend />
-                            {Object.keys(getUniqueValues('grade')).map((gradeIndex) => {
-                                const grade = getUniqueValues('grade')[gradeIndex as any] as string;
-                                const colorKey = `chart-${(parseInt(gradeIndex) % 5) + 1}` as const;
+                            {Array.from(new Set(results.map(r => r.grade))).map((grade, gradeIndex) => {
+                                const colorKey = `chart-${(gradeIndex % 5) + 1}` as const;
+                                const dataKey = `${grade}_correctas`;
                                 return (
                                     <React.Fragment key={grade}>
-                                        <Bar name={`${grade} - Puntaje`} dataKey={`${grade}.correctas`} fill={`hsl(var(--${colorKey}))`} >
-                                            <LabelList dataKey={`${grade}.correctas`} position="top" formatter={(value: number) => value > 0 ? value : ''} />
+                                        <Bar name={`${grade} - Puntaje`} dataKey={dataKey} fill={`hsl(var(--${colorKey}))`} >
+                                            <LabelList dataKey={dataKey} position="top" formatter={(value: number) => value > 0 ? value : ''} />
                                         </Bar>
                                     </React.Fragment>
                                 );
@@ -507,48 +516,45 @@ function AnalisisPageContent() {
                                 </TableRow>
                             </TableHeader>
                              <TableBody>
-                                {examAnalysisData.map((examen) => (
-                                    <React.Fragment key={examen.name}>
-                                        {Object.keys(examen).filter(key => key !== 'name' && key !== 'school').map((grade, index) => {
-                                            const examenData = examen[grade as keyof typeof examen] as { correctas: number; totalMaxScore: number } | undefined;
-                                            
-                                            if (!examenData) return null;
+                                {examAnalysisData.map((examen) => {
+                                    const grades = [...new Set(Object.keys(examen).filter(k => k.includes('_')).map(k => k.split('_')[0]))];
+                                    const visibleGrades = grades.filter(grade => {
+                                        const correctas = examen[`${grade}_correctas`] || 0;
+                                        const totalMaxScore = examen[`${grade}_totalMaxScore`] || 0;
+                                        return correctas > 0 || totalMaxScore > 0;
+                                    });
+                                    let firstVisibleRowRendered = false;
 
-                                            const { correctas, totalMaxScore } = examenData;
-                                            const rendimiento = totalMaxScore > 0 ? ((correctas / totalMaxScore) * 100).toFixed(1) : "0.0";
-                                            
-                                            const shouldShowRow = !(correctas === 0 && totalMaxScore === 0);
-                                            if (!shouldShowRow) return null;
-                                            
-                                            const firstVisibleRowIndex = Object.keys(examen).filter(key => key !== 'name' && key !== 'school').findIndex(g => {
-                                                const data = examen[g as keyof typeof examen] as { correctas: number; totalMaxScore: number };
-                                                return data && (data.correctas > 0 || data.totalMaxScore > 0);
-                                            });
-                                            
-                                            const isFirstVisibleRow = index === firstVisibleRowIndex;
+                                    return visibleGrades.map((grade, index) => {
+                                        const correctasKey = `${grade}_correctas`;
+                                        const totalMaxScoreKey = `${grade}_totalMaxScore`;
+                                        const correctas = examen[correctasKey];
+                                        const totalMaxScore = examen[totalMaxScoreKey];
+                                        const rendimiento = totalMaxScore > 0 ? ((correctas / totalMaxScore) * 100).toFixed(1) : "0.0";
+                                        
+                                        const isFirstVisibleRow = !firstVisibleRowRendered;
+                                        if (isFirstVisibleRow) {
+                                            firstVisibleRowRendered = true;
+                                        }
 
-                                            return (
-                                                <TableRow key={grade}>
-                                                    {isFirstVisibleRow && (
-                                                        <TableCell 
-                                                             rowSpan={Object.keys(examen).filter(key => key !== 'name' && key !== 'school').reduce((acc, g) => {
-                                                                const data = examen[g as keyof typeof examen] as { correctas: number; totalMaxScore: number };
-                                                                return acc + (data && (data.correctas > 0 || data.totalMaxScore > 0) ? 1 : 0);
-                                                            }, 0)} 
-                                                            className="font-medium align-middle"
-                                                        >
-                                                            {examen.name}
-                                                        </TableCell>
-                                                    )}
-                                                    <TableCell className="text-center">{grade}</TableCell>
-                                                    <TableCell className="text-center">{correctas}</TableCell>
-                                                    <TableCell className="text-center">{totalMaxScore}</TableCell>
-                                                    <TableCell className="text-center">{rendimiento}%</TableCell>
-                                                </TableRow>
-                                            )
-                                        })}
-                                    </React.Fragment>
-                                ))}
+                                        return (
+                                            <TableRow key={`${examen.name}-${grade}`}>
+                                                {isFirstVisibleRow && (
+                                                    <TableCell 
+                                                        rowSpan={visibleGrades.length} 
+                                                        className="font-medium align-middle"
+                                                    >
+                                                        {examen.name}
+                                                    </TableCell>
+                                                )}
+                                                <TableCell className="text-center">{grade}</TableCell>
+                                                <TableCell className="text-center">{correctas}</TableCell>
+                                                <TableCell className="text-center">{totalMaxScore}</TableCell>
+                                                <TableCell className="text-center">{rendimiento}%</TableCell>
+                                            </TableRow>
+                                        )
+                                    })
+                                })}
                             </TableBody>
                         </Table>
                     </div>
