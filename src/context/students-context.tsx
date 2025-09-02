@@ -1,9 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { collection, getDocs, addDoc, doc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import type { Result } from './results-context';
 
 export type Student = {
@@ -18,52 +16,35 @@ export type Student = {
 
 type NewStudent = Omit<Student, 'id' | 'results'>;
 
+const initialStudents: Student[] = [
+    { id: '1', name: 'Juan Perez', dni: '40123456', grade: '3er Grado', course: 'A', school: 'Escuela N° 123' },
+    { id: '2', name: 'Maria Lopez', dni: '41987654', grade: '3er Grado', course: 'A', school: 'Escuela N° 123' },
+    { id: '3', name: 'Pedro Gonzalez', dni: '42345678', grade: '5to Grado', course: 'B', school: 'Escuela N° 456' },
+];
+
 interface StudentsContextType {
   students: Student[];
-  addStudent: (student: NewStudent) => Promise<void>;
-  deleteStudent: (studentId: string) => Promise<void>;
+  addStudent: (student: NewStudent) => void;
+  deleteStudent: (studentId: string) => void;
   loading: boolean;
 }
 
 const StudentsContext = createContext<StudentsContextType | undefined>(undefined);
 
 export function StudentsProvider({ children }: { children: ReactNode }) {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [students, setStudents] = useState<Student[]>(initialStudents);
+  const [loading] = useState(false);
 
-  const fetchStudents = async () => {
-    try {
-      const studentsCollection = collection(db, 'students');
-      const studentsSnapshot = await getDocs(studentsCollection);
-      const studentsList = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
-      setStudents(studentsList);
-    } catch (error) {
-      console.error("Error fetching students from Firestore:", error);
-    } finally {
-      setLoading(false);
-    }
+  const addStudent = (studentData: NewStudent) => {
+    const newStudent: Student = {
+        ...studentData,
+        id: (students.length + 1).toString(),
+    };
+    setStudents(prev => [...prev, newStudent]);
   };
 
-  useEffect(() => {
-    fetchStudents();
-  }, []);
-
-  const addStudent = async (studentData: NewStudent) => {
-    try {
-      const docRef = await addDoc(collection(db, 'students'), studentData);
-      setStudents(prevStudents => [...prevStudents, { ...studentData, id: docRef.id }]);
-    } catch (error) {
-      console.error("Error adding student to Firestore:", error);
-    }
-  };
-
-  const deleteStudent = async (studentId: string) => {
-    try {
-      await deleteDoc(doc(db, 'students', studentId));
-      setStudents(prevStudents => prevStudents.filter(student => student.id !== studentId));
-    } catch (error) {
-      console.error("Error deleting student from Firestore:", error);
-    }
+  const deleteStudent = (studentId: string) => {
+    setStudents(prev => prev.filter(student => student.id !== studentId));
   };
 
   return (

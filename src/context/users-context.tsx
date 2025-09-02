@@ -1,9 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, Unsubscribe } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import type { UserRole } from '@/lib/auth';
 
 export type User = {
@@ -22,66 +20,48 @@ type NewUser = Omit<User, 'id' | 'status'> & {
     password?: string;
 };
 
+const initialUsers: User[] = [
+    { id: '1', name: 'Laura Martinez', email: 'laura.martinez@chubut.edu.ar', role: 'Docente', school: 'Escuela N° 123', status: 'Activo', grade: '3er Grado', course: 'A' },
+    { id: '2', name: 'Carlos Gomez', email: 'carlos.gomez@chubut.edu.ar', role: 'Director', school: 'Escuela N° 456', status: 'Activo' },
+    { id: '3', name: 'Ana Fernandez', email: 'ana.fernandez@chubut.edu.ar', role: 'Referente', school: 'Distrito I', status: 'Activo' },
+    { id: '4', name: 'Admin General', email: 'admin@chubut.edu.ar', role: 'Administrador', school: 'Ministerio', status: 'Activo' },
+    { id: '5', name: 'Usuario Pendiente', email: 'pendiente@chubut.edu.ar', role: 'Docente', school: 'Escuela N° 789', status: 'Pendiente' },
+];
+
+
 interface UsersContextType {
   users: User[];
-  addUser: (user: NewUser) => Promise<void>;
-  deleteUser: (userId: string) => Promise<void>;
-  enableUser: (userId: string) => Promise<void>;
+  addUser: (user: NewUser) => void;
+  deleteUser: (userId: string) => void;
+  enableUser: (userId: string) => void;
   loading: boolean;
 }
 
 const UsersContext = createContext<UsersContextType | undefined>(undefined);
 
 export function UsersProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [loading] = useState(false); // Data is loaded statically
 
-  useEffect(() => {
-    const usersCollection = collection(db, 'users');
-    
-    const unsubscribe: Unsubscribe = onSnapshot(usersCollection, (querySnapshot) => {
-      const usersList = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as User));
-      setUsers(usersList);
-      setLoading(false);
-    }, (error) => {
-      console.error("Error fetching users with onSnapshot: ", error);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const addUser = async (userData: NewUser) => {
-    try {
-      const newUser: Omit<User, 'id'> = {
-          ...userData,
-          status: "Pendiente",
-      }
-      await addDoc(collection(db, 'users'), newUser);
-    } catch (error) {
-      console.error("Error adding user to Firestore:", error);
-    }
+  const addUser = (userData: NewUser) => {
+    const newUser: User = {
+      id: (users.length + 1).toString(),
+      ...userData,
+      status: "Pendiente",
+    };
+    setUsers(prevUsers => [...prevUsers, newUser]);
   };
 
-  const deleteUser = async (userId: string) => {
-    try {
-      await deleteDoc(doc(db, 'users', userId));
-    } catch (error) {
-      console.error("Error deleting user from Firestore:", error);
-    }
+  const deleteUser = (userId: string) => {
+    setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
   };
   
-  const enableUser = async (userId: string) => {
-    try {
-      const userDocRef = doc(db, 'users', userId);
-      await updateDoc(userDocRef, { status: "Activo" });
-    } catch (error)
-    {
-      console.error("Error enabling user in Firestore:", error);
-    }
+  const enableUser = (userId: string) => {
+    setUsers(prevUsers =>
+      prevUsers.map(user =>
+        user.id === userId ? { ...user, status: 'Activo' } : user
+      )
+    );
   };
 
   return (

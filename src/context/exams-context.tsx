@@ -1,9 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { collection, getDocs, addDoc, doc, deleteDoc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export type Question = {
   consigna: string;
@@ -23,94 +21,56 @@ export type Exam = {
     fileName?: string;
 };
 
+const initialExams: Exam[] = [
+    { id: '1', name: 'Diagnóstico Matemática 2024', tema: 'Matemática', grade: '3er Grado', created: '2024-05-10', status: 'Cerrado', questions: [{ consigna: '2+2', respuesta: '4', puntaje: 10 }, { consigna: '5*5', respuesta: '25', puntaje: 15 }] },
+    { id: '2', name: 'Prácticas del Lenguaje - 1er Trimestre', tema: 'Lengua', grade: '3er Grado', created: '2024-04-22', status: 'Cerrado', questions: [{ consigna: 'Capital de Argentina', respuesta: 'Buenos Aires', puntaje: 10 }] },
+    { id: '3', name: 'Ciencias Naturales - Seres Vivos', tema: 'Naturales', grade: '5to Grado', created: '2024-06-01', status: 'Abierto', questions: [{ consigna: 'Planeta Tierra es el...', respuesta: '3ro', puntaje: 10 }] },
+];
+
 interface ExamsContextType {
   exams: Exam[];
-  addExam: (exam: Omit<Exam, 'id' | 'status'>) => Promise<void>;
-  updateExam: (exam: Omit<Exam, 'status'>) => Promise<void>;
-  deleteExam: (examId: string) => Promise<void>;
-  toggleExamStatus: (examId: string) => Promise<void>;
+  addExam: (exam: Omit<Exam, 'id' | 'status'>) => void;
+  updateExam: (exam: Omit<Exam, 'status'>) => void;
+  deleteExam: (examId: string) => void;
+  toggleExamStatus: (examId: string) => void;
   loading: boolean;
 }
 
 const ExamsContext = createContext<ExamsContextType | undefined>(undefined);
 
 export function ExamsProvider({ children }: { children: ReactNode }) {
-  const [exams, setExams] = useState<Exam[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [exams, setExams] = useState<Exam[]>(initialExams);
+  const [loading] = useState(false);
 
-  const fetchExams = async () => {
-    try {
-      const examsCollection = collection(db, 'exams');
-      const examsSnapshot = await getDocs(examsCollection);
-      const examsList = examsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Exam));
-      setExams(examsList);
-    } catch (error) {
-      console.error("Error fetching exams from Firestore:", error);
-    } finally {
-      setLoading(false);
-    }
+  const addExam = (examData: Omit<Exam, 'id' | 'status'>) => {
+    const newExam: Exam = {
+      ...examData,
+      id: (exams.length + 1).toString(),
+      status: "Abierto",
+    };
+    setExams(prevExams => [...prevExams, newExam]);
   };
 
-  useEffect(() => {
-    fetchExams();
-  }, []);
-
-  const addExam = async (examData: Omit<Exam, 'id' | 'status'>) => {
-    try {
-      const newExam: Omit<Exam, 'id'> = {
-          ...examData,
-          status: "Abierto",
-      }
-      const docRef = await addDoc(collection(db, 'exams'), newExam);
-      setExams(prevExams => [...prevExams, { ...newExam, id: docRef.id }]);
-    } catch (error) {
-      console.error("Error adding exam to Firestore:", error);
-    }
+  const updateExam = (updatedExamData: Omit<Exam, 'status'>) => {
+    setExams(prevExams =>
+      prevExams.map(exam =>
+        exam.id === updatedExamData.id ? { ...exam, ...updatedExamData } : exam
+      )
+    );
   };
 
-  const updateExam = async (updatedExamData: Omit<Exam, 'status'>) => {
-    try {
-      const examDocRef = doc(db, 'exams', updatedExamData.id);
-      const { id, ...dataToUpdate } = updatedExamData;
-      await updateDoc(examDocRef, dataToUpdate);
-
-      setExams(prevExams =>
-        prevExams.map(exam =>
-          exam.id === updatedExamData.id ? { ...exam, ...dataToUpdate } : exam
-        )
-      );
-    } catch (error) {
-      console.error("Error updating exam in Firestore:", error);
-    }
+  const deleteExam = (examId: string) => {
+    setExams(prevExams => prevExams.filter(exam => exam.id !== examId));
   };
 
-  const deleteExam = async (examId: string) => {
-    try {
-      await deleteDoc(doc(db, 'exams', examId));
-      setExams(prevExams => prevExams.filter(exam => exam.id !== examId));
-    } catch (error) {
-      console.error("Error deleting exam from Firestore:", error);
-    }
-  };
-
-  const toggleExamStatus = async (examId: string) => {
-    const examToToggle = exams.find(e => e.id === examId);
-    if (!examToToggle) return;
-    
-    try {
-      const newStatus = examToToggle.status === "Abierto" ? "Cerrado" : "Abierto";
-      const examDocRef = doc(db, 'exams', examId);
-      await updateDoc(examDocRef, { status: newStatus });
-      setExams(prevExams =>
-        prevExams.map(exam =>
-          exam.id === examId
-            ? { ...exam, status: newStatus }
-            : exam
-        )
-      );
-    } catch (error) {
-      console.error("Error toggling exam status in Firestore:", error);
-    }
+  const toggleExamStatus = (examId: string) => {
+    setExams(prevExams =>
+      prevExams.map(exam =>
+        exam.id === examId
+          ? { ...exam, status: exam.status === "Abierto" ? "Cerrado" : "Abierto" }
+          : exam
+      )
+    );
   };
 
   return (

@@ -1,9 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export type School = {
   id: string;
@@ -12,121 +10,66 @@ export type School = {
   status: "Activa" | "Inactiva";
 };
 
-type District = {
-    id: string;
-    name: string;
-}
-
 type NewSchool = Omit<School, 'id' | 'status'>;
+
+const initialSchools: School[] = [
+    { id: "1", name: "Escuela N° 123", district: "Distrito I", status: "Activa" },
+    { id: "2", name: "Escuela N° 456", district: "Distrito II", status: "Activa" },
+    { id: "3", name: "Escuela N° 789", district: "Distrito I", status: "Inactiva" },
+];
+
+const initialDistricts: string[] = ["Distrito I", "Distrito II", "Distrito III"];
 
 interface SchoolsContextType {
   schools: School[];
   districts: string[];
-  addSchool: (school: NewSchool) => Promise<void>;
-  updateSchool: (school: School) => Promise<void>;
-  deleteSchool: (schoolId: string) => Promise<void>;
-  toggleSchoolStatus: (schoolId: string) => Promise<void>;
-  addDistrict: (districtName: string) => Promise<{ success: boolean; message: string }>;
+  addSchool: (school: NewSchool) => void;
+  updateSchool: (school: School) => void;
+  deleteSchool: (schoolId: string) => void;
+  toggleSchoolStatus: (schoolId: string) => void;
+  addDistrict: (districtName: string) => { success: boolean; message: string };
   loading: boolean;
 }
 
 const SchoolsContext = createContext<SchoolsContextType | undefined>(undefined);
 
 export function SchoolsProvider({ children }: { children: ReactNode }) {
-  const [schools, setSchools] = useState<School[]>([]);
-  const [districts, setDistricts] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [schools, setSchools] = useState<School[]>(initialSchools);
+  const [districts, setDistricts] = useState<string[]>(initialDistricts);
+  const [loading] = useState(false);
 
-  const fetchSchoolsAndDistricts = async () => {
-    setLoading(true);
-    try {
-      // Fetch schools
-      const schoolsQuery = query(collection(db, 'schools'), orderBy("name"));
-      const schoolsSnapshot = await getDocs(schoolsQuery);
-      const schoolsList = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
-      setSchools(schoolsList);
-
-      // Fetch districts
-      const districtsQuery = query(collection(db, 'districts'), orderBy("name"));
-      const districtsSnapshot = await getDocs(districtsQuery);
-      const districtsList = districtsSnapshot.docs.map(doc => (doc.data() as { name: string }).name);
-      setDistricts(districtsList);
-
-    } catch (error) {
-      console.error("Error fetching data from Firestore:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSchoolsAndDistricts();
-  }, []);
-
-  const addSchool = async (schoolData: NewSchool) => {
-    try {
-      const newSchool = {
-          ...schoolData,
-          status: "Activa"
-      }
-      await addDoc(collection(db, 'schools'), newSchool);
-      await fetchSchoolsAndDistricts(); 
-    } catch (error) {
-      console.error("Error adding school:", error);
-    }
+  const addSchool = (schoolData: NewSchool) => {
+    const newSchool: School = {
+        id: (schools.length + 1).toString(),
+        ...schoolData,
+        status: "Activa"
+    };
+    setSchools(prev => [...prev, newSchool]);
   };
   
-  const updateSchool = async (updatedSchool: School) => {
-    try {
-        const schoolDocRef = doc(db, 'schools', updatedSchool.id);
-        const { id, ...dataToUpdate } = updatedSchool;
-        await updateDoc(schoolDocRef, dataToUpdate);
-        await fetchSchoolsAndDistricts();
-    } catch(error) {
-        console.error("Error updating school:", error);
-    }
+  const updateSchool = (updatedSchool: School) => {
+    setSchools(prev => prev.map(s => s.id === updatedSchool.id ? updatedSchool : s));
   };
   
-  const deleteSchool = async (schoolId: string) => {
-    try {
-        await deleteDoc(doc(db, 'schools', schoolId));
-        await fetchSchoolsAndDistricts();
-    } catch (error) {
-        console.error("Error deleting school:", error);
-    }
+  const deleteSchool = (schoolId: string) => {
+    setSchools(prev => prev.filter(s => s.id !== schoolId));
   };
 
-  const toggleSchoolStatus = async (schoolId: string) => {
-    const schoolToToggle = schools.find(s => s.id === schoolId);
-    if (!schoolToToggle) return;
-    
-    try {
-        const newStatus = schoolToToggle.status === "Activa" ? "Inactiva" : "Activa";
-        const schoolDocRef = doc(db, 'schools', schoolId);
-        await updateDoc(schoolDocRef, { status: newStatus });
-        await fetchSchoolsAndDistricts();
-    } catch (error) {
-        console.error("Error toggling school status:", error);
-    }
+  const toggleSchoolStatus = (schoolId: string) => {
+    setSchools(prev => prev.map(s => {
+        if (s.id === schoolId) {
+            return { ...s, status: s.status === "Activa" ? "Inactiva" : "Activa" };
+        }
+        return s;
+    }));
   };
   
-  const addDistrict = async (districtName: string): Promise<{ success: boolean; message: string }> => {
-    try {
-      // Robust check for duplicates directly in Firestore
-      const q = query(collection(db, "districts"), where("name", "==", districtName));
-      const querySnapshot = await getDocs(q);
-      
-      if (!querySnapshot.empty) {
+  const addDistrict = (districtName: string): { success: boolean; message: string } => {
+    if (districts.some(d => d.toLowerCase() === districtName.toLowerCase())) {
         return { success: false, message: `El distrito "${districtName}" ya existe.` };
-      }
-
-      await addDoc(collection(db, 'districts'), { name: districtName });
-      await fetchSchoolsAndDistricts();
-      return { success: true, message: `El distrito "${districtName}" ha sido agregado.` };
-    } catch (error) {
-      console.error("Error adding district:", error);
-      return { success: false, message: "No se pudo agregar el distrito." };
     }
+    setDistricts(prev => [...prev, districtName]);
+    return { success: true, message: `El distrito "${districtName}" ha sido agregado.` };
   };
 
   const value = { 

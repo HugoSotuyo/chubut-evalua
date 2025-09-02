@@ -1,9 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { collection, getDocs, addDoc, doc, deleteDoc, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export type Result = {
   id: string;
@@ -23,10 +21,17 @@ export type Result = {
 
 type NewResult = Omit<Result, 'id'>;
 
+const initialResults: Result[] = [
+    { id: '1', studentId: '1', studentName: 'Juan Perez', examId: '1', examName: 'Diagnóstico Matemática 2024', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Aprobado', score: 80, scores: {0: 8, 1: 12}, totalScore: 20, maxScore: 25 },
+    { id: '2', studentId: '2', studentName: 'Maria Lopez', examId: '1', examName: 'Diagnóstico Matemática 2024', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Desaprobado', score: 40, scores: {0: 5, 1: 5}, totalScore: 10, maxScore: 25},
+    { id: '3', studentId: '1', studentName: 'Juan Perez', examId: '2', examName: 'Prácticas del Lenguaje - 1er Trimestre', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Aprobado', score: 100, scores: {0: 10}, totalScore: 10, maxScore: 10 },
+];
+
+
 interface ResultsContextType {
   results: Result[];
-  addResult: (result: NewResult) => Promise<void>;
-  deleteResult: (resultId: string) => Promise<void>;
+  addResult: (result: NewResult) => void;
+  deleteResult: (resultId: string) => void;
   resultExists: (studentId: string, examId: string) => boolean;
   loading: boolean;
 }
@@ -34,42 +39,19 @@ interface ResultsContextType {
 const ResultsContext = createContext<ResultsContextType | undefined>(undefined);
 
 export function ResultsProvider({ children }: { children: ReactNode }) {
-  const [results, setResults] = useState<Result[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [results, setResults] = useState<Result[]>(initialResults);
+  const [loading] = useState(false);
 
-  const fetchResults = async () => {
-    try {
-      const resultsCollection = collection(db, 'results');
-      const resultsSnapshot = await getDocs(resultsCollection);
-      const resultsList = resultsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Result));
-      setResults(resultsList);
-    } catch (error) {
-      console.error("Error fetching results from Firestore:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchResults();
-  }, []);
-
-  const addResult = async (resultData: NewResult) => {
-    try {
-      const docRef = await addDoc(collection(db, 'results'), resultData);
-      setResults(prevResults => [...prevResults, { ...resultData, id: docRef.id }]);
-    } catch (error) {
-      console.error("Error adding result to Firestore:", error);
-    }
+  const addResult = (resultData: NewResult) => {
+    const newResult: Result = {
+        ...resultData,
+        id: (results.length + 1).toString()
+    };
+    setResults(prevResults => [...prevResults, newResult]);
   };
   
-  const deleteResult = async (resultId: string) => {
-    try {
-      await deleteDoc(doc(db, 'results', resultId));
-      setResults(prevResults => prevResults.filter(result => result.id !== resultId));
-    } catch (error) {
-      console.error("Error deleting result from Firestore:", error);
-    }
+  const deleteResult = (resultId: string) => {
+    setResults(prevResults => prevResults.filter(result => result.id !== resultId));
   };
   
   const resultExists = (studentId: string, examId: string): boolean => {
