@@ -43,20 +43,31 @@ export default function UsuariosPage() {
 
   const filteredUsers = useMemo(() => {
     if (!user) return [];
-    let results = users;
 
-    // Role-based pre-filtering
-    if (user.role === "Director") {
-        results = results.filter(u => u.school === user.school && u.role === "Docente");
-    } else if (user.role !== "Evaluador") { // Evaluador skips UI role filter
-      if (roleFilter !== "all") {
-        results = results.filter(user => user.role === roleFilter);
-      }
+    let results: User[] = [];
+
+    switch (user.role) {
+      case "Evaluador":
+        // Evaluador can see all users, only filtered by search term
+        results = users;
+        break;
+      
+      case "Director":
+        // Director can see only teachers from their school
+        results = users.filter(u => u.school === user.school && u.role === "Docente");
+        break;
+
+      default:
+        // Other roles filter by the dropdown selection
+        results = roleFilter === "all"
+          ? users
+          : users.filter(u => u.role === roleFilter);
+        break;
     }
-    
-    // Search term filtering (applies to all)
+
+    // Apply search term filter to all roles
     if (searchTerm) {
-      results = results.filter(user => user.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      results = results.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }
     
     return results;
@@ -103,7 +114,6 @@ export default function UsuariosPage() {
         [user.id, user.name, user.role, user.school, user.status].join(';')
     );
     
-    // BOM para compatibilidad con Excel
     const bom = "\uFEFF";
     const csvContent = bom + [headers.join(';'), ...rows].join("\n");
     
