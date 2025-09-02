@@ -1,18 +1,9 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
-
-// En un futuro, estos datos vendrían de Firestore
-const initialSchoolsData = [
-    { id: "esc-001", name: "Escuela N° 101", district: "Distrito I", status: "Activa" },
-    { id: "esc-002", name: "Escuela N° 789", district: "Distrito II", status: "Activa" },
-    { id: "esc-003", name: "Escuela N° 456", district: "Distrito I", status: "Activa" },
-    { id: "esc-004", name: "Escuela N° 23", district: "Distrito III", status: "Inactiva" },
-    { id: "esc-005", name: "Escuela N° 502", district: "Distrito II", status: "Activa" },
-];
-
-const initialDistrictsData = ["Distrito I", "Distrito II", "Distrito III", "Distrito IV", "Distrito V"];
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export type School = {
   id: string;
@@ -21,65 +12,119 @@ export type School = {
   status: "Activa" | "Inactiva";
 };
 
+type District = {
+    id: string;
+    name: string;
+}
+
 type NewSchool = Omit<School, 'id' | 'status'>;
 
 interface SchoolsContextType {
   schools: School[];
   districts: string[];
-  addSchool: (school: NewSchool) => void;
-  updateSchool: (school: School) => void;
-  deleteSchool: (schoolId: string) => void;
-  toggleSchoolStatus: (schoolId: string) => void;
-  addDistrict: (districtName: string) => void;
+  addSchool: (school: NewSchool) => Promise<void>;
+  updateSchool: (school: School) => Promise<void>;
+  deleteSchool: (schoolId: string) => Promise<void>;
+  toggleSchoolStatus: (schoolId: string) => Promise<void>;
+  addDistrict: (districtName: string) => Promise<void>;
   loading: boolean;
 }
 
 const SchoolsContext = createContext<SchoolsContextType | undefined>(undefined);
 
 export function SchoolsProvider({ children }: { children: ReactNode }) {
-  const [schools, setSchools] = useState<School[]>(initialSchoolsData);
-  const [districts, setDistricts] = useState<string[]>(initialDistrictsData);
-  const [loading, setLoading] = useState(false); // Por ahora en false, cambiaría con Firestore
+  const [schools, setSchools] = useState<School[]>([]);
+  const [districts, setDistricts] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const uniqueDistricts = useMemo(() => {
-    const districtsFromSchools = schools.map(school => school.district);
-    return [...new Set([...districtsFromSchools, ...districts])];
-  }, [schools, districts]);
+  const fetchSchoolsAndDistricts = async () => {
+    setLoading(true);
+    try {
+      const schoolsCollection = collection(db, 'schools');
+      const schoolsSnapshot = await getDocs(schoolsCollection);
+      const schoolsList = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
+      setSchools(schoolsList);
 
-  const addSchool = (schoolData: NewSchool) => {
-    const newSchool: School = {
-        ...schoolData,
-        id: `esc-${Date.now()}`,
-        status: "Activa"
-    };
-    setSchools(prev => [...prev, newSchool]);
+      const districtsCollection = collection(db, 'districts');
+      const districtsSnapshot = await getDocs(districtsCollection);
+      const districtsList = districtsSnapshot.docs.map(doc => (doc.data() as District).name);
+      
+      const districtsFromSchools = schoolsList.map(school => school.district);
+      const allDistricts = [...new Set([...districtsList, ...districtsFromSchools])];
+      setDistricts(allDistricts.sort());
+
+    } catch (error) {
+      console.error("Error fetching data from Firestore:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSchoolsAndDistricts();
+  }, []);
+
+  const addSchool = async (schoolData: NewSchool) => {
+    try {
+      const newSchool = {
+          ...schoolData,
+          status: "Activa"
+      }
+      await addDoc(collection(db, 'schools'), newSchool);
+      await fetchSchoolsAndDistricts(); // Re-fetch to keep data in sync
+    } catch (error) {
+      console.error("Error adding school:", error);
+    }
   };
   
-  const updateSchool = (updatedSchool: School) => {
-    setSchools(prev => prev.map(s => s.id === updatedSchool.id ? updatedSchool : s));
+  const updateSchool = async (updatedSchool: School) => {
+    try {
+        const schoolDocRef = doc(db, 'schools', updatedSchool.id);
+        const { id, ...dataToUpdate } = updatedSchool;
+        await updateDoc(schoolDocRef, dataToUpdate);
+        await fetchSchoolsAndDistricts();
+    } catch(error) {
+        console.error("Error updating school:", error);
+    }
   };
   
-  const deleteSchool = (schoolId: string) => {
-    setSchools(prev => prev.filter(s => s.id !== schoolId));
+  const deleteSchool = async (schoolId: string) => {
+    try {
+        await deleteDoc(doc(db, 'schools', schoolId));
+        await fetchSchoolsAndDistricts();
+    } catch (error) {
+        console.error("Error deleting school:", error);
+    }
   };
 
-  const toggleSchoolStatus = (schoolId: string) => {
-    setSchools(prev => prev.map(s => 
-        s.id === schoolId 
-            ? { ...s, status: s.status === "Activa" ? "Inactiva" : "Activa" } 
-            : s
-    ));
+  const toggleSchoolStatus = async (schoolId: string) => {
+    const schoolToToggle = schools.find(s => s.id === schoolId);
+    if (!schoolToToggle) return;
+    
+    try {
+        const newStatus = schoolToToggle.status === "Activa" ? "Inactiva" : "Activa";
+        const schoolDocRef = doc(db, 'schools', schoolId);
+        await updateDoc(schoolDocRef, { status: newStatus });
+        await fetchSchoolsAndDistricts();
+    } catch (error) {
+        console.error("Error toggling school status:", error);
+    }
   };
   
-  const addDistrict = (districtName: string) => {
+  const addDistrict = async (districtName: string) => {
     if (!districts.includes(districtName)) {
-        setDistricts(prev => [...prev, districtName]);
+        try {
+            await addDoc(collection(db, 'districts'), { name: districtName });
+            await fetchSchoolsAndDistricts();
+        } catch(error) {
+            console.error("Error adding district:", error);
+        }
     }
   };
 
   const value = { 
     schools, 
-    districts: uniqueDistricts, 
+    districts,
     addSchool, 
     updateSchool, 
     deleteSchool, 
