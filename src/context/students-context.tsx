@@ -2,6 +2,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { collection, getDocs, addDoc, doc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import type { Result } from './results-context';
 
 export type Student = {
@@ -18,60 +20,54 @@ type NewStudent = Omit<Student, 'id' | 'results'>;
 
 interface StudentsContextType {
   students: Student[];
-  addStudent: (student: NewStudent) => void;
-  deleteStudent: (studentId: string) => void;
+  addStudent: (student: NewStudent) => Promise<void>;
+  deleteStudent: (studentId: string) => Promise<void>;
+  loading: boolean;
 }
 
 const StudentsContext = createContext<StudentsContextType | undefined>(undefined);
 
-const initialStudents: Student[] = [
-    { id: "alu-001", name: "Juan Pérez", dni: "45.123.456", grade: "5to Grado", course: "A", school: "Escuela N° 101" },
-    { id: "alu-002", name: "María García", dni: "46.789.012", grade: "5to Grado", course: "A", school: "Escuela N° 101" },
-    { id: "alu-003", name: "Pedro Rodríguez", dni: "44.555.666", grade: "4to Grado", course: "B", school: "Escuela N° 789" },
-    { id: "alu-004", name: "Ana Martínez", dni: "45.987.654", grade: "6to Grado", course: "C", school: "Escuela N° 101" },
-];
-
-const LOCAL_STORAGE_KEY = 'chubut-evalua-students';
-
 export function StudentsProvider({ children }: { children: ReactNode }) {
   const [students, setStudents] = useState<Student[]>([]);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchStudents = async () => {
     try {
-      const storedStudents = window.localStorage.getItem(LOCAL_STORAGE_KEY);
-      setStudents(storedStudents ? JSON.parse(storedStudents) : initialStudents);
+      const studentsCollection = collection(db, 'students');
+      const studentsSnapshot = await getDocs(studentsCollection);
+      const studentsList = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
+      setStudents(studentsList);
     } catch (error) {
-      console.error("Error reading from localStorage", error);
-      setStudents(initialStudents);
+      console.error("Error fetching students from Firestore:", error);
+    } finally {
+      setLoading(false);
     }
-    setIsInitialized(true);
-  }, []);
-
-  useEffect(() => {
-    if (isInitialized) {
-      try {
-        window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(students));
-      } catch (error) {
-        console.error("Error writing to localStorage", error);
-      }
-    }
-  }, [students, isInitialized]);
-
-  const addStudent = (studentData: NewStudent) => {
-    const newStudent: Student = {
-        ...studentData,
-        id: `alu-${Date.now()}`,
-    }
-    setStudents(prevStudents => [...prevStudents, newStudent]);
   };
 
-  const deleteStudent = (studentId: string) => {
-    setStudents(prevStudents => prevStudents.filter(student => student.id !== studentId));
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const addStudent = async (studentData: NewStudent) => {
+    try {
+      const docRef = await addDoc(collection(db, 'students'), studentData);
+      setStudents(prevStudents => [...prevStudents, { ...studentData, id: docRef.id }]);
+    } catch (error) {
+      console.error("Error adding student to Firestore:", error);
+    }
+  };
+
+  const deleteStudent = async (studentId: string) => {
+    try {
+      await deleteDoc(doc(db, 'students', studentId));
+      setStudents(prevStudents => prevStudents.filter(student => student.id !== studentId));
+    } catch (error) {
+      console.error("Error deleting student from Firestore:", error);
+    }
   };
 
   return (
-    <StudentsContext.Provider value={{ students, addStudent, deleteStudent }}>
+    <StudentsContext.Provider value={{ students, addStudent, deleteStudent, loading }}>
       {children}
     </StudentsContext.Provider>
   );

@@ -38,11 +38,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import type { User } from "@/lib/auth";
 import { SidebarTrigger } from "./ui/sidebar";
 import { useSearch } from "@/context/search-context";
 import { usePathname } from "next/navigation";
 import { RoleIcon } from "./role-icon";
+import { useAuth, mockLogout } from "@/context/auth-context";
+import type { User } from "@/context/users-context";
 
 interface DashboardHeaderProps {
   user: User;
@@ -89,8 +90,8 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
           </DropdownMenuItem>
           <DropdownMenuItem>Configuración</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link href="/">Cerrar Sesión</Link>
+          <DropdownMenuItem onClick={mockLogout}>
+            Cerrar Sesión
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

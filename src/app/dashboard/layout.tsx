@@ -7,6 +7,10 @@ import { DashboardNav } from "@/components/dashboard-nav";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
 import { GraduationCap } from "lucide-react";
 import { AuthProvider, useAuth } from "@/context/auth-context";
+import { ExamsProvider } from "@/context/exams-context";
+import { StudentsProvider } from "@/context/students-context";
+import { ResultsProvider } from "@/context/results-context";
+import { SearchProvider } from "@/context/search-context";
 
 function DashboardLayoutContent({
     children,
@@ -16,12 +20,12 @@ function DashboardLayoutContent({
     const { user, loading } = useAuth();
 
     if (loading) {
-        return <div>Cargando...</div>;
+        return <div className="flex h-screen w-full items-center justify-center">Cargando...</div>;
     }
 
     if (!user) {
-        // Esto puede ser un componente de error más elaborado
-        return <div>Error: Usuario no autenticado. Por favor, inicie sesión.</div>;
+        // This can be a more elaborate error component
+        return <div className="flex h-screen w-full items-center justify-center">Error: Usuario no autenticado. Por favor, inicie sesión.</div>;
     }
 
     return (
@@ -57,7 +61,15 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthProvider>
-        <DashboardLayoutContent>{children}</DashboardLayoutContent>
+        <SearchProvider>
+          <ExamsProvider>
+            <StudentsProvider>
+              <ResultsProvider>
+                <DashboardLayoutContent>{children}</DashboardLayoutContent>
+              </ResultsProvider>
+            </StudentsProvider>
+          </ExamsProvider>
+        </SearchProvider>
     </AuthProvider>
   );
 }

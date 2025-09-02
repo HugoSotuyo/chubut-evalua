@@ -1,11 +1,9 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
+import { AuthProvider } from '@/context/auth-context';
 import { UsersProvider } from '@/context/users-context';
-import { ExamsProvider } from '@/context/exams-context';
-import { SearchProvider } from '@/context/search-context';
-import { StudentsProvider } from '@/context/students-context';
-import { ResultsProvider } from '@/context/results-context';
 
 export const metadata: Metadata = {
   title: 'Chubut evalúa',
@@ -25,18 +23,12 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <UsersProvider>
-          <SearchProvider>
-            <ExamsProvider>
-              <StudentsProvider>
-                <ResultsProvider>
-                  {children}
-                  <Toaster />
-                </ResultsProvider>
-              </StudentsProvider>
-            </ExamsProvider>
-          </SearchProvider>
-        </UsersProvider>
+        <AuthProvider>
+          <UsersProvider>
+            {children}
+            <Toaster />
+          </UsersProvider>
+        </AuthProvider>
       </body>
     </html>
   );

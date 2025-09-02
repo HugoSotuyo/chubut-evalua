@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useUsers } from "@/context/users-context";
-import { setMockUser } from "@/lib/auth";
+import { mockLogin } from "@/context/auth-context";
 
 export function LoginForm() {
   const router = useRouter();
@@ -37,15 +37,13 @@ export function LoginForm() {
         foundUser = users.find(user => user.email === email && user.password === password);
     }
 
-
     if (foundUser) {
         if (foundUser.status === "Activo") {
             toast({
                 title: "Inicio de sesión exitoso",
                 description: `Bienvenido, ${foundUser.name}.`,
             });
-            setMockUser(foundUser);
-            router.push("/dashboard");
+            mockLogin(foundUser);
         } else if (foundUser.status === "Pendiente") {
             toast({
                 variant: "default",

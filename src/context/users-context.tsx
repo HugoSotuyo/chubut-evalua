@@ -2,13 +2,15 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { collection, getDocs, addDoc, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import type { UserRole } from '@/lib/auth';
 
 export type User = {
   id: string;
   name: string;
   email: string;
-  password?: string; // Should be handled securely on a real backend
+  password?: string;
   role: UserRole;
   school: string;
   status: "Activo" | "Pendiente" | "Inactivo";
@@ -16,81 +18,81 @@ export type User = {
   course?: string;
 };
 
-type NewUser = Omit<User, 'id' | 'status' | 'avatar'> & {
+type NewUser = Omit<User, 'id' | 'status'> & {
     password?: string;
 };
 
 interface UsersContextType {
   users: User[];
-  addUser: (user: NewUser) => void;
-  deleteUser: (userId: string) => void;
-  enableUser: (userId: string) => void;
+  addUser: (user: NewUser) => Promise<void>;
+  deleteUser: (userId: string) => Promise<void>;
+  enableUser: (userId: string) => Promise<void>;
+  loading: boolean;
 }
 
 const UsersContext = createContext<UsersContextType | undefined>(undefined);
 
-const initialUsers: User[] = [
-    { id: "usr-001", name: "Ana Gomez", email: "ana.gomez@example.com", password: "password123", role: "Docente", school: "Escuela N° 101", status: "Activo", grade: "5to Grado", course: "A" },
-    { id: "usr-002", name: "Carlos Diaz", email: "carlos.diaz@example.com", password: "password123", role: "Director", school: "Escuela N° 789", status: "Activo" },
-    { id: "usr-003", name: "Lucia Fernandez", email: "lucia.fernandez@example.com", password: "password123", role: "Referente", school: "N/A", status: "Activo" },
-    { id: "usr-004", name: "Marcos Torres", email: "marcos.torres@example.com", password: "password123", role: "Docente", school: "Escuela N° 101", status: "Pendiente", grade: "6to Grado", course: "B" },
-    { id: "usr-005", name: "Sofia Reyes", email: "sofia.reyes@example.com", password: "password123", role: "Administrador", school: "N/A", status: "Activo" },
-    { id: "usr-006", name: "Evaluador Principal", email: "evaluador@chubut.edu.ar", password: "hdsp6032", role: "Evaluador", school: "N/A", status: "Activo" },
-];
-
-const LOCAL_STORAGE_KEY = 'chubut-evalua-users';
-
 export function UsersProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<User[]>([]);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUsers = async () => {
+    try {
+      const usersCollection = collection(db, 'users');
+      const usersSnapshot = await getDocs(usersCollection);
+      const usersList = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+      setUsers(usersList);
+    } catch (error) {
+      console.error("Error fetching users from Firestore:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    try {
-      const storedUsers = window.localStorage.getItem(LOCAL_STORAGE_KEY);
-      setUsers(storedUsers ? JSON.parse(storedUsers) : initialUsers);
-    } catch (error) {
-      console.error("Error reading from localStorage", error);
-      setUsers(initialUsers);
-    }
-    setIsInitialized(true);
+    fetchUsers();
   }, []);
 
-  useEffect(() => {
-    if (isInitialized) {
-      try {
-        window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(users));
-      } catch (error) {
-        console.error("Error writing to localStorage", error);
+  const addUser = async (userData: NewUser) => {
+    try {
+      const newUser: Omit<User, 'id'> = {
+          ...userData,
+          status: "Pendiente",
       }
+      const docRef = await addDoc(collection(db, 'users'), newUser);
+      setUsers(prevUsers => [...prevUsers, { ...newUser, id: docRef.id }]);
+    } catch (error) {
+      console.error("Error adding user to Firestore:", error);
     }
-  }, [users, isInitialized]);
-
-  const addUser = (userData: NewUser) => {
-    const newUser: User = {
-        ...userData,
-        id: `usr-${Date.now()}`,
-        status: "Pendiente",
-    }
-    setUsers(prevUsers => [...prevUsers, newUser]);
   };
 
-  const deleteUser = (userId: string) => {
-    setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+  const deleteUser = async (userId: string) => {
+    try {
+      await deleteDoc(doc(db, 'users', userId));
+      setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+    } catch (error) {
+      console.error("Error deleting user from Firestore:", error);
+    }
   };
   
-  const enableUser = (userId: string) => {
-    setUsers(prevUsers =>
-      prevUsers.map(user =>
-        user.id === userId
-          ? { ...user, status: "Activo" }
-          : user
-      )
-    );
+  const enableUser = async (userId: string) => {
+    try {
+      const userDocRef = doc(db, 'users', userId);
+      await updateDoc(userDocRef, { status: "Activo" });
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user.id === userId
+            ? { ...user, status: "Activo" }
+            : user
+        )
+      );
+    } catch (error) {
+      console.error("Error enabling user in Firestore:", error);
+    }
   };
 
-
   return (
-    <UsersContext.Provider value={{ users, addUser, deleteUser, enableUser }}>
+    <UsersContext.Provider value={{ users, addUser, deleteUser, enableUser, loading }}>
       {children}
     </UsersContext.Provider>
   );
