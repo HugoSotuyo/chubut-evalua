@@ -1,7 +1,6 @@
 
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import 'dotenv/config';
 
 const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
