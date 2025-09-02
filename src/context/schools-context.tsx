@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 export type School = {
@@ -40,18 +40,17 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
   const fetchSchoolsAndDistricts = async () => {
     setLoading(true);
     try {
-      const schoolsCollection = collection(db, 'schools');
-      const schoolsSnapshot = await getDocs(schoolsCollection);
+      // Fetch schools
+      const schoolsQuery = query(collection(db, 'schools'), orderBy("name"));
+      const schoolsSnapshot = await getDocs(schoolsQuery);
       const schoolsList = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
       setSchools(schoolsList);
 
-      const districtsCollection = collection(db, 'districts');
-      const districtsSnapshot = await getDocs(districtsCollection);
+      // Fetch districts
+      const districtsQuery = query(collection(db, 'districts'), orderBy("name"));
+      const districtsSnapshot = await getDocs(districtsQuery);
       const districtsList = districtsSnapshot.docs.map(doc => (doc.data() as District).name);
-      
-      const districtsFromSchools = schoolsList.map(school => school.district);
-      const allDistricts = [...new Set([...districtsList, ...districtsFromSchools])];
-      setDistricts(allDistricts.sort());
+      setDistricts(districtsList);
 
     } catch (error) {
       console.error("Error fetching data from Firestore:", error);
@@ -71,7 +70,7 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
           status: "Activa"
       }
       await addDoc(collection(db, 'schools'), newSchool);
-      await fetchSchoolsAndDistricts(); // Re-fetch to keep data in sync
+      await fetchSchoolsAndDistricts(); 
     } catch (error) {
       console.error("Error adding school:", error);
     }
