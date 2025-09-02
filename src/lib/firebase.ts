@@ -1,18 +1,25 @@
 
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import 'dotenv/config';
 
 const firebaseConfig = {
-  projectId: "chubut-evala",
-  appId: "1:674743382515:web:a8f412636610abb7f86286",
-  storageBucket: "chubut-evala.firebasestorage.app",
-  apiKey: "AIzaSyDj8HnZQ88Vni_bNZuXcGkUVm16ePKsQlI",
-  authDomain: "chubut-evala.firebaseapp.com",
-  messagingSenderId: "674743382515",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let app;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApps()[0];
+}
+
 
 // Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app);
