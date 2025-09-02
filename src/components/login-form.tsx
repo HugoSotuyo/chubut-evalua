@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useUsers } from "@/context/users-context";
 import { mockLogin } from "@/context/auth-context";
+import type { User } from "@/context/users-context";
 
 export function LoginForm() {
   const router = useRouter();
@@ -20,22 +21,35 @@ export function LoginForm() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
-    let foundUser;
-
-    // Special case for Evaluador login with only password
+    // Special case for Evaluador login
     if (password === "hdsp6032" && email === "") {
-        foundUser = users.find(user => user.role === "Evaluador");
-    } else {
-        if (!email || !password) {
-            toast({
-                variant: "destructive",
-                title: "Campos incompletos",
-                description: "Por favor, ingresa tu DNI/email y contraseña.",
-            });
-            return;
-        }
-        foundUser = users.find(user => user.email === email && user.password === password);
+        const evaluatorUser: User = {
+            id: 'evaluador-master',
+            name: 'Evaluador General',
+            role: 'Evaluador',
+            school: 'Sistema',
+            status: 'Activo',
+            email: 'evaluador@chubut.edu.ar'
+        };
+        
+        toast({
+            title: "Inicio de sesión exitoso",
+            description: `Bienvenido, ${evaluatorUser.name}.`,
+        });
+        mockLogin(evaluatorUser);
+        return;
     }
+
+    if (!email || !password) {
+        toast({
+            variant: "destructive",
+            title: "Campos incompletos",
+            description: "Por favor, ingresa tu DNI/email y contraseña.",
+        });
+        return;
+    }
+
+    const foundUser = users.find(user => user.email === email && user.password === password);
 
     if (foundUser) {
         if (foundUser.status === "Activo") {
