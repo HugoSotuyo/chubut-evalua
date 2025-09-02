@@ -49,7 +49,7 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
       // Fetch districts
       const districtsQuery = query(collection(db, 'districts'), orderBy("name"));
       const districtsSnapshot = await getDocs(districtsQuery);
-      const districtsList = districtsSnapshot.docs.map(doc => (doc.data() as District).name);
+      const districtsList = districtsSnapshot.docs.map(doc => (doc.data() as { name: string }).name);
       setDistricts(districtsList);
 
     } catch (error) {
