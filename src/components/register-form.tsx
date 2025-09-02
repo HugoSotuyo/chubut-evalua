@@ -17,6 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useUsers } from "@/context/users-context";
 import { useSchools } from "@/context/schools-context";
 import type { UserRole } from "@/lib/auth";
+import type { User } from "@/context/users-context";
+
 
 export function RegisterForm() {
   const [role, setRole] = useState<UserRole | "">("");
@@ -41,9 +43,9 @@ export function RegisterForm() {
     const lastName = formData.get("last-name") as string;
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    const role = formData.get("role") as UserRole;
+    const selectedRole = formData.get("role") as UserRole;
     
-    if (!firstName || !lastName || !role || !email || !password) {
+    if (!firstName || !lastName || !selectedRole || !email || !password) {
         toast({
             title: "Error de validación",
             description: "Por favor, completa todos los campos requeridos.",
@@ -52,12 +54,16 @@ export function RegisterForm() {
         return;
     }
     
-    let school = "N/A";
-    let grade = undefined;
-    let course = undefined;
+    const userData: Omit<User, 'id' | 'status'> = {
+        name: `${firstName} ${lastName}`,
+        email: email,
+        password: password,
+        role: selectedRole,
+        school: "N/A",
+    };
 
-    if (role === "Director" || role === "Docente") {
-        school = formData.get("escuela") as string;
+    if (selectedRole === "Director" || selectedRole === "Docente") {
+        const school = formData.get("escuela") as string;
         if (!selectedDistrict || !school) {
             toast({
                 title: "Error de validación",
@@ -66,11 +72,12 @@ export function RegisterForm() {
             });
             return;
         }
+        userData.school = school;
     }
     
-    if (role === "Docente") {
-        grade = formData.get("grado") as string;
-        course = formData.get("curso") as string;
+    if (selectedRole === "Docente") {
+        const grade = formData.get("grado") as string;
+        const course = formData.get("curso") as string;
         if (!grade || !course) {
              toast({
                 title: "Error de validación",
@@ -79,17 +86,11 @@ export function RegisterForm() {
             });
             return;
         }
+        userData.grade = grade;
+        userData.course = course;
     }
 
-    addUser({
-        name: `${firstName} ${lastName}`,
-        email: email,
-        password: password,
-        role: role,
-        school: school,
-        grade: grade,
-        course: course,
-    });
+    addUser(userData);
 
     toast({
       title: "Registro exitoso",
