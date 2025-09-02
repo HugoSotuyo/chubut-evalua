@@ -141,15 +141,24 @@ export default function EscuelasPage() {
         return;
     }
     
-    const result = await addDistrict(name.trim());
-    toast({
-        title: result.success ? "Distrito Agregado" : "Error",
-        description: result.message,
-        variant: result.success ? "default" : "destructive",
-    });
+    try {
+        const result = await addDistrict(name.trim());
+        toast({
+            title: result.success ? "Distrito Agregado" : "Error",
+            description: result.message,
+            variant: result.success ? "default" : "destructive",
+        });
 
-    if (result.success) {
-      setIsAddDistrictDialogOpen(false);
+        if (result.success) {
+            setIsAddDistrictDialogOpen(false);
+        }
+    } catch (error) {
+        toast({
+            title: "Error Inesperado",
+            description: "Ocurrió un error al intentar guardar el distrito.",
+            variant: "destructive",
+        });
+        console.error("Error submitting district:", error);
     }
   }
 
