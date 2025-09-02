@@ -140,10 +140,15 @@ export default function EscuelasPage() {
         toast({ title: "Error", description: "El nombre del distrito es requerido.", variant: "destructive"});
         return;
     }
+
+    if (districts.includes(name.trim())) {
+       toast({ title: "Distrito Duplicado", description: `El distrito "${name.trim()}" ya existe.`, variant: "destructive"});
+       return;
+    }
     
     try {
-        await addDistrict(name);
-        toast({ title: "Distrito Agregado", description: `El distrito ${name} ha sido agregado.` });
+        await addDistrict(name.trim());
+        toast({ title: "Distrito Agregado", description: `El distrito ${name.trim()} ha sido agregado.` });
         setIsAddDistrictDialogOpen(false);
     } catch (error) {
         toast({ title: "Error al Agregar", description: "No se pudo agregar el distrito.", variant: "destructive"});
@@ -417,3 +422,5 @@ export default function EscuelasPage() {
     </div>
   )
 }
+
+    
