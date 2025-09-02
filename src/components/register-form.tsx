@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,15 +15,24 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useUsers } from "@/context/users-context";
+import { useSchools } from "@/context/schools-context";
 import type { UserRole } from "@/lib/auth";
 
 export function RegisterForm() {
   const [role, setRole] = useState<UserRole | "">("");
-  const [selectedSchool, setSelectedSchool] = useState("");
-  const [selectedGrade, setSelectedGrade] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
   const router = useRouter();
   const { toast } = useToast();
   const { addUser } = useUsers();
+  const { schools, districts } = useSchools();
+
+  const filteredSchools = useMemo(() => {
+    if (!selectedDistrict) {
+      return [];
+    }
+    return schools.filter(school => school.district === selectedDistrict);
+  }, [selectedDistrict, schools]);
+
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -47,12 +56,29 @@ export function RegisterForm() {
     let grade = undefined;
     let course = undefined;
 
-    if (role === "Director") {
+    if (role === "Director" || role === "Docente") {
         school = formData.get("escuela") as string;
-    } else if (role === "Docente") {
-        school = formData.get("escuela") as string;
+        if (!selectedDistrict || !school) {
+            toast({
+                title: "Error de validación",
+                description: "Debes seleccionar un distrito y una escuela.",
+                variant: "destructive",
+            });
+            return;
+        }
+    }
+    
+    if (role === "Docente") {
         grade = formData.get("grado") as string;
         course = formData.get("curso") as string;
+        if (!grade || !course) {
+             toast({
+                title: "Error de validación",
+                description: "Debes seleccionar un grado y un curso.",
+                variant: "destructive",
+            });
+            return;
+        }
     }
 
     addUser({
@@ -117,26 +143,27 @@ export function RegisterForm() {
         <>
           <div className="grid gap-2">
             <Label htmlFor="distrito">Distrito</Label>
-            <Select name="distrito" required>
+            <Select name="distrito" onValueChange={setSelectedDistrict} required>
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona un distrito" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">Distrito I</SelectItem>
-                <SelectItem value="2">Distrito II</SelectItem>
+                {districts.map(district => (
+                    <SelectItem key={district} value={district}>{district}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="escuela-director">Escuela</Label>
-            <Select name="escuela" onValueChange={setSelectedSchool} required>
+            <Select name="escuela" required disabled={!selectedDistrict}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona una escuela" />
+                <SelectValue placeholder={!selectedDistrict ? "Selecciona un distrito primero" : "Selecciona una escuela"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Escuela N° 101">Escuela N° 101</SelectItem>
-                <SelectItem value="Escuela N° 789">Escuela N° 789</SelectItem>
-                <SelectItem value="Escuela N° 456">Escuela N° 456</SelectItem>
+                {filteredSchools.map(school => (
+                    <SelectItem key={school.id} value={school.name}>{school.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -148,7 +175,7 @@ export function RegisterForm() {
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
                 <Label htmlFor="grado">Grado</Label>
-                <Select name="grado" onValueChange={setSelectedGrade} required>
+                <Select name="grado" required>
                 <SelectTrigger>
                     <SelectValue placeholder="Grado" />
                 </SelectTrigger>

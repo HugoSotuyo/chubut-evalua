@@ -32,23 +32,20 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast";
 import { useSearch } from "@/context/search-context";
+import { useSchools, type School } from "@/context/schools-context";
 
-
-const initialSchools = [
-    { id: "esc-001", name: "Escuela N° 101", district: "Distrito I", status: "Activa" },
-    { id: "esc-002", name: "Escuela N° 789", district: "Distrito II", status: "Activa" },
-    { id: "esc-003", name: "Escuela N° 456", district: "Distrito I", status: "Activa" },
-    { id: "esc-004", name: "Escuela N° 23", district: "Distrito III", status: "Inactiva" },
-    { id: "esc-005", name: "Escuela N° 502", district: "Distrito II", status: "Activa" },
-];
-
-type School = typeof initialSchools[0];
-
-const initialDistricts = ["Distrito I", "Distrito II", "Distrito III", "Distrito IV", "Distrito V"];
 
 export default function EscuelasPage() {
-  const [schools, setSchools] = useState<School[]>(initialSchools);
-  const [districts, setDistricts] = useState<string[]>(initialDistricts);
+  const { 
+    schools, 
+    districts, 
+    addSchool, 
+    updateSchool, 
+    deleteSchool, 
+    toggleSchoolStatus, 
+    addDistrict 
+  } = useSchools();
+
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddSchoolDialogOpen, setIsAddSchoolDialogOpen] = useState(false);
@@ -58,11 +55,6 @@ export default function EscuelasPage() {
   const [districtFilter, setDistrictFilter] = useState("all");
   const { toast } = useToast();
   const { searchTerm } = useSearch();
-
-  const uniqueDistricts = useMemo(() => {
-    const districtsFromSchools = schools.map(school => school.district);
-    return [...new Set([...districtsFromSchools, ...districts])];
-  }, [schools, districts]);
 
   const filteredSchools = useMemo(() => {
     let results = schools;
@@ -88,7 +80,7 @@ export default function EscuelasPage() {
 
   const handleDeleteSchool = () => {
     if (!selectedSchool) return;
-    setSchools(schools.filter((school) => school.id !== selectedSchool.id));
+    deleteSchool(selectedSchool.id);
     toast({
         title: "Escuela Eliminada",
         description: `La escuela ${selectedSchool.name} ha sido eliminada correctamente.`,
@@ -100,26 +92,18 @@ export default function EscuelasPage() {
   const handleToggleStatus = (schoolId: string) => {
     const schoolToToggle = schools.find((school) => school.id === schoolId);
     if (!schoolToToggle) return;
-
-    const newStatus = schoolToToggle.status === "Activa" ? "Inactiva" : "Activa";
     
-    setSchools(schools.map((school) =>
-      school.id === schoolId ? { ...school, status: newStatus } : school
-    ));
+    toggleSchoolStatus(schoolId);
 
     toast({
-        title: `Escuela ${newStatus === "Activa" ? "Activada" : "Desactivada"}`,
-        description: `La escuela ${schoolToToggle.name} ahora está ${newStatus.toLowerCase()}.`,
+        title: `Escuela ${schoolToToggle.status === "Activa" ? "Desactivada" : "Activada"}`,
+        description: `La escuela ${schoolToToggle.name} ahora está ${schoolToToggle.status === "Activa" ? "inactiva" : "activa"}.`,
     });
   };
 
   const handleUpdateSchool = () => {
     if (!editingSchool) return;
-
-    setSchools(schools.map((school) =>
-        school.id === editingSchool.id ? editingSchool : school
-    ));
-
+    updateSchool(editingSchool);
     toast({
         title: "Escuela Actualizada",
         description: `Los datos de la escuela ${editingSchool.name} han sido actualizados.`,
@@ -139,14 +123,10 @@ export default function EscuelasPage() {
         return;
     }
 
-    const newSchool: School = {
-        id: `esc-${Date.now()}`,
+    addSchool({
         name,
         district,
-        status: "Activa"
-    };
-
-    setSchools([...schools, newSchool]);
+    });
     toast({ title: "Escuela Agregada", description: `La escuela ${name} ha sido agregada.` });
     setIsAddSchoolDialogOpen(false);
   };
@@ -166,7 +146,7 @@ export default function EscuelasPage() {
         return;
     }
 
-    setDistricts([...districts, name]);
+    addDistrict(name);
     toast({ title: "Distrito Agregado", description: `El distrito ${name} ha sido agregado.` });
     setIsAddDistrictDialogOpen(false);
   }
@@ -233,7 +213,7 @@ export default function EscuelasPage() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todos los Distritos</SelectItem>
-                                {uniqueDistricts.map(district => (
+                                {districts.map(district => (
                                     <SelectItem key={district} value={district}>{district}</SelectItem>
                                 ))}
                             </SelectContent>
@@ -348,7 +328,7 @@ export default function EscuelasPage() {
                                     <SelectValue placeholder="Selecciona un distrito" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {uniqueDistricts.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                                    {districts.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -392,7 +372,7 @@ export default function EscuelasPage() {
                                     <SelectValue placeholder="Selecciona un distrito" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {uniqueDistricts.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                                    {districts.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>

@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/context/auth-context';
 import { UsersProvider } from '@/context/users-context';
+import { SchoolsProvider } from '@/context/schools-context';
 
 export const metadata: Metadata = {
   title: 'Chubut evalúa',
@@ -25,8 +26,10 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <AuthProvider>
           <UsersProvider>
-            {children}
-            <Toaster />
+            <SchoolsProvider>
+                {children}
+                <Toaster />
+            </SchoolsProvider>
           </UsersProvider>
         </AuthProvider>
       </body>
