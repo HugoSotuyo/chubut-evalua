@@ -111,11 +111,18 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
   };
   
   const addDistrict = async (districtName: string) => {
+    // Basic check to prevent adding empty district names
+    if (!districtName.trim()) {
+        console.error("District name cannot be empty.");
+        return;
+    }
     try {
         await addDoc(collection(db, 'districts'), { name: districtName });
-        await fetchSchoolsAndDistricts();
+        await fetchSchoolsAndDistricts(); // Reload all data after adding
     } catch(error) {
         console.error("Error adding district:", error);
+        // Optionally re-throw or handle the error for the UI
+        throw error;
     }
   };
 

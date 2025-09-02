@@ -112,7 +112,7 @@ export default function EscuelasPage() {
     setEditingSchool(null);
   };
   
-  const handleAddSchool = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleAddSchool = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const name = formData.get("school-name") as string;
@@ -123,7 +123,7 @@ export default function EscuelasPage() {
         return;
     }
 
-    addSchool({
+    await addSchool({
         name,
         district,
     });
@@ -131,24 +131,24 @@ export default function EscuelasPage() {
     setIsAddSchoolDialogOpen(false);
   };
 
-  const handleAddDistrict = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleAddDistrict = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const name = formData.get("district-name") as string;
     
-    if (!name) {
+    if (!name || !name.trim()) {
         toast({ title: "Error", description: "El nombre del distrito es requerido.", variant: "destructive"});
         return;
     }
     
-    if (districts.includes(name)) {
-        toast({ title: "Error", description: "El distrito ya existe.", variant: "destructive"});
-        return;
+    try {
+        await addDistrict(name);
+        toast({ title: "Distrito Agregado", description: `El distrito ${name} ha sido agregado.` });
+        setIsAddDistrictDialogOpen(false);
+    } catch (error) {
+        toast({ title: "Error al Agregar", description: "No se pudo agregar el distrito.", variant: "destructive"});
+        console.error(error);
     }
-
-    addDistrict(name);
-    toast({ title: "Distrito Agregado", description: `El distrito ${name} ha sido agregado.` });
-    setIsAddDistrictDialogOpen(false);
   }
 
   const handleExport = () => {
