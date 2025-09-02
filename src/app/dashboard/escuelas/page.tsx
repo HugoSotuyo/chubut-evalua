@@ -141,6 +141,15 @@ export default function EscuelasPage() {
         return;
     }
     
+    if (districts.some(d => d.toLowerCase() === name.trim().toLowerCase())) {
+        toast({
+            title: "Distrito Duplicado",
+            description: `El distrito "${name.trim()}" ya existe en la lista.`,
+            variant: "destructive",
+        });
+        return;
+    }
+    
     try {
         const result = await addDistrict(name.trim());
         toast({
