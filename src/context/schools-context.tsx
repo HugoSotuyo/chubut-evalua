@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 export type School = {
@@ -26,7 +26,7 @@ interface SchoolsContextType {
   updateSchool: (school: School) => Promise<void>;
   deleteSchool: (schoolId: string) => Promise<void>;
   toggleSchoolStatus: (schoolId: string) => Promise<void>;
-  addDistrict: (districtName: string) => Promise<void>;
+  addDistrict: (districtName: string) => Promise<{ success: boolean; message: string }>;
   loading: boolean;
 }
 
@@ -110,14 +110,22 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  const addDistrict = async (districtName: string) => {
+  const addDistrict = async (districtName: string): Promise<{ success: boolean; message: string }> => {
     try {
-        await addDoc(collection(db, 'districts'), { name: districtName });
-        await fetchSchoolsAndDistricts(); // Reload all data after adding
-    } catch(error) {
-        console.error("Error adding district:", error);
-        // Optionally re-throw or handle the error for the UI
-        throw error;
+      // Robust check for duplicates directly in Firestore
+      const q = query(collection(db, "districts"), where("name", "==", districtName));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        return { success: false, message: `El distrito "${districtName}" ya existe.` };
+      }
+
+      await addDoc(collection(db, 'districts'), { name: districtName });
+      await fetchSchoolsAndDistricts();
+      return { success: true, message: `El distrito "${districtName}" ha sido agregado.` };
+    } catch (error) {
+      console.error("Error adding district:", error);
+      return { success: false, message: "No se pudo agregar el distrito." };
     }
   };
 
