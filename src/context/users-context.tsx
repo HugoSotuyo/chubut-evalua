@@ -37,10 +37,8 @@ export function UsersProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
     const usersCollection = collection(db, 'users');
     
-    // Set up a real-time listener
     const unsubscribe: Unsubscribe = onSnapshot(usersCollection, (querySnapshot) => {
       const usersList = querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -53,7 +51,6 @@ export function UsersProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
 
@@ -64,7 +61,6 @@ export function UsersProvider({ children }: { children: ReactNode }) {
           status: "Pendiente",
       }
       await addDoc(collection(db, 'users'), newUser);
-      // No need to update state manually, onSnapshot will do it.
     } catch (error) {
       console.error("Error adding user to Firestore:", error);
     }
@@ -73,7 +69,6 @@ export function UsersProvider({ children }: { children: ReactNode }) {
   const deleteUser = async (userId: string) => {
     try {
       await deleteDoc(doc(db, 'users', userId));
-      // No need to update state manually, onSnapshot will do it.
     } catch (error) {
       console.error("Error deleting user from Firestore:", error);
     }
@@ -83,7 +78,6 @@ export function UsersProvider({ children }: { children: ReactNode }) {
     try {
       const userDocRef = doc(db, 'users', userId);
       await updateDoc(userDocRef, { status: "Activo" });
-      // No need to update state manually, onSnapshot will do it.
     } catch (error)
     {
       console.error("Error enabling user in Firestore:", error);
