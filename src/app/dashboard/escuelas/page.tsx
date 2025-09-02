@@ -213,8 +213,8 @@ export default function EscuelasPage() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todos los Distritos</SelectItem>
-                                {districts.map(district => (
-                                    <SelectItem key={district} value={district}>{district}</SelectItem>
+                                {districts.map((district, index) => (
+                                    <SelectItem key={`${district}-${index}`} value={district}>{district}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -328,7 +328,7 @@ export default function EscuelasPage() {
                                     <SelectValue placeholder="Selecciona un distrito" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {districts.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                                    {districts.map((d, index) => <SelectItem key={`${d}-${index}`} value={d}>{d}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -372,7 +372,7 @@ export default function EscuelasPage() {
                                     <SelectValue placeholder="Selecciona un distrito" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {districts.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                                    {districts.map((d, index) => <SelectItem key={`${d}-${index}`} value={d}>{d}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
