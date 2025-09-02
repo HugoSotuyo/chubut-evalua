@@ -45,16 +45,20 @@ export default function UsuariosPage() {
     if (!user) return [];
     let results = users;
 
+    // Role-based pre-filtering
     if (user.role === "Director") {
         results = results.filter(u => u.school === user.school && u.role === "Docente");
+    } else if (user.role !== "Evaluador") { // Evaluador skips UI role filter
+      if (roleFilter !== "all") {
+        results = results.filter(user => user.role === roleFilter);
+      }
     }
-
-    if (roleFilter !== "all" && user.role !== "Director") {
-      results = results.filter(user => user.role === roleFilter);
-    }
+    
+    // Search term filtering (applies to all)
     if (searchTerm) {
       results = results.filter(user => user.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }
+    
     return results;
   }, [users, roleFilter, searchTerm, user]);
 
@@ -118,6 +122,8 @@ export default function UsuariosPage() {
   if (!user) {
     return <div>Cargando...</div>;
   }
+  
+  const showRoleFilter = user.role !== "Director" && user.role !== "Evaluador";
 
   return (
     <div className="flex flex-col gap-8">
@@ -138,7 +144,7 @@ export default function UsuariosPage() {
             </div>
         </div>
         
-        {user.role !== "Director" && (
+        {showRoleFilter && (
             <Card>
                 <CardHeader>
                     <div className="flex items-center gap-2">
