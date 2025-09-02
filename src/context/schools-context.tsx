@@ -111,13 +111,11 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
   };
   
   const addDistrict = async (districtName: string) => {
-    if (!districts.includes(districtName)) {
-        try {
-            await addDoc(collection(db, 'districts'), { name: districtName });
-            await fetchSchoolsAndDistricts();
-        } catch(error) {
-            console.error("Error adding district:", error);
-        }
+    try {
+        await addDoc(collection(db, 'districts'), { name: districtName });
+        await fetchSchoolsAndDistricts();
+    } catch(error) {
+        console.error("Error adding district:", error);
     }
   };
 
