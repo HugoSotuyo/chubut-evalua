@@ -1,8 +1,9 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import type { UserRole } from '@/lib/auth';
+import { getAllUsers, seedUser } from '@/lib/userService'; // Import Firestore functions
 
 export type User = {
   id: string;
@@ -18,16 +19,15 @@ export type User = {
 
 type NewUser = Omit<User, 'id' | 'status'>;
 
-const initialUsers: User[] = [
-    { id: '1', name: 'Laura Martinez', email: 'laura.martinez@chubut.edu.ar', role: 'Docente', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Activo', password: '123' },
-    { id: '2', name: 'Carlos Gomez', email: 'carlos.gomez@chubut.edu.ar', role: 'Director', school: 'Escuela N° 456', status: 'Activo', password: '123' },
-    { id: '3', name: 'Ana Fernandez', email: 'ana.fernandez@chubut.edu.ar', role: 'Referente', school: 'Distrito I', status: 'Activo', password: '123' },
-    { id: '4', name: 'Admin General', email: 'admin@chubut.edu.ar', role: 'Administrador', school: 'Ministerio', status: 'Activo', password: '123' },
-    { id: '5', name: 'Usuario Pendiente', email: 'pendiente@chubut.edu.ar', role: 'Docente', school: 'Escuela N° 789', status: 'Pendiente', password: '123' },
-    { id: '6', name: 'Evaluador General', email: 'evaluador@chubut.edu.ar', role: 'Evaluador', school: 'Sistema', status: 'Activo', password: 'hdsp6032' },
+const initialUsers: Omit<User, 'id'>[] = [
+    { name: 'Laura Martinez', email: 'laura.martinez@chubut.edu.ar', role: 'Docente', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Activo', password: '123' },
+    { name: 'Carlos Gomez', email: 'carlos.gomez@chubut.edu.ar', role: 'Director', school: 'Escuela N° 456', status: 'Activo', password: '123' },
+    { name: 'Ana Fernandez', email: 'ana.fernandez@chubut.edu.ar', role: 'Referente', school: 'Distrito I', status: 'Activo', password: '123' },
+    { name: 'Admin General', email: 'admin@chubut.edu.ar', role: 'Administrador', school: 'Ministerio', status: 'Activo', password: '123' },
+    { name: 'Usuario Pendiente', email: 'pendiente@chubut.edu.ar', role: 'Docente', school: 'Escuela N° 789', status: 'Pendiente', password: '123' },
+    { name: 'Evaluador General', email: 'evaluador@chubut.edu.ar', role: 'Evaluador', school: 'Sistema', status: 'Activo', password: 'hdsp6032' },
 ];
 
-const USERS_STORAGE_KEY = 'chubut_evalua_users';
 
 interface UsersContextType {
   users: User[];
@@ -44,52 +44,55 @@ export function UsersProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const storedUsers = localStorage.getItem(USERS_STORAGE_KEY);
-      if (storedUsers) {
-        setUsers(JSON.parse(storedUsers));
-      } else {
-        setUsers(initialUsers);
-        localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(initialUsers));
-      }
-    } catch (error) {
-      console.error("Failed to access localStorage for users:", error);
-      setUsers(initialUsers);
-    }
-    setLoading(false);
+    const seedDatabase = async () => {
+        const existingUsers = await getAllUsers();
+        if (existingUsers.length === 0) {
+            console.log("Seeding database with initial users...");
+            for (const user of initialUsers) {
+                await seedUser(user);
+            }
+            // After seeding, fetch again to populate the context
+             const allUsers = await getAllUsers();
+             setUsers(allUsers);
+        } else {
+             setUsers(existingUsers);
+        }
+        setLoading(false);
+    };
+    
+    seedDatabase();
   }, []);
   
   const updateUsersInStateAndStorage = (newUsers: User[]) => {
+    // This function will now only update the local state.
+    // Firestore updates will be handled by specific service functions.
     setUsers(newUsers);
-    try {
-      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(newUsers));
-    } catch (error) {
-      console.error("Failed to save users to localStorage:", error);
-    }
   };
 
 
   const addUser = (userData: NewUser): { success: boolean; message: string } => {
-    if (users.some(user => user.email === userData.email)) {
-        return { success: false, message: "Ya existe un usuario con este email." };
-    }
-
+    // This context function is now primarily for local state management, 
+    // the actual DB operation is in register-form.
+    // However, we can update the local state to reflect the change immediately.
     const newUser: User = {
-      id: (Math.max(...users.map(u => parseInt(u.id, 10)), 0) + 1).toString(),
+      id: `temp-${Date.now()}`, // temporary ID
       ...userData,
       status: "Pendiente",
     };
     
-    updateUsersInStateAndStorage([...users, newUser]);
-    return { success: true, message: "Usuario registrado exitosamente." };
+    setUsers(prev => [...prev, newUser]);
+    // The success message will come from the server action in the form
+    return { success: true, message: "Usuario registrado. Actualizando lista local." };
   };
 
   const deleteUser = (userId: string) => {
+    // TODO: This should call a Firestore delete function
     const newUsers = users.filter(user => user.id !== userId);
     updateUsersInStateAndStorage(newUsers);
   };
   
   const enableUser = (userId: string) => {
+    // TODO: This should call a Firestore update function
     const newUsers = users.map(user => 
         user.id === userId ? { ...user, status: "Activo" as const } : user
     );
