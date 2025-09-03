@@ -18,6 +18,7 @@ import { useUsers } from "@/context/users-context";
 import { useSchools } from "@/context/schools-context";
 import type { UserRole } from "@/lib/auth";
 import type { User } from "@/context/users-context";
+import { addUser } from "@/lib/userService";
 
 
 export function RegisterForm() {
@@ -25,7 +26,7 @@ export function RegisterForm() {
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const router = useRouter();
   const { toast } = useToast();
-  const { users, addUser } = useUsers();
+  const { users } = useUsers();
   const { schools, districts } = useSchools();
 
   const schoolsWithDirectors = useMemo(() => {
@@ -67,12 +68,13 @@ export function RegisterForm() {
         return;
     }
     
-    const userData: Omit<User, 'id' | 'status'> = {
+    const userData: any = {
         name: `${firstName} ${lastName}`,
         email: email,
         password: password,
         role: selectedRole,
         school: "N/A",
+        status: "Pendiente"
     };
 
     if (selectedRole === "Director" || selectedRole === "Docente") {

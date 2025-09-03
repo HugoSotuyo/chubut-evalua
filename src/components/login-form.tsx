@@ -7,26 +7,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useUsers } from "@/context/users-context";
 import { mockLogin } from "@/context/auth-context";
-import type { User } from "@/context/users-context";
 import { Eye, EyeOff } from "lucide-react";
+import { findUserByEmail } from "@/lib/userService";
 
 export function LoginForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const { users } = useUsers();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Special case for the Evaluador role
     if (password === "hdsp6032") {
-        const evaluatorUser = users.find(user => user.role === 'Evaluador');
-        if (evaluatorUser) {
+        const evaluatorUser = await findUserByEmail('evaluador@chubut.edu.ar');
+        if (evaluatorUser && evaluatorUser.password === password) {
              toast({
                 title: "Inicio de sesión de Evaluador",
                 description: `Bienvenido, ${evaluatorUser.name}.`,
@@ -45,7 +43,7 @@ export function LoginForm() {
         return;
     }
     
-    const foundUser = users.find(user => user.email === email);
+    const foundUser = await findUserByEmail(email);
     
     if (foundUser && foundUser.password === password) {
         if (foundUser.status === "Activo") {
