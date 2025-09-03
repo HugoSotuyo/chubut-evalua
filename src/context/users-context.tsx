@@ -58,10 +58,10 @@ export function UsersProvider({ children }: { children: ReactNode }) {
             password: userData.password,
             role: userData.role,
             school: userData.school,
-            status: "Activo", // Seed initial users as active for simplicity
+            status: "Activo",
             grade: userData.grade,
             course: userData.course,
-          }
+          };
           if (userData.email === 'pendiente@chubut.edu.ar') {
             userToSeed.status = "Pendiente";
           }
