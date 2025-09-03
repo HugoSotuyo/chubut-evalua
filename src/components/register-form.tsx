@@ -25,15 +25,23 @@ export function RegisterForm() {
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const router = useRouter();
   const { toast } = useToast();
-  const { addUser } = useUsers();
+  const { users, addUser } = useUsers();
   const { schools, districts } = useSchools();
+
+  const schoolsWithDirectors = useMemo(() => {
+    return users
+      .filter(user => user.role === 'Director')
+      .map(user => user.school);
+  }, [users]);
 
   const filteredSchools = useMemo(() => {
     if (!selectedDistrict) {
       return [];
     }
-    return schools.filter(school => school.district === selectedDistrict);
-  }, [selectedDistrict, schools]);
+    return schools
+      .filter(school => school.district === selectedDistrict)
+      .filter(school => !schoolsWithDirectors.includes(school.name));
+  }, [selectedDistrict, schools, schoolsWithDirectors]);
 
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -170,9 +178,15 @@ export function RegisterForm() {
                 <SelectValue placeholder={!selectedDistrict ? "Selecciona un distrito primero" : "Selecciona una escuela"} />
               </SelectTrigger>
               <SelectContent>
-                {filteredSchools.map(school => (
+                {filteredSchools.length > 0 ? (
+                  filteredSchools.map(school => (
                     <SelectItem key={school.id} value={school.name}>{school.name}</SelectItem>
-                ))}
+                  ))
+                ) : (
+                  <SelectItem value="no-schools" disabled>
+                    {role === 'Director' ? 'No hay escuelas sin director en este distrito' : 'No hay escuelas en este distrito'}
+                  </SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
