@@ -49,7 +49,7 @@ export function RegisterForm() {
   }, [selectedDistrict, schools, schoolsWithDirectors, role]);
 
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const firstName = formData.get("first-name") as string;
@@ -103,7 +103,7 @@ export function RegisterForm() {
         userData.course = course;
     }
 
-    const result = addUser(userData);
+    const result = await addUser(userData);
 
     if (result.success) {
         toast({
