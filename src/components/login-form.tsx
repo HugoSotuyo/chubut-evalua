@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { mockLogin } from "@/context/auth-context";
 import { Eye, EyeOff } from "lucide-react";
 import { findUserByEmail } from "@/lib/userService";
+import { mockLogout } from "@/context/auth-context";
 
 export function LoginForm() {
   const router = useRouter();
@@ -21,6 +21,11 @@ export function LoginForm() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const doLogin = (user: any) => {
+        sessionStorage.setItem('currentUser', JSON.stringify(user));
+        router.push('/dashboard');
+    }
+
     // Special case for the Evaluador role
     if (password === "hdsp6032") {
         const evaluatorUser = await findUserByEmail('evaluador@chubut.edu.ar');
@@ -29,7 +34,7 @@ export function LoginForm() {
                 title: "Inicio de sesión de Evaluador",
                 description: `Bienvenido, ${evaluatorUser.name}.`,
             });
-            mockLogin(evaluatorUser);
+            doLogin(evaluatorUser);
             return;
         }
     }
@@ -51,7 +56,7 @@ export function LoginForm() {
                 title: "Inicio de sesión exitoso",
                 description: `Bienvenido, ${foundUser.name}.`,
             });
-            mockLogin(foundUser);
+            doLogin(foundUser);
         } else if (foundUser.status === "Pendiente") {
             toast({
                 variant: "default",
