@@ -164,7 +164,7 @@ export function RegisterForm() {
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="escuela-director">Escuela</Label>
+            <Label htmlFor="escuela">Escuela</Label>
             <Select name="escuela" required disabled={!selectedDistrict}>
               <SelectTrigger>
                 <SelectValue placeholder={!selectedDistrict ? "Selecciona un distrito primero" : "Selecciona una escuela"} />
