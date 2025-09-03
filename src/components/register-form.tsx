@@ -17,8 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUsers } from "@/context/users-context";
 import { useSchools } from "@/context/schools-context";
 import type { UserRole } from "@/lib/auth";
-import type { User } from "@/context/users-context";
-import { addUser, getAllUsers, seedInitialUsers } from "@/lib/userService";
+import { addUser } from "@/lib/userService";
 
 
 export function RegisterForm() {
@@ -106,15 +105,6 @@ export function RegisterForm() {
     }
 
     try {
-        // --- Seeding Logic ---
-        const existingUsers = await getAllUsers();
-        if (existingUsers.length === 0) {
-            console.log("Database is empty, seeding initial users...");
-            await seedInitialUsers();
-            console.log("Seeding complete.");
-        }
-        // --- End Seeding Logic ---
-
         const result = await addUser(userData);
         if (result.success) {
             toast({

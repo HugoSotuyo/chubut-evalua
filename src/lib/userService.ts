@@ -102,9 +102,11 @@ export async function seedInitialUsers() {
         return;
     }
     try {
+        console.log('Seeding database with', initialUsers.length, 'users.');
         for (const user of initialUsers) {
              await addDoc(collection(db, "users"), user);
         }
+        console.log('Seeding complete.');
     } catch (error) {
         console.error("Error seeding users:", error);
     }
