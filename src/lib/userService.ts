@@ -18,6 +18,11 @@ type NewUserPayload = {
 
 // Find a user by their email for login purposes
 export async function findUserByEmail(email: string): Promise<User | null> {
+    // This function is intended to be used on the server side.
+    if (!db) {
+        console.error("Firestore database is not initialized.");
+        return null;
+    }
     const usersRef = collection(db, "users");
     const q = query(usersRef, where("email", "==", email));
     
@@ -30,11 +35,12 @@ export async function findUserByEmail(email: string): Promise<User | null> {
     const userDoc = querySnapshot.docs[0];
     const userData = userDoc.data();
 
+    // Ensure the returned object matches the User type, especially the password.
     return {
         id: userDoc.id,
         name: userData.name,
         email: userData.email,
-        password: userData.password,
+        password: userData.password, // This field is optional in the type, but crucial for login
         role: userData.role,
         school: userData.school,
         status: userData.status,
