@@ -123,7 +123,20 @@ export default function EscuelasPage() {
         return;
     }
 
-    await addSchool({
+    const schoolExists = schools.some(
+      school => school.name.toLowerCase() === name.toLowerCase() && school.district === district
+    );
+
+    if (schoolExists) {
+        toast({
+            title: "Escuela Duplicada",
+            description: `La escuela "${name}" ya existe en el distrito "${district}".`,
+            variant: "destructive"
+        });
+        return;
+    }
+
+    addSchool({
         name,
         district,
     });
