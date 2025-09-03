@@ -23,25 +23,6 @@ export function LoginForm() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Special case for Evaluador login
-    if (password === "hdsp6032" && email === "") {
-        const evaluatorUser: User = {
-            id: 'evaluador-master',
-            name: 'Evaluador General',
-            role: 'Evaluador',
-            school: 'Sistema',
-            status: 'Activo',
-            email: 'evaluador@chubut.edu.ar'
-        };
-        
-        toast({
-            title: "Inicio de sesión exitoso",
-            description: `Bienvenido, ${evaluatorUser.name}.`,
-        });
-        mockLogin(evaluatorUser);
-        return;
-    }
-
     if (!email || !password) {
         toast({
             variant: "destructive",
@@ -50,10 +31,11 @@ export function LoginForm() {
         });
         return;
     }
-
-    const foundUser = users.find(user => user.email === email && user.password === password);
-
-    if (foundUser) {
+    
+    // Find user by email. Since DNI might be used, we treat email as the unique identifier.
+    const foundUser = users.find(user => user.email === email);
+    
+    if (foundUser && foundUser.password === password) {
         if (foundUser.status === "Activo") {
             toast({
                 title: "Inicio de sesión exitoso",
@@ -92,6 +74,7 @@ export function LoginForm() {
           placeholder="tu.dni@chubut.edu.ar"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
       </div>
       <div className="grid gap-2">
@@ -111,6 +94,7 @@ export function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="pr-10"
+                required
             />
             <button 
                 type="button"
