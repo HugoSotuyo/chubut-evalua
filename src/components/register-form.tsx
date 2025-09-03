@@ -52,8 +52,6 @@ export function RegisterForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Seed the database if it's the first registration.
-    // This is a simple way to ensure initial data exists.
     try {
         await seedInitialUsers();
     } catch(error) {
@@ -88,7 +86,6 @@ export function RegisterForm() {
         password: password,
         role: selectedRole,
         school: "N/A",
-        status: "Pendiente"
     };
 
     if (selectedRole === "Director" || selectedRole === "Docente") {

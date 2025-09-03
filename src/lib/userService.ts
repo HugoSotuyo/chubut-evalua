@@ -14,7 +14,7 @@ const initialUsers: Omit<User, 'id'>[] = [
     { name: 'Evaluador General', email: 'evaluador@chubut.edu.ar', role: 'Evaluador', school: 'Sistema', status: 'Activo', password: 'hdsp6032' },
 ];
 
-type NewUserPayload = Omit<User, 'id'>;
+type NewUserPayload = Omit<User, 'id' | 'status'> & { password?: string };
 
 export async function findUserByEmail(email: string): Promise<User | null> {
     if (!db) throw new Error("Firestore database is not initialized.");
@@ -43,7 +43,19 @@ export async function addUser(userData: NewUserPayload): Promise<{ success: bool
         if (existingUser) {
             return { success: false, message: "Ya existe un usuario con este email." };
         }
-        await addDoc(collection(db, "users"), userData);
+        
+        const userToAdd: Omit<User, 'id'> = {
+          name: userData.name,
+          email: userData.email,
+          role: userData.role,
+          school: userData.school,
+          status: "Pendiente",
+          grade: userData.grade,
+          course: userData.course,
+          password: userData.password,
+        }
+
+        await addDoc(collection(db, "users"), userToAdd);
         return { success: true, message: "Usuario registrado exitosamente." };
     } catch (error) {
         console.error("Error adding user: ", error);
