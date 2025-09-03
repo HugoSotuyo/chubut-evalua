@@ -18,7 +18,7 @@ import { useUsers } from "@/context/users-context";
 import { useSchools } from "@/context/schools-context";
 import type { UserRole } from "@/lib/auth";
 import type { User } from "@/context/users-context";
-import { addUser } from "@/lib/userService";
+import { addUser, getAllUsers, seedInitialUsers } from "@/lib/userService";
 
 
 export function RegisterForm() {
@@ -105,20 +105,37 @@ export function RegisterForm() {
         userData.course = course;
     }
 
-    const result = await addUser(userData);
+    try {
+        // --- Seeding Logic ---
+        const existingUsers = await getAllUsers();
+        if (existingUsers.length === 0) {
+            console.log("Database is empty, seeding initial users...");
+            await seedInitialUsers();
+            console.log("Seeding complete.");
+        }
+        // --- End Seeding Logic ---
 
-    if (result.success) {
+        const result = await addUser(userData);
+        if (result.success) {
+            toast({
+            title: "Registro exitoso",
+            description: "Tu cuenta ha sido creada. Un evaluador revisará tu solicitud.",
+            });
+            router.push("/");
+        } else {
+            toast({
+                title: "Error en el registro",
+                description: result.message,
+                variant: "destructive",
+            });
+        }
+    } catch (error) {
         toast({
-        title: "Registro exitoso",
-        description: "Tu cuenta ha sido creada. Un evaluador revisará tu solicitud.",
+            title: "Error de Servidor",
+            description: "No se pudo completar el registro. Inténtalo de nuevo.",
+            variant: "destructive"
         });
-        router.push("/");
-    } else {
-        toast({
-            title: "Error en el registro",
-            description: result.message,
-            variant: "destructive",
-        });
+        console.error("Registration failed:", error);
     }
   };
 

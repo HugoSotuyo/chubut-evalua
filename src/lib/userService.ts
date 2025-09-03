@@ -1,8 +1,18 @@
+
 'use server';
 
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import { db } from './firebase';
 import type { User as AppUser } from "@/context/users-context";
+
+const initialUsers: Omit<AppUser, 'id'>[] = [
+    { name: 'Laura Martinez', email: 'laura.martinez@chubut.edu.ar', role: 'Docente', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Activo', password: '123' },
+    { name: 'Carlos Gomez', email: 'carlos.gomez@chubut.edu.ar', role: 'Director', school: 'Escuela N° 456', status: 'Activo', password: '123' },
+    { name: 'Ana Fernandez', email: 'ana.fernandez@chubut.edu.ar', role: 'Referente', school: 'Distrito I', status: 'Activo', password: '123' },
+    { name: 'Admin General', email: 'admin@chubut.edu.ar', role: 'Administrador', school: 'Ministerio', status: 'Activo', password: '123' },
+    { name: 'Usuario Pendiente', email: 'pendiente@chubut.edu.ar', role: 'Docente', school: 'Escuela N° 789', status: 'Pendiente', password: '123' },
+    { name: 'Evaluador General', email: 'evaluador@chubut.edu.ar', role: 'Evaluador', school: 'Sistema', status: 'Activo', password: 'hdsp6032' },
+];
 
 
 // This is not a standard User type, it's a payload for creation.
@@ -85,15 +95,17 @@ export async function getAllUsers(): Promise<AppUser[]> {
     return users;
 }
 
-// Seed the database with an initial user - internal use
-export async function seedUser(userData: Omit<AppUser, 'id'>) {
+// Seed the database with initial users.
+export async function seedInitialUsers() {
     if (!db) {
         console.error("Firestore database is not initialized.");
         return;
     }
     try {
-        await addDoc(collection(db, "users"), userData);
+        for (const user of initialUsers) {
+             await addDoc(collection(db, "users"), user);
+        }
     } catch (error) {
-        console.error("Error seeding user:", error);
+        console.error("Error seeding users:", error);
     }
 }

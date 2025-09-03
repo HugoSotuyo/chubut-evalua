@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import type { UserRole } from '@/lib/auth';
-import { getAllUsers, seedUser } from '@/lib/userService'; // Import Firestore functions
+import { getAllUsers } from '@/lib/userService'; // Import Firestore functions
 
 export type User = {
   id: string;
@@ -18,16 +18,6 @@ export type User = {
 };
 
 type NewUser = Omit<User, 'id' | 'status'>;
-
-const initialUsers: Omit<User, 'id'>[] = [
-    { name: 'Laura Martinez', email: 'laura.martinez@chubut.edu.ar', role: 'Docente', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Activo', password: '123' },
-    { name: 'Carlos Gomez', email: 'carlos.gomez@chubut.edu.ar', role: 'Director', school: 'Escuela N° 456', status: 'Activo', password: '123' },
-    { name: 'Ana Fernandez', email: 'ana.fernandez@chubut.edu.ar', role: 'Referente', school: 'Distrito I', status: 'Activo', password: '123' },
-    { name: 'Admin General', email: 'admin@chubut.edu.ar', role: 'Administrador', school: 'Ministerio', status: 'Activo', password: '123' },
-    { name: 'Usuario Pendiente', email: 'pendiente@chubut.edu.ar', role: 'Docente', school: 'Escuela N° 789', status: 'Pendiente', password: '123' },
-    { name: 'Evaluador General', email: 'evaluador@chubut.edu.ar', role: 'Evaluador', school: 'Sistema', status: 'Activo', password: 'hdsp6032' },
-];
-
 
 interface UsersContextType {
   users: User[];
@@ -44,23 +34,14 @@ export function UsersProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const seedDatabase = async () => {
-        const existingUsers = await getAllUsers();
-        if (existingUsers.length === 0) {
-            console.log("Seeding database with initial users...");
-            for (const user of initialUsers) {
-                await seedUser(user);
-            }
-            // After seeding, fetch again to populate the context
-             const allUsers = await getAllUsers();
-             setUsers(allUsers);
-        } else {
-             setUsers(existingUsers);
-        }
+    const fetchUsers = async () => {
+        setLoading(true);
+        const allUsers = await getAllUsers();
+        setUsers(allUsers);
         setLoading(false);
     };
     
-    seedDatabase();
+    fetchUsers();
   }, []);
   
   const updateUsersInStateAndStorage = (newUsers: User[]) => {
