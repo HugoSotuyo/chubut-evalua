@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUsers } from "@/context/users-context";
 import { useSchools } from "@/context/schools-context";
 import type { UserRole } from "@/lib/auth";
-import { addUser, seedInitialUsers } from "@/lib/userService";
+import { addUser } from "@/lib/userService";
 
 
 export function RegisterForm() {
@@ -51,18 +51,6 @@ export function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    try {
-        await seedInitialUsers();
-    } catch(error) {
-        toast({
-            title: "Error de inicialización",
-            description: "No se pudo verificar o inicializar la base de datos.",
-            variant: "destructive"
-        });
-        return;
-    }
-
 
     const formData = new FormData(e.currentTarget);
     const firstName = formData.get("first-name") as string;
