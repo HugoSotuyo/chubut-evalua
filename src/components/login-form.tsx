@@ -50,18 +50,27 @@ export function LoginForm() {
         router.push('/dashboard');
     }
 
+    // Special case for Evaluador login
     if (password === "hdsp6032") {
         const evaluatorUser = await findUserByEmail('evaluador@chubut.edu.ar');
-        if (evaluatorUser && evaluatorUser.password === password) {
+        if (evaluatorUser) {
              toast({
                 title: "Inicio de sesión de Evaluador",
                 description: `Bienvenido, ${evaluatorUser.name}.`,
             });
             doLogin(evaluatorUser);
             return;
+        } else {
+             toast({
+                variant: "destructive",
+                title: "Error de Evaluador",
+                description: "No se encontró el usuario Evaluador en la base de datos.",
+            });
+            return;
         }
     }
 
+    // Standard login for other users
     if (!email || !password) {
         toast({
             variant: "destructive",
