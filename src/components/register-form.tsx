@@ -38,10 +38,15 @@ export function RegisterForm() {
     if (!selectedDistrict) {
       return [];
     }
-    return schools
-      .filter(school => school.district === selectedDistrict)
-      .filter(school => !schoolsWithDirectors.includes(school.name));
-  }, [selectedDistrict, schools, schoolsWithDirectors]);
+    const schoolsInDistrict = schools.filter(school => school.district === selectedDistrict);
+
+    if (role === 'Director') {
+      return schoolsInDistrict.filter(school => !schoolsWithDirectors.includes(school.name));
+    }
+    
+    // For teachers and other roles, show all schools in the district.
+    return schoolsInDistrict;
+  }, [selectedDistrict, schools, schoolsWithDirectors, role]);
 
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -184,7 +189,7 @@ export function RegisterForm() {
                   ))
                 ) : (
                   <SelectItem value="no-schools" disabled>
-                    {role === 'Director' ? 'No hay escuelas sin director en este distrito' : 'No hay escuelas en este distrito'}
+                    {selectedDistrict ? 'No hay escuelas disponibles en este distrito' : 'Selecciona un distrito primero'}
                   </SelectItem>
                 )}
               </SelectContent>
