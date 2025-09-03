@@ -52,20 +52,23 @@ export function UsersProvider({ children }: { children: ReactNode }) {
       if (usersFromDb.length === 0) {
         console.log("Seeding users collection in Firestore...");
         for (const userData of initialUsers) {
-          const userToSeed = {
-            name: userData.name,
-            email: userData.email,
-            password: userData.password,
-            role: userData.role,
-            school: userData.school,
-            status: "Activo",
-            grade: userData.grade,
-            course: userData.course,
-          };
-          if (userData.email === 'pendiente@chubut.edu.ar') {
-            userToSeed.status = "Pendiente";
-          }
-          await addDocument(USERS_COLLECTION, userToSeed);
+            // Aseguramos que todos los campos, incluido el password, se incluyan.
+            const userToSeed: Omit<User, 'id' | 'status'> & {status: string} = {
+                name: userData.name,
+                email: userData.email,
+                password: userData.password,
+                role: userData.role,
+                school: userData.school,
+                status: "Activo",
+                grade: userData.grade,
+                course: userData.course,
+            };
+
+            if (userData.email === 'pendiente@chubut.edu.ar') {
+                userToSeed.status = "Pendiente";
+            }
+            // Los campos undefined no se guardan en Firestore, lo que es correcto.
+            await addDocument(USERS_COLLECTION, userToSeed);
         }
         usersFromDb = await getCollection<User>(USERS_COLLECTION);
       }
