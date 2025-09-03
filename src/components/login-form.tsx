@@ -8,8 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
-import { findUserByEmail, seedInitialUsers, getAllUsers } from "@/lib/userService";
-import type { User } from "@/context/users-context";
+import { findUserByEmail, seedInitialUsers } from "@/lib/userService";
 
 export function LoginForm() {
   const router = useRouter();
@@ -17,47 +16,37 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-        const existingUsers = await getAllUsers();
-        if (existingUsers.length === 0) {
-            console.log("Database is empty, seeding initial users...");
-            await seedInitialUsers();
-            console.log("Seeding complete.");
-            toast({
-                title: "Base de Datos Inicializada",
-                description: "Se han cargado los usuarios iniciales. Por favor, intenta iniciar sesión de nuevo.",
-            });
-            return; 
-        }
-    } catch (error) {
-        console.error("Error checking/seeding DB:", error);
-        toast({
-            title: "Error de Servidor",
-            description: "No se pudo verificar la base de datos.",
-            variant: "destructive"
-        });
-        return;
-    }
+    if (isSeeding) return;
 
     if (password === "hdsp6032") {
-        const evaluatorUser = await findUserByEmail('evaluador@chubut.edu.ar');
-        if (evaluatorUser) {
-             toast({
-                title: "Inicio de sesión de Evaluador",
-                description: `Bienvenido, ${evaluatorUser.name}.`,
-            });
-            sessionStorage.setItem('currentUser', JSON.stringify(evaluatorUser));
-            router.push('/dashboard');
-            return;
-        } else {
+        try {
+            const evaluatorUser = await findUserByEmail('evaluador@chubut.edu.ar');
+            if (evaluatorUser) {
+                 toast({
+                    title: "Inicio de sesión de Evaluador",
+                    description: `Bienvenido, ${evaluatorUser.name}.`,
+                });
+                sessionStorage.setItem('currentUser', JSON.stringify(evaluatorUser));
+                router.push('/dashboard');
+                return;
+            } else {
+                 toast({
+                    variant: "destructive",
+                    title: "Inicialización Requerida",
+                    description: "No se encontró el usuario Evaluador. Registra un nuevo usuario para inicializar la base de datos.",
+                });
+                return;
+            }
+        } catch (error) {
              toast({
                 variant: "destructive",
-                title: "Error de Evaluador",
-                description: "No se encontró el usuario Evaluador en la base de datos. Por favor, registra un usuario primero para inicializar la base de datos.",
+                title: "Error de Base de Datos",
+                description: "No se pudo contactar a la base de datos. Por favor, intenta de nuevo.",
             });
             return;
         }
@@ -72,34 +61,43 @@ export function LoginForm() {
         return;
     }
     
-    const foundUser = await findUserByEmail(email);
-    
-    if (foundUser && foundUser.password === password) {
-        if (foundUser.status === "Activo") {
-            toast({
-                title: "Inicio de sesión exitoso",
-                description: `Bienvenido, ${foundUser.name}.`,
-            });
-            sessionStorage.setItem('currentUser', JSON.stringify(foundUser));
-            router.push('/dashboard');
-        } else if (foundUser.status === "Pendiente") {
-            toast({
-                variant: "default",
-                title: "Cuenta Pendiente",
-                description: "Tu cuenta está pendiente de activación por parte de un evaluador.",
-            });
+    try {
+        const foundUser = await findUserByEmail(email);
+        
+        if (foundUser && foundUser.password === password) {
+            if (foundUser.status === "Activo") {
+                toast({
+                    title: "Inicio de sesión exitoso",
+                    description: `Bienvenido, ${foundUser.name}.`,
+                });
+                sessionStorage.setItem('currentUser', JSON.stringify(foundUser));
+                router.push('/dashboard');
+            } else if (foundUser.status === "Pendiente") {
+                toast({
+                    variant: "default",
+                    title: "Cuenta Pendiente",
+                    description: "Tu cuenta está pendiente de activación por parte de un evaluador.",
+                });
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Cuenta Inactiva",
+                    description: "Tu cuenta se encuentra inactiva. Contacta al administrador.",
+                });
+            }
         } else {
             toast({
                 variant: "destructive",
-                title: "Cuenta Inactiva",
-                description: "Tu cuenta se encuentra inactiva. Contacta al administrador.",
+                title: "Error de autenticación",
+                description: "DNI/email o contraseña incorrectos.",
             });
         }
-    } else {
+    } catch (error) {
+        console.error("Login failed:", error);
         toast({
             variant: "destructive",
-            title: "Error de autenticación",
-            description: "DNI/email o contraseña incorrectos.",
+            title: "Error de Servidor",
+            description: "No se pudo completar el inicio de sesión. Intenta de nuevo.",
         });
     }
   };

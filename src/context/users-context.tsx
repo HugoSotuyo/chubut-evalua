@@ -2,20 +2,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import type { UserRole } from '@/lib/auth';
-import { getAllUsers } from '@/lib/userService'; // Import Firestore functions
-
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-  password?: string;
-  role: UserRole;
-  school: string;
-  status: "Activo" | "Pendiente" | "Inactivo";
-  grade?: string;
-  course?: string;
-};
+import { getAllUsers } from '@/lib/userService'; 
+import type { User } from "@/lib/types";
 
 type NewUser = Omit<User, 'id' | 'status'>;
 
@@ -36,9 +24,14 @@ export function UsersProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchUsers = async () => {
         setLoading(true);
-        const allUsers = await getAllUsers();
-        setUsers(allUsers);
-        setLoading(false);
+        try {
+            const allUsers = await getAllUsers();
+            setUsers(allUsers);
+        } catch (error) {
+            console.error("Failed to fetch users in context:", error);
+        } finally {
+            setLoading(false);
+        }
     };
     
     fetchUsers();

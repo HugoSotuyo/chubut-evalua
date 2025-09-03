@@ -1,11 +1,11 @@
 
 'use server';
 
-import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, getCountFromServer } from "firebase/firestore";
 import { db } from './firebase';
-import type { User as AppUser } from "@/context/users-context";
+import type { User } from "./types";
 
-const initialUsers: Omit<AppUser, 'id'>[] = [
+const initialUsers: Omit<User, 'id'>[] = [
     { name: 'Laura Martinez', email: 'laura.martinez@chubut.edu.ar', role: 'Docente', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Activo', password: '123' },
     { name: 'Carlos Gomez', email: 'carlos.gomez@chubut.edu.ar', role: 'Director', school: 'Escuela N° 456', status: 'Activo', password: '123' },
     { name: 'Ana Fernandez', email: 'ana.fernandez@chubut.edu.ar', role: 'Referente', school: 'Distrito I', status: 'Activo', password: '123' },
@@ -14,61 +14,35 @@ const initialUsers: Omit<AppUser, 'id'>[] = [
     { name: 'Evaluador General', email: 'evaluador@chubut.edu.ar', role: 'Evaluador', school: 'Sistema', status: 'Activo', password: 'hdsp6032' },
 ];
 
+type NewUserPayload = Omit<User, 'id'>;
 
-// This is not a standard User type, it's a payload for creation.
-type NewUserPayload = {
-    name: string;
-    email: string;
-    password?: string;
-    role: AppUser['role'];
-    school: string;
-    status: AppUser['status'];
-    grade?: string;
-    course?: string;
-};
-
-// Find a user by their email for login purposes
-export async function findUserByEmail(email: string): Promise<AppUser | null> {
-    if (!db) {
-        console.error("Firestore database is not initialized.");
-        return null;
-    }
+export async function findUserByEmail(email: string): Promise<User | null> {
+    if (!db) throw new Error("Firestore database is not initialized.");
+    
     const usersRef = collection(db, "users");
     const q = query(usersRef, where("email", "==", email));
     
     try {
         const querySnapshot = await getDocs(q);
-        
         if (querySnapshot.empty) {
             return null;
         }
-        
         const userDoc = querySnapshot.docs[0];
-        const userData = userDoc.data();
-
-        return {
-            id: userDoc.id,
-            ...userData
-        } as AppUser;
-
+        return { id: userDoc.id, ...userDoc.data() } as User;
     } catch (error) {
         console.error("Error finding user by email:", error);
-        return null;
+        throw new Error("Failed to query database for user.");
     }
 }
 
-// Add a new user to the database during registration
 export async function addUser(userData: NewUserPayload): Promise<{ success: boolean; message: string; }> {
-    if (!db) {
-        console.error("Firestore database is not initialized.");
-        return { success: false, message: "La base de datos no está inicializada." };
-    }
+    if (!db) return { success: false, message: "La base de datos no está inicializada." };
+
     try {
         const existingUser = await findUserByEmail(userData.email);
         if (existingUser) {
             return { success: false, message: "Ya existe un usuario con este email." };
         }
-
         await addDoc(collection(db, "users"), userData);
         return { success: true, message: "Usuario registrado exitosamente." };
     } catch (error) {
@@ -77,37 +51,40 @@ export async function addUser(userData: NewUserPayload): Promise<{ success: bool
     }
 }
 
-// Get all users from the database
-export async function getAllUsers(): Promise<AppUser[]> {
-    if (!db) {
-        console.error("Firestore database is not initialized.");
-        return [];
-    }
-    const users: AppUser[] = [];
+export async function getAllUsers(): Promise<User[]> {
+    if (!db) throw new Error("Firestore database is not initialized.");
+    
+    const users: User[] = [];
     try {
         const querySnapshot = await getDocs(collection(db, "users"));
         querySnapshot.forEach((doc) => {
-            users.push({ id: doc.id, ...doc.data() } as AppUser);
+            users.push({ id: doc.id, ...doc.data() } as User);
         });
     } catch (error) {
         console.error("Error getting all users:", error);
+        throw new Error("Failed to query database for all users.");
     }
     return users;
 }
 
-// Seed the database with initial users.
 export async function seedInitialUsers() {
-    if (!db) {
-        console.error("Firestore database is not initialized.");
-        return;
-    }
+    if (!db) throw new Error("Firestore database is not initialized.");
+
     try {
+        const snapshot = await getCountFromServer(collection(db, "users"));
+        if (snapshot.data().count > 0) {
+            console.log('Database already seeded. Skipping.');
+            return { success: true, message: "Database already contains users." };
+        }
+
         console.log('Seeding database with', initialUsers.length, 'users.');
         for (const user of initialUsers) {
              await addDoc(collection(db, "users"), user);
         }
         console.log('Seeding complete.');
+        return { success: true, message: "Database seeded successfully." };
     } catch (error) {
         console.error("Error seeding users:", error);
+        throw new Error("Failed to seed database.");
     }
 }
