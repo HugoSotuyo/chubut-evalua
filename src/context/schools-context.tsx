@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export type School = {
   id: string;
@@ -33,10 +33,58 @@ interface SchoolsContextType {
 
 const SchoolsContext = createContext<SchoolsContextType | undefined>(undefined);
 
+const SCHOOLS_STORAGE_KEY = 'chubut_evalua_schools';
+const DISTRICTS_STORAGE_KEY = 'chubut_evalua_districts';
+
 export function SchoolsProvider({ children }: { children: ReactNode }) {
-  const [schools, setSchools] = useState<School[]>(initialSchools);
-  const [districts, setDistricts] = useState<string[]>(initialDistricts);
-  const [loading] = useState(false);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [districts, setDistricts] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    try {
+      const storedSchools = localStorage.getItem(SCHOOLS_STORAGE_KEY);
+      const storedDistricts = localStorage.getItem(DISTRICTS_STORAGE_KEY);
+
+      if (storedSchools) {
+        setSchools(JSON.parse(storedSchools));
+      } else {
+        setSchools(initialSchools);
+        localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(initialSchools));
+      }
+
+      if (storedDistricts) {
+        setDistricts(JSON.parse(storedDistricts));
+      } else {
+        setDistricts(initialDistricts);
+        localStorage.setItem(DISTRICTS_STORAGE_KEY, JSON.stringify(initialDistricts));
+      }
+    } catch (error) {
+      console.error("Failed to access localStorage for schools/districts:", error);
+      setSchools(initialSchools);
+      setDistricts(initialDistricts);
+    }
+    setLoading(false);
+  }, []);
+
+  const updateSchools = (newSchools: School[]) => {
+    setSchools(newSchools);
+    try {
+        localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(newSchools));
+    } catch (error) {
+        console.error("Failed to save schools to localStorage:", error);
+    }
+  };
+
+  const updateDistricts = (newDistricts: string[]) => {
+    setDistricts(newDistricts);
+    try {
+        localStorage.setItem(DISTRICTS_STORAGE_KEY, JSON.stringify(newDistricts));
+    } catch (error) {
+        console.error("Failed to save districts to localStorage:", error);
+    }
+  };
+
 
   const addSchool = (schoolData: NewSchool) => {
     const newSchool: School = {
@@ -44,31 +92,34 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
         ...schoolData,
         status: "Activa"
     };
-    setSchools(prev => [...prev, newSchool]);
+    updateSchools([...schools, newSchool]);
   };
   
   const updateSchool = (updatedSchool: School) => {
-    setSchools(prev => prev.map(s => s.id === updatedSchool.id ? updatedSchool : s));
+    const newSchools = schools.map(s => s.id === updatedSchool.id ? updatedSchool : s);
+    updateSchools(newSchools);
   };
   
   const deleteSchool = (schoolId: string) => {
-    setSchools(prev => prev.filter(s => s.id !== schoolId));
+    const newSchools = schools.filter(s => s.id !== schoolId);
+    updateSchools(newSchools);
   };
 
   const toggleSchoolStatus = (schoolId: string) => {
-    setSchools(prev => prev.map(s => {
+    const newSchools = schools.map(s => {
         if (s.id === schoolId) {
             return { ...s, status: s.status === "Activa" ? "Inactiva" : "Activa" };
         }
         return s;
-    }));
+    });
+    updateSchools(newSchools);
   };
   
   const addDistrict = (districtName: string): { success: boolean; message: string } => {
     if (districts.some(d => d.toLowerCase() === districtName.toLowerCase())) {
         return { success: false, message: `El distrito "${districtName}" ya existe.` };
     }
-    setDistricts(prev => [...prev, districtName]);
+    updateDistricts([...districts, districtName]);
     return { success: true, message: `El distrito "${districtName}" ha sido agregado.` };
   };
 
