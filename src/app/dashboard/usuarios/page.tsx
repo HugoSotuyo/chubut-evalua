@@ -44,13 +44,15 @@ export default function UsuariosPage() {
   const filteredUsers = useMemo(() => {
     if (!user) return [];
 
-    let results: User[] = [];
+    let results: User[] = users;
 
     switch (user.role) {
       case "Evaluador":
         // Evaluador can see all users, only filtered by search term
-        results = users;
-        break;
+        if (searchTerm) {
+          results = results.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        }
+        return results; // Return all users, ignoring roleFilter
       
       case "Director":
         // Director can see only teachers from their school
@@ -59,13 +61,13 @@ export default function UsuariosPage() {
 
       default:
         // Other roles filter by the dropdown selection
-        results = roleFilter === "all"
-          ? users
-          : users.filter(u => u.role === roleFilter);
+        if (roleFilter !== "all") {
+            results = results.filter(u => u.role === roleFilter);
+        }
         break;
     }
 
-    // Apply search term filter to all roles
+    // Apply search term filter for roles other than Evaluador
     if (searchTerm) {
       results = results.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }

@@ -90,13 +90,21 @@ export function RegisterForm() {
         userData.course = course;
     }
 
-    addUser(userData);
+    const result = addUser(userData);
 
-    toast({
-      title: "Registro exitoso",
-      description: "Tu cuenta ha sido creada. Un evaluador revisará tu solicitud.",
-    });
-    router.push("/");
+    if (result.success) {
+        toast({
+        title: "Registro exitoso",
+        description: "Tu cuenta ha sido creada. Un evaluador revisará tu solicitud.",
+        });
+        router.push("/");
+    } else {
+        toast({
+            title: "Error en el registro",
+            description: result.message,
+            variant: "destructive",
+        });
+    }
   };
 
   return (
