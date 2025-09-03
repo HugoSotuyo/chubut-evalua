@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
-import { findUserByEmail } from "@/lib/userService";
+import { findUserByEmail, getAllUsers, seedInitialUsers } from "@/lib/userService";
+import type { User } from "@/context/users-context";
 
 export function LoginForm() {
   const router = useRouter();
@@ -17,13 +18,38 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  const doLogin = (user: User) => {
+    sessionStorage.setItem('currentUser', JSON.stringify(user));
+    router.push('/dashboard');
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const doLogin = (user: any) => {
-        sessionStorage.setItem('currentUser', JSON.stringify(user));
-        router.push('/dashboard');
+    // --- Seeding Logic ---
+    // On the very first login attempt, check if the DB is empty and seed it.
+    try {
+        const existingUsers = await getAllUsers();
+        if (existingUsers.length === 0) {
+            console.log("Database is empty, seeding initial users...");
+            await seedInitialUsers();
+            console.log("Seeding complete.");
+            toast({
+                title: "Base de Datos Inicializada",
+                description: "Se han cargado los usuarios iniciales. Por favor, intenta iniciar sesión de nuevo.",
+            });
+            // We return here to allow the user to re-attempt login now that users exist.
+            return; 
+        }
+    } catch (error) {
+        toast({
+            title: "Error de Servidor",
+            description: "No se pudo verificar la base de datos.",
+            variant: "destructive"
+        });
+        return;
     }
+    // --- End Seeding Logic ---
 
     // Special case for Evaluador login
     if (password === "hdsp6032") {
