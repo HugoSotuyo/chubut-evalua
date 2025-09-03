@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
-import { findUserByEmail, getAllUsers, seedInitialUsers } from "@/lib/userService";
+import { findUserByEmail } from "@/lib/userService";
 
 export function LoginForm() {
   const router = useRouter();
@@ -19,31 +19,6 @@ export function LoginForm() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // --- Seeding Logic ---
-    // On the very first login attempt, check if the DB is empty and seed it.
-    try {
-        const existingUsers = await getAllUsers();
-        if (existingUsers.length === 0) {
-            console.log("Database is empty, seeding initial users...");
-            await seedInitialUsers();
-            console.log("Seeding complete. Please try logging in again.");
-            toast({
-                title: "Base de Datos Inicializada",
-                description: "Se han cargado los usuarios iniciales. Por favor, intenta iniciar sesión de nuevo.",
-            });
-            return; 
-        }
-    } catch (error) {
-        toast({
-            title: "Error de Servidor",
-            description: "No se pudo verificar la base de datos.",
-            variant: "destructive"
-        });
-        return;
-    }
-    // --- End Seeding Logic ---
-
 
     const doLogin = (user: any) => {
         sessionStorage.setItem('currentUser', JSON.stringify(user));
@@ -64,7 +39,7 @@ export function LoginForm() {
              toast({
                 variant: "destructive",
                 title: "Error de Evaluador",
-                description: "No se encontró el usuario Evaluador en la base de datos.",
+                description: "No se encontró el usuario Evaluador en la base de datos. Por favor, registra un usuario primero para inicializar la base de datos.",
             });
             return;
         }
