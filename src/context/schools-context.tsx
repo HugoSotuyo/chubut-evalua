@@ -67,7 +67,7 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  const updateSchools = (newSchools: School[]) => {
+  const updateSchoolsInStateAndStorage = (newSchools: School[]) => {
     setSchools(newSchools);
     try {
         localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(newSchools));
@@ -76,7 +76,7 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateDistricts = (newDistricts: string[]) => {
+  const updateDistrictsInStateAndStorage = (newDistricts: string[]) => {
     setDistricts(newDistricts);
     try {
         localStorage.setItem(DISTRICTS_STORAGE_KEY, JSON.stringify(newDistricts));
@@ -92,17 +92,17 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
         ...schoolData,
         status: "Activa"
     };
-    updateSchools([...schools, newSchool]);
+    updateSchoolsInStateAndStorage([...schools, newSchool]);
   };
   
   const updateSchool = (updatedSchool: School) => {
     const newSchools = schools.map(s => s.id === updatedSchool.id ? updatedSchool : s);
-    updateSchools(newSchools);
+    updateSchoolsInStateAndStorage(newSchools);
   };
   
   const deleteSchool = (schoolId: string) => {
     const newSchools = schools.filter(s => s.id !== schoolId);
-    updateSchools(newSchools);
+    updateSchoolsInStateAndStorage(newSchools);
   };
 
   const toggleSchoolStatus = (schoolId: string) => {
@@ -112,14 +112,14 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
         }
         return s;
     });
-    updateSchools(newSchools);
+    updateSchoolsInStateAndStorage(newSchools);
   };
   
   const addDistrict = (districtName: string): { success: boolean; message: string } => {
     if (districts.some(d => d.toLowerCase() === districtName.toLowerCase())) {
         return { success: false, message: `El distrito "${districtName}" ya existe.` };
     }
-    updateDistricts([...districts, districtName]);
+    updateDistrictsInStateAndStorage([...districts, districtName]);
     return { success: true, message: `El distrito "${districtName}" ha sido agregado.` };
   };
 
