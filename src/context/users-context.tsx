@@ -2,13 +2,13 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { getAllUsers } from '@/lib/userService'; 
+import { getAllUsers, updateUserStatusInDb } from '@/lib/userService'; 
 import type { User } from "@/lib/types";
 
 interface UsersContextType {
   users: User[];
   deleteUser: (userId: string) => void;
-  enableUser: (userId: string) => void;
+  enableUser: (userId: string) => Promise<void>;
   loading: boolean;
 }
 
@@ -34,24 +34,27 @@ export function UsersProvider({ children }: { children: ReactNode }) {
     fetchUsers();
   }, []);
   
-  const updateUsersInStateAndStorage = (newUsers: User[]) => {
-    // This function will now only update the local state.
-    // Firestore updates will be handled by specific service functions.
+  const updateUsersInState = (newUsers: User[]) => {
     setUsers(newUsers);
   };
 
   const deleteUser = (userId: string) => {
     // TODO: This should call a Firestore delete function
     const newUsers = users.filter(user => user.id !== userId);
-    updateUsersInStateAndStorage(newUsers);
+    updateUsersInState(newUsers);
   };
   
-  const enableUser = (userId: string) => {
-    // TODO: This should call a Firestore update function
-    const newUsers = users.map(user => 
-        user.id === userId ? { ...user, status: "Activo" as const } : user
-    );
-    updateUsersInStateAndStorage(newUsers);
+  const enableUser = async (userId: string) => {
+    try {
+      await updateUserStatusInDb(userId, "Activo");
+      const newUsers = users.map(user => 
+          user.id === userId ? { ...user, status: "Activo" as const } : user
+      );
+      updateUsersInState(newUsers);
+    } catch (error) {
+      console.error("Failed to enable user:", error);
+      // Optionally, show a toast notification to the user about the failure
+    }
   };
 
   return (

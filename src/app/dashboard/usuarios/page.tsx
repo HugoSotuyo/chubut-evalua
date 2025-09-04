@@ -35,6 +35,7 @@ export default function UsuariosPage() {
   const { toast } = useToast();
   const { searchTerm } = useSearch();
   const { user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const uniqueRoles = useMemo(() => {
     const roles = users.map(user => user.role);
@@ -91,16 +92,26 @@ export default function UsuariosPage() {
     setSelectedUser(null);
   };
 
-  const handleEnableUser = (userId: string) => {
+  const handleEnableUser = async (userId: string) => {
     const userToEnable = users.find((user) => user.id === userId);
-    if (!userToEnable) return;
-    
-    enableUser(userId);
-    
-    toast({
-        title: "Usuario Habilitado",
-        description: `El usuario ${userToEnable.name} ha sido habilitado correctamente.`,
-    });
+    if (!userToEnable || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      await enableUser(userId);
+      toast({
+          title: "Usuario Habilitado",
+          description: `El usuario ${userToEnable.name} ha sido habilitado correctamente.`,
+      });
+    } catch (error) {
+       toast({
+        variant: "destructive",
+        title: "Error al Habilitar",
+        description: "No se pudo actualizar el estado del usuario. Inténtalo de nuevo.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const showToast = (title: string) => {
@@ -229,7 +240,11 @@ export default function UsuariosPage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                        {user.status === "Pendiente" && <DropdownMenuItem onSelect={() => handleEnableUser(user.id)}>Habilitar Usuario</DropdownMenuItem>}
+                                        {user.status === "Pendiente" && 
+                                            <DropdownMenuItem onSelect={() => handleEnableUser(user.id)} disabled={isSubmitting}>
+                                                {isSubmitting ? "Habilitando..." : "Habilitar Usuario"}
+                                            </DropdownMenuItem>
+                                        }
                                         <DropdownMenuItem onSelect={() => showToast('Editar Usuario')}>Editar</DropdownMenuItem>
                                         <DropdownMenuItem onSelect={() => showToast('Cambiar Contraseña')}>Cambiar Contraseña</DropdownMenuItem>
                                         <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(user)}>Eliminar</DropdownMenuItem>

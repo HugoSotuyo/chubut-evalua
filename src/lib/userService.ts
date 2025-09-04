@@ -2,7 +2,7 @@
 'use server';
 
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc } from "firebase/firestore";
 import type { User } from "./types";
 
 // Firebase configuration - directly in the server file
@@ -121,24 +121,34 @@ export async function seedInitialUsers() {
     }
 
     try {
-        console.log("Checking if seeding is necessary...");
         const usersCollection = collection(db, "users");
         const snapshot = await getCountFromServer(usersCollection);
         
         if (snapshot.data().count > 0) {
-            console.log('Database already seeded. Skipping.');
             return { success: true, message: "Database already contains users." };
         }
 
-        console.log('Seeding database with', initialUsers.length, 'users.');
         for (const user of initialUsers) {
              await addDoc(usersCollection, user);
-             console.log(`Added user: ${user.name}`);
         }
-        console.log('Seeding complete.');
         return { success: true, message: "Database seeded successfully." };
     } catch (error) {
         console.error("Error seeding users:", error);
         throw new Error("Failed to seed database.");
+    }
+}
+
+export async function updateUserStatusInDb(userId: string, newStatus: "Activo" | "Inactivo" | "Pendiente") {
+    const db = getDb();
+    if (!db) throw new Error("Firestore database is not initialized.");
+
+    try {
+        const userRef = doc(db, "users", userId);
+        await updateDoc(userRef, {
+            status: newStatus
+        });
+    } catch (error) {
+        console.error(`Error updating status for user ${userId}:`, error);
+        throw new Error("Failed to update user status in database.");
     }
 }
