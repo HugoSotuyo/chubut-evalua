@@ -88,7 +88,7 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
 
   const addSchool = (schoolData: NewSchool) => {
     const newSchool: School = {
-        id: (schools.length + 1).toString(),
+        id: (Math.max(0, ...schools.map(s => parseInt(s.id, 10))) + 1).toString(),
         ...schoolData,
         status: "Activa"
     };
@@ -113,6 +113,7 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
         return s;
     });
     updateSchools(newSchools);
+s
   };
   
   const addDistrict = (districtName: string): { success: boolean; message: string } => {
