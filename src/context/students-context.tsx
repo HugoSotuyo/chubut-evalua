@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import type { Result } from './results-context';
 
 export type Student = {
@@ -31,20 +31,48 @@ interface StudentsContextType {
 
 const StudentsContext = createContext<StudentsContextType | undefined>(undefined);
 
+const STUDENTS_STORAGE_KEY = 'chubut_evalua_students';
+
 export function StudentsProvider({ children }: { children: ReactNode }) {
-  const [students, setStudents] = useState<Student[]>(initialStudents);
-  const [loading] = useState(false);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    try {
+      const storedStudents = localStorage.getItem(STUDENTS_STORAGE_KEY);
+      if (storedStudents) {
+        setStudents(JSON.parse(storedStudents));
+      } else {
+        setStudents(initialStudents);
+        localStorage.setItem(STUDENTS_STORAGE_KEY, JSON.stringify(initialStudents));
+      }
+    } catch (error) {
+      console.error("Failed to access localStorage for students:", error);
+      setStudents(initialStudents);
+    }
+    setLoading(false);
+  }, []);
+
+  const updateStudentsInStateAndStorage = (newStudents: Student[]) => {
+    setStudents(newStudents);
+    try {
+      localStorage.setItem(STUDENTS_STORAGE_KEY, JSON.stringify(newStudents));
+    } catch (error) {
+      console.error("Failed to save students to localStorage:", error);
+    }
+  };
 
   const addStudent = (studentData: NewStudent) => {
     const newStudent: Student = {
         ...studentData,
-        id: (students.length + 1).toString(),
+        id: (Math.max(0, ...students.map(s => parseInt(s.id, 10))) + 1).toString(),
     };
-    setStudents(prev => [...prev, newStudent]);
+    updateStudentsInStateAndStorage([...students, newStudent]);
   };
 
   const deleteStudent = (studentId: string) => {
-    setStudents(prev => prev.filter(student => student.id !== studentId));
+    const newStudents = students.filter(student => student.id !== studentId);
+    updateStudentsInStateAndStorage(newStudents);
   };
 
   return (
