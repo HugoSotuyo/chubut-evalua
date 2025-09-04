@@ -113,7 +113,6 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
         return s;
     });
     updateSchools(newSchools);
-s
   };
   
   const addDistrict = (districtName: string): { success: boolean; message: string } => {
