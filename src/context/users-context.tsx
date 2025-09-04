@@ -5,11 +5,8 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { getAllUsers } from '@/lib/userService'; 
 import type { User } from "@/lib/types";
 
-type NewUser = Omit<User, 'id' | 'status'>;
-
 interface UsersContextType {
   users: User[];
-  addUser: (user: NewUser) => { success: boolean; message: string };
   deleteUser: (userId: string) => void;
   enableUser: (userId: string) => void;
   loading: boolean;
@@ -43,22 +40,6 @@ export function UsersProvider({ children }: { children: ReactNode }) {
     setUsers(newUsers);
   };
 
-
-  const addUser = (userData: NewUser): { success: boolean; message: string } => {
-    // This context function is now primarily for local state management, 
-    // the actual DB operation is in register-form.
-    // However, we can update the local state to reflect the change immediately.
-    const newUser: User = {
-      id: `temp-${Date.now()}`, // temporary ID
-      ...userData,
-      status: "Pendiente",
-    };
-    
-    setUsers(prev => [...prev, newUser]);
-    // The success message will come from the server action in the form
-    return { success: true, message: "Usuario registrado. Actualizando lista local." };
-  };
-
   const deleteUser = (userId: string) => {
     // TODO: This should call a Firestore delete function
     const newUsers = users.filter(user => user.id !== userId);
@@ -74,7 +55,7 @@ export function UsersProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <UsersContext.Provider value={{ users, addUser, deleteUser, enableUser, loading }}>
+    <UsersContext.Provider value={{ users, deleteUser, enableUser, loading }}>
       {children}
     </UsersContext.Provider>
   );

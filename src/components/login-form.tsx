@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,19 +12,31 @@ import { findUserByEmail, seedInitialUsers } from "@/lib/userService";
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    const registrationSuccess = searchParams.get('registration_success');
+    if (registrationSuccess === 'true') {
+      toast({
+        title: "Registro exitoso",
+        description: "Tu cuenta ha sido creada. Un evaluador revisará tu solicitud.",
+      });
+      // Clean the URL
+      router.replace('/', undefined);
+    }
+  }, [searchParams, toast, router]);
+
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // Ensure the database is seeded on the very first login attempt.
-      // This is the most reliable place to put this logic.
       await seedInitialUsers();
     } catch (error) {
       console.error("Seeding check failed:", error);
@@ -49,7 +61,6 @@ export function LoginForm() {
           sessionStorage.setItem('currentUser', JSON.stringify(evaluatorUser));
           router.push('/dashboard');
         } else {
-          // This should ideally not happen after seeding logic is fixed.
           toast({
             variant: "destructive",
             title: "Error Crítico",

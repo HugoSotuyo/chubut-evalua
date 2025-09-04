@@ -1,9 +1,11 @@
+
 import Image from "next/image";
 import Link from "next/link";
 import { LoginForm } from "@/components/login-form";
 import { GraduationCap } from "lucide-react";
+import { Suspense } from 'react';
 
-export default function LoginPage() {
+function LoginPageContent() {
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">
       <div className="flex items-center justify-center py-12">
@@ -47,4 +49,12 @@ export default function LoginPage() {
       </div>
     </div>
   );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <LoginPageContent />
+    </Suspense>
+  )
 }

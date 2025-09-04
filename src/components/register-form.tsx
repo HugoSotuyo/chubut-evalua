@@ -109,11 +109,7 @@ export function RegisterForm() {
     try {
         const result = await addUser(userData);
         if (result.success) {
-            toast({
-            title: "Registro exitoso",
-            description: "Tu cuenta ha sido creada. Un evaluador revisará tu solicitud.",
-            });
-            router.push("/");
+            router.push("/?registration_success=true");
         } else {
             toast({
                 title: "Error en el registro",
