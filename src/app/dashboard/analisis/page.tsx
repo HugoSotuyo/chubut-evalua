@@ -14,12 +14,16 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/auth-context";
 import { useExams } from "@/context/exams-context";
 import { useResults } from "@/context/results-context"
+import { useSchools } from "@/context/schools-context"
+import { useStudents } from "@/context/students-context"
 import type { Result } from "@/context/results-context"
 
 function AnalisisPageContent() {
     const { user } = useAuth();
     const { exams } = useExams();
     const { results } = useResults();
+    const { schools, districts } = useSchools();
+    const { students } = useStudents();
     const searchParams = useSearchParams();
     const [filters, setFilters] = useState({
         district: "all",
@@ -63,14 +67,8 @@ function AnalisisPageContent() {
     }, [user, searchParams]);
 
 
-    const getUniqueValues = (key: keyof Result | "examName" | "schoolName") => {
-        if (key === 'examName') {
-            return [...new Set(exams.map(e => e.name))];
-        }
-        if (key === 'schoolName') {
-             return [...new Set(results.map(r => r.school))];
-        }
-        const values = results.map(item => item[key as keyof Result]);
+    const getUniqueValues = (key: 'grade' | 'course') => {
+        const values = students.map(item => item[key]);
         return [...new Set(values)];
     }
 
@@ -354,7 +352,7 @@ function AnalisisPageContent() {
                                     <SelectTrigger id="filtro-distrito"><SelectValue placeholder="Distrito" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos</SelectItem>
-                                        {(getUniqueValues("district" as any) as string[]).map((d, i) => <SelectItem key={`${d}-${i}`} value={d}>{d}</SelectItem>)}
+                                        {districts.map((d, i) => <SelectItem key={`${d}-${i}`} value={d}>{d}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -364,7 +362,7 @@ function AnalisisPageContent() {
                                     <SelectTrigger id="filtro-escuela"><SelectValue placeholder="Escuela" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todas</SelectItem>
-                                        {(getUniqueValues("schoolName") as string[]).map((s, i) => <SelectItem key={`${s}-${i}`} value={s}>{s}</SelectItem>)}
+                                        {schools.map((s, i) => <SelectItem key={`${s.id}-${i}`} value={s.name}>{s.name}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -378,7 +376,7 @@ function AnalisisPageContent() {
                                     <SelectTrigger id="filtro-grado"><SelectValue placeholder="Grado" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos</SelectItem>
-                                        {(getUniqueValues("grade") as string[]).map((g, i) => <SelectItem key={`${g}-${i}`} value={g}>{g}</SelectItem>)}
+                                        {getUniqueValues("grade").map((g, i) => <SelectItem key={`${g}-${i}`} value={g}>{g}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -388,7 +386,7 @@ function AnalisisPageContent() {
                                     <SelectTrigger id="filtro-curso"><SelectValue placeholder="Curso" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos</SelectItem>
-                                        {(getUniqueValues("course") as string[]).map((c, i) => <SelectItem key={`${c}-${i}`} value={c}>"{c}"</SelectItem>)}
+                                        {getUniqueValues("course").map((c, i) => <SelectItem key={`${c}-${i}`} value={c}>"{c}"</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
