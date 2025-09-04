@@ -38,7 +38,13 @@ function AnalisisPageContent() {
     
     useEffect(() => {
         const examFromUrl = searchParams.get("exam");
-        let initialFilters = { ...filters };
+        let initialFilters = {
+            district: "all",
+            school: "all",
+            grade: "all",
+            course: "all",
+            exam: "all",
+        };
 
         if (user?.role === 'Director') {
             initialFilters.school = user.school;
@@ -50,20 +56,17 @@ function AnalisisPageContent() {
         
         if (examFromUrl) {
             const decodedExamName = decodeURIComponent(examFromUrl);
-            initialFilters.exam = decodedExamName;
+            const examExists = exams.some(e => e.name === decodedExamName);
+            if (examExists) {
+                initialFilters.exam = decodedExamName;
+            }
         }
         
         setFilters(initialFilters);
         setAppliedFilters(initialFilters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user, searchParams]);
+    }, [user, searchParams, exams]);
 
-    const getUniqueValues = (key: 'grade' | 'course') => {
-        if (!students) return [];
-        const values = students.map(item => item[key]);
-        return [...new Set(values.filter(v => v))].sort();
-    }
-    
     const availableDistricts = useMemo(() => {
         return districts.sort();
     }, [districts]);
@@ -71,6 +74,12 @@ function AnalisisPageContent() {
     const availableSchools = useMemo(() => {
         return schools.map(s => s.name).sort();
     }, [schools]);
+    
+    const getUniqueValues = (key: 'grade' | 'course') => {
+        if (!students) return [];
+        const values = students.map(item => item[key]);
+        return [...new Set(values.filter(v => v))].sort();
+    }
 
     const availableExams = useMemo(() => {
         if (user?.role === 'Docente') {
@@ -360,7 +369,7 @@ function AnalisisPageContent() {
                                     <SelectTrigger id="filtro-grado"><SelectValue placeholder="Grado" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos</SelectItem>
-                                        {getUniqueValues("grade").map((g, i) => <SelectItem key={`${g}-${i}`} value={g}>{g}</SelectItem>)}
+                                        {getUniqueValues("grade").map((g, i) => <SelectItem key={`${g}-${i}`} value={g as string}>{g}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -370,7 +379,7 @@ function AnalisisPageContent() {
                                     <SelectTrigger id="filtro-curso"><SelectValue placeholder="Curso" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos</SelectItem>
-                                        {getUniqueValues("course").map((c, i) => <SelectItem key={`${c}-${i}`} value={c}>"{c}"</SelectItem>)}
+                                        {getUniqueValues("course").map((c, i) => <SelectItem key={`${c}-${i}`} value={c as string}>"{c}"</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -597,3 +606,5 @@ export default function AnalisisPage() {
         </React.Suspense>
     )
 }
+
+    

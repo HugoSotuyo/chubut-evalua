@@ -82,11 +82,12 @@ export default function Dashboard() {
         const gradeData: Record<string, { totalScore: number, count: number }> = {};
         
         filteredData.results.forEach(result => {
-            if (!gradeData[result.grade]) {
-                gradeData[result.grade] = { totalScore: 0, count: 0 };
+            const grade = result.grade || 'Sin Grado';
+            if (!gradeData[grade]) {
+                gradeData[grade] = { totalScore: 0, count: 0 };
             }
-            gradeData[result.grade].totalScore += result.score;
-            gradeData[result.grade].count += 1;
+            gradeData[grade].totalScore += result.score;
+            gradeData[grade].count += 1;
         });
 
         return Object.entries(gradeData).map(([grade, data]) => ({
@@ -252,3 +253,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
+    
