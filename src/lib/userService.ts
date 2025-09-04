@@ -31,7 +31,7 @@ export async function findUserByEmail(email: string): Promise<User | null> {
         return { id: userDoc.id, ...userDoc.data() } as User;
     } catch (error) {
         console.error("Error finding user by email:", error);
-        throw new Error("Failed to query database for user.");
+        throw error;
     }
 }
 
@@ -90,8 +90,9 @@ export async function seedInitialUsers() {
         }
 
         console.log('Seeding database with', initialUsers.length, 'users.');
+        const usersRef = collection(db, "users");
         for (const user of initialUsers) {
-             await addDoc(collection(db, "users"), user);
+             await addDoc(usersRef, user);
         }
         console.log('Seeding complete.');
         return { success: true, message: "Database seeded successfully." };
