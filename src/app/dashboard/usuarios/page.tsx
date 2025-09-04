@@ -65,15 +65,27 @@ export default function UsuariosPage() {
     setIsAlertOpen(true);
   };
 
-  const handleDeleteUser = () => {
-    if (!selectedUser) return;
-    deleteUser(selectedUser.id);
-    toast({
-        title: "Usuario Eliminado",
-        description: `El usuario ${selectedUser.name} ha sido eliminado correctamente.`,
-    });
-    setIsAlertOpen(false);
-    setSelectedUser(null);
+  const handleDeleteUser = async () => {
+    if (!selectedUser || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      await deleteUser(selectedUser.id);
+      toast({
+          title: "Usuario Eliminado",
+          description: `El usuario ${selectedUser.name} ha sido eliminado correctamente.`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error al Eliminar",
+        description: "No se pudo eliminar al usuario. Inténtalo de nuevo.",
+      });
+    } finally {
+      setIsSubmitting(false);
+      setIsAlertOpen(false);
+      setSelectedUser(null);
+    }
   };
 
   const handleEnableUser = async (userId: string) => {
@@ -257,12 +269,12 @@ export default function UsuariosPage() {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel onClick={() => setSelectedUser(null)}>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteUser}>Confirmar</AlertDialogAction>
+                    <AlertDialogAction onClick={handleDeleteUser} disabled={isSubmitting}>
+                      {isSubmitting ? "Eliminando..." : "Confirmar"}
+                    </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
     </div>
   )
 }
-
-    

@@ -2,12 +2,12 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { getAllUsers, updateUserStatusInDb } from '@/lib/userService'; 
+import { getAllUsers, updateUserStatusInDb, deleteUserFromDb } from '@/lib/userService'; 
 import type { User } from "@/lib/types";
 
 interface UsersContextType {
   users: User[];
-  deleteUser: (userId: string) => void;
+  deleteUser: (userId: string) => Promise<void>;
   enableUser: (userId: string) => Promise<void>;
   loading: boolean;
 }
@@ -38,10 +38,15 @@ export function UsersProvider({ children }: { children: ReactNode }) {
     setUsers(newUsers);
   };
 
-  const deleteUser = (userId: string) => {
-    // TODO: This should call a Firestore delete function
-    const newUsers = users.filter(user => user.id !== userId);
-    updateUsersInState(newUsers);
+  const deleteUser = async (userId: string) => {
+    try {
+      await deleteUserFromDb(userId);
+      const newUsers = users.filter(user => user.id !== userId);
+      updateUsersInState(newUsers);
+    } catch (error) {
+      console.error(`Failed to delete user ${userId}:`, error);
+      throw error; // Re-throw to be caught in the component for user feedback
+    }
   };
   
   const enableUser = async (userId: string) => {
@@ -53,7 +58,7 @@ export function UsersProvider({ children }: { children: ReactNode }) {
       updateUsersInState(newUsers);
     } catch (error) {
       console.error("Failed to enable user:", error);
-      // Optionally, show a toast notification to the user about the failure
+      throw error;
     }
   };
 

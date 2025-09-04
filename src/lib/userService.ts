@@ -2,7 +2,7 @@
 'use server';
 
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import type { User } from "./types";
 
 // Firebase configuration - directly in the server file
@@ -150,5 +150,18 @@ export async function updateUserStatusInDb(userId: string, newStatus: "Activo" |
     } catch (error) {
         console.error(`Error updating status for user ${userId}:`, error);
         throw new Error("Failed to update user status in database.");
+    }
+}
+
+export async function deleteUserFromDb(userId: string) {
+    const db = getDb();
+    if (!db) throw new Error("Firestore database is not initialized.");
+
+    try {
+        const userRef = doc(db, "users", userId);
+        await deleteDoc(userRef);
+    } catch (error) {
+        console.error(`Error deleting user ${userId}:`, error);
+        throw new Error("Failed to delete user from database.");
     }
 }
