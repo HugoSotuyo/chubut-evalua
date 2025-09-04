@@ -20,14 +20,12 @@ let app: FirebaseApp;
 let db: Firestore;
 
 function getDb() {
-    if (!app) {
-        if (getApps().length > 0) {
-            app = getApps()[0];
-        } else {
-            app = initializeApp(firebaseConfig);
-        }
-        db = getFirestore(app);
+    if (getApps().length === 0) {
+        app = initializeApp(firebaseConfig);
+    } else {
+        app = getApps()[0];
     }
+    db = getFirestore(app);
     return db;
 }
 
@@ -41,7 +39,7 @@ const initialUsers: Omit<User, 'id'>[] = [
     { name: 'Evaluador General', email: 'evaluador@chubut.edu.ar', dni: '1', role: 'Evaluador', school: 'Sistema', status: 'Activo', password: 'hdsp6032' },
 ];
 
-type NewUserPayload = Omit<User, 'id' | 'status'> & { password?: string };
+type NewUserPayload = Omit<User, 'id' | 'status'>;
 
 export async function findUserByEmail(email: string): Promise<User | null> {
     const db = getDb();
@@ -80,9 +78,14 @@ export async function addUser(userData: NewUserPayload): Promise<{ success: bool
           role: userData.role,
           school: userData.school,
           status: "Pendiente",
-          grade: userData.grade,
-          course: userData.course,
           password: userData.password,
+        };
+
+        if (userData.grade) {
+          userToAdd.grade = userData.grade;
+        }
+        if (userData.course) {
+          userToAdd.course = userData.course;
         }
 
         await addDoc(collection(db, "users"), userToAdd);
