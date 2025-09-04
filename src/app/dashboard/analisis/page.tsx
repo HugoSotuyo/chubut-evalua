@@ -66,18 +66,23 @@ function AnalisisPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, searchParams]);
 
-
     const getUniqueValues = (key: 'grade' | 'course') => {
+        if (!students) return [];
         const values = students.map(item => item[key]);
-        return [...new Set(values)];
+        return [...new Set(values)].sort();
     }
+    
+    const availableDistricts = useMemo(() => {
+        return districts.sort();
+    }, [districts]);
+
+    const availableSchools = useMemo(() => {
+        return schools.map(s => s.name).sort();
+    }, [schools]);
 
     const availableExams = useMemo(() => {
         if (user?.role === 'Docente') {
             return exams.filter(e => e.grade === user.grade && e.status === 'Cerrado');
-        }
-        if (user?.role === 'Director') {
-            return exams.filter(e => e.status === 'Cerrado');
         }
         return exams;
     }, [exams, user]);
@@ -91,119 +96,104 @@ function AnalisisPageContent() {
     }
     
     const { dataAprobados, examAnalysisData, questionAnalysisData } = useMemo(() => {
-        let filteredData = results;
+        let filteredResults = [...results];
 
-        if (appliedFilters.exam !== 'all') {
-            const examId = exams.find(e => e.name === appliedFilters.exam)?.id;
-            if(examId) {
-                filteredData = filteredData.filter(r => r.examId === examId);
-            }
-        }
-
+        // Role-based filtering
         if (user?.role === 'Director') {
-            filteredData = filteredData.filter(r => r.school === user.school);
+            filteredResults = filteredResults.filter(r => r.school === user.school);
         } else if (user?.role === 'Docente') {
-            filteredData = filteredData.filter(r => 
+            filteredResults = filteredResults.filter(r => 
                 r.school === user.school &&
                 r.grade === user.grade &&
                 r.course === user.course
             );
         }
-        
+
+        // Apply user-selected filters
+        if (appliedFilters.exam !== 'all') {
+            filteredResults = filteredResults.filter(r => r.examName === appliedFilters.exam);
+        }
         if (appliedFilters.school !== 'all') {
-            filteredData = filteredData.filter(r => r.school === appliedFilters.school);
+            filteredResults = filteredResults.filter(r => r.school === appliedFilters.school);
         }
         if (appliedFilters.grade !== 'all') {
-            filteredData = filteredData.filter(r => r.grade === appliedFilters.grade);
+            filteredResults = filteredResults.filter(r => r.grade === appliedFilters.grade);
         }
         if (appliedFilters.course !== 'all') {
-            filteredData = filteredData.filter(r => r.course === appliedFilters.course);
+            filteredResults = filteredResults.filter(r => r.course === appliedFilters.course);
         }
 
         // --- Data Aprobados vs. Desaprobados ---
         const aprobadosPorGrado: Record<string, { Aprobados: number, Desaprobados: number }> = {};
-        filteredData.forEach(r => {
-            if (!aprobadosPorGrado[r.grade]) {
-                aprobadosPorGrado[r.grade] = { Aprobados: 0, Desaprobados: 0 };
+        filteredResults.forEach(r => {
+            const grade = r.grade || 'Sin Grado';
+            if (!aprobadosPorGrado[grade]) {
+                aprobadosPorGrado[grade] = { Aprobados: 0, Desaprobados: 0 };
             }
             if (r.status === 'Aprobado') {
-                aprobadosPorGrado[r.grade].Aprobados++;
+                aprobadosPorGrado[grade].Aprobados++;
             } else {
-                aprobadosPorGrado[r.grade].Desaprobados++;
+                aprobadosPorGrado[grade].Desaprobados++;
             }
         });
-        const dataAprobados = Object.entries(aprobadosPorGrado).map(([grade, counts]) => ({
-            name: grade,
-            ...counts
-        }));
+        const dataAprobados = Object.entries(aprobadosPorGrado)
+          .map(([grade, counts]) => ({ name: grade, ...counts }))
+          .sort((a,b) => a.name.localeCompare(b.name));
 
         // --- Data Análisis por Examen ---
-        const examAnalysis: Record<string, { name: string; school: string; [grade: string]: any; }> = {};
-        filteredData.forEach(r => {
-            const examKey = r.examName;
-            if (!examAnalysis[examKey]) {
-                examAnalysis[examKey] = { name: r.examName, school: r.school };
+        const examAnalysis: Record<string, Record<string, { totalScore: number, maxScore: number }>> = {};
+        filteredResults.forEach(r => {
+            if (!examAnalysis[r.examName]) {
+                examAnalysis[r.examName] = {};
             }
-            const gradeKey = r.grade;
-            const correctasKey = `${gradeKey}_correctas`;
-            const totalMaxScoreKey = `${gradeKey}_totalMaxScore`;
-
-            if (!examAnalysis[examKey][correctasKey]) {
-                 examAnalysis[examKey][correctasKey] = 0;
+            const grade = r.grade || 'Sin Grado';
+            if (!examAnalysis[r.examName][grade]) {
+                examAnalysis[r.examName][grade] = { totalScore: 0, maxScore: 0 };
             }
-            if (!examAnalysis[examKey][totalMaxScoreKey]) {
-                 examAnalysis[examKey][totalMaxScoreKey] = 0;
-            }
-
-            examAnalysis[examKey][correctasKey] += r.totalScore;
-            examAnalysis[examKey][totalMaxScoreKey] += r.maxScore;
+            examAnalysis[r.examName][grade].totalScore += r.totalScore;
+            examAnalysis[r.examName][grade].maxScore += r.maxScore;
         });
         
-        const examAnalysisData = Object.values(examAnalysis).map(exam => {
-            const newExamData = { ...exam };
-            const grades = [...new Set(Object.keys(exam).filter(k => k.includes('_')).map(k => k.split('_')[0]))];
-            grades.forEach(grade => {
-                const correctas = exam[`${grade}_correctas`] || 0;
-                const totalMaxScore = exam[`${grade}_totalMaxScore`] || 0;
+        const examAnalysisData = Object.entries(examAnalysis).map(([examName, gradeData]) => {
+            const examRow: { name: string, [key: string]: any } = { name: examName };
+            Object.entries(gradeData).forEach(([grade, scores]) => {
                 const rendimientoKey = `${grade}_rendimiento`;
-                newExamData[rendimientoKey] = totalMaxScore > 0 ? (correctas / totalMaxScore) * 100 : 0;
+                examRow[rendimientoKey] = scores.maxScore > 0 ? (scores.totalScore / scores.maxScore) * 100 : 0;
+                examRow[`${grade}_correctas`] = scores.totalScore;
+                examRow[`${grade}_totalMaxScore`] = scores.maxScore;
             });
-            return newExamData;
+            return examRow;
         });
 
         // --- Data Análisis por Pregunta ---
-        const questionAnalysis: Record<string, { totalScore: number, totalMaxScore: number, count: number }> = {};
-        if (appliedFilters.exam !== 'all' && filteredData.length > 0) {
-            const examId = exams.find(e => e.name === appliedFilters.exam)?.id;
-            const exam = exams.find(e => e.id === examId);
+        const questionAnalysis: Record<string, { totalScore: number, totalMaxScore: number }> = {};
+        const selectedExam = exams.find(e => e.name === appliedFilters.exam);
+        
+        if (selectedExam && filteredResults.length > 0) {
+            selectedExam.questions.forEach((q, index) => {
+                const questionKey = `Preg. ${index + 1}`;
+                questionAnalysis[questionKey] = { totalScore: 0, totalMaxScore: 0 };
+            });
 
-            if (exam) {
-                exam.questions.forEach((q, index) => {
-                    const questionKey = `Preg. ${index + 1}`;
-                    questionAnalysis[questionKey] = { totalScore: 0, totalMaxScore: 0, count: 0 };
-                });
-
-                filteredData.forEach(result => {
-                    if (result.examId === exam.id) {
-                         Object.entries(result.scores).forEach(([qIndex, score]) => {
-                             const questionKey = `Preg. ${Number(qIndex) + 1}`;
-                             if (questionAnalysis[questionKey]) {
-                                 questionAnalysis[questionKey].totalScore += score;
-                                 questionAnalysis[questionKey].totalMaxScore += exam.questions[Number(qIndex)].puntaje;
-                                 questionAnalysis[questionKey].count += 1;
-                             }
-                         })
-                    }
-                });
-            }
+            filteredResults.forEach(result => {
+                if(result.examId === selectedExam.id) {
+                    Object.entries(result.scores).forEach(([qIndex, score]) => {
+                        const questionKey = `Preg. ${Number(qIndex) + 1}`;
+                        if (questionAnalysis[questionKey]) {
+                            questionAnalysis[questionKey].totalScore += score;
+                            questionAnalysis[questionKey].totalMaxScore += selectedExam.questions[Number(qIndex)].puntaje;
+                        }
+                    });
+                }
+            });
         }
+        
         const questionAnalysisData = Object.entries(questionAnalysis).map(([name, data]) => ({
             name,
             Rendimiento: data.totalMaxScore > 0 ? (data.totalScore / data.totalMaxScore) * 100 : 0
         }));
 
         return { dataAprobados, examAnalysisData, questionAnalysisData };
-
     }, [appliedFilters, user, results, exams]);
     
     const handleExport = () => {
@@ -352,7 +342,7 @@ function AnalisisPageContent() {
                                     <SelectTrigger id="filtro-distrito"><SelectValue placeholder="Distrito" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos</SelectItem>
-                                        {districts.map((d, i) => <SelectItem key={`${d}-${i}`} value={d}>{d}</SelectItem>)}
+                                        {availableDistricts.map((d, i) => <SelectItem key={`${d}-${i}`} value={d}>{d}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -362,7 +352,7 @@ function AnalisisPageContent() {
                                     <SelectTrigger id="filtro-escuela"><SelectValue placeholder="Escuela" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todas</SelectItem>
-                                        {schools.map((s, i) => <SelectItem key={`${s.id}-${i}`} value={s.name}>{s.name}</SelectItem>)}
+                                        {availableSchools.map((s, i) => <SelectItem key={`${s}-${i}`} value={s}>{s}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -613,3 +603,5 @@ export default function AnalisisPage() {
         </React.Suspense>
     )
 }
+
+    
