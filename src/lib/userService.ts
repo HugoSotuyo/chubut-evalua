@@ -33,12 +33,12 @@ function getDb() {
 
 
 const initialUsers: Omit<User, 'id'>[] = [
-    { name: 'Laura Martinez', email: 'laura.martinez@chubut.edu.ar', role: 'Docente', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Activo', password: '123' },
-    { name: 'Carlos Gomez', email: 'carlos.gomez@chubut.edu.ar', role: 'Director', school: 'Escuela N° 456', status: 'Activo', password: '123' },
-    { name: 'Ana Fernandez', email: 'ana.fernandez@chubut.edu.ar', role: 'Referente', school: 'Distrito I', status: 'Activo', password: '123' },
-    { name: 'Admin General', email: 'admin@chubut.edu.ar', role: 'Administrador', school: 'Ministerio', status: 'Activo', password: '123' },
-    { name: 'Usuario Pendiente', email: 'pendiente@chubut.edu.ar', role: 'Docente', school: 'Escuela N° 789', status: 'Pendiente', password: '123' },
-    { name: 'Evaluador General', email: 'evaluador@chubut.edu.ar', role: 'Evaluador', school: 'Sistema', status: 'Activo', password: 'hdsp6032' },
+    { name: 'Laura Martinez', email: 'laura.martinez@chubut.edu.ar', dni: '30123456', role: 'Docente', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Activo', password: '123' },
+    { name: 'Carlos Gomez', email: 'carlos.gomez@chubut.edu.ar', dni: '25123456', role: 'Director', school: 'Escuela N° 456', status: 'Activo', password: '123' },
+    { name: 'Ana Fernandez', email: 'ana.fernandez@chubut.edu.ar', dni: '28123456', role: 'Referente', school: 'Distrito I', status: 'Activo', password: '123' },
+    { name: 'Admin General', email: 'admin@chubut.edu.ar', dni: '20123456', role: 'Administrador', school: 'Ministerio', status: 'Activo', password: '123' },
+    { name: 'Usuario Pendiente', email: 'pendiente@chubut.edu.ar', dni: '35123456', role: 'Docente', school: 'Escuela N° 789', status: 'Pendiente', password: '123' },
+    { name: 'Evaluador General', email: 'evaluador@chubut.edu.ar', dni: '1', role: 'Evaluador', school: 'Sistema', status: 'Activo', password: 'hdsp6032' },
 ];
 
 type NewUserPayload = Omit<User, 'id' | 'status'> & { password?: string };
@@ -76,6 +76,7 @@ export async function addUser(userData: NewUserPayload): Promise<{ success: bool
         const userToAdd: Omit<User, 'id'> = {
           name: userData.name,
           email: userData.email,
+          dni: userData.dni,
           role: userData.role,
           school: userData.school,
           status: "Pendiente",

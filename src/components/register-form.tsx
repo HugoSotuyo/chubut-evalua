@@ -56,10 +56,11 @@ export function RegisterForm() {
     const firstName = formData.get("first-name") as string;
     const lastName = formData.get("last-name") as string;
     const email = formData.get("email") as string;
+    const dni = formData.get("dni") as string;
     const password = formData.get("password") as string;
     const selectedRole = formData.get("role") as UserRole;
     
-    if (!firstName || !lastName || !selectedRole || !email || !password) {
+    if (!firstName || !lastName || !selectedRole || !email || !password || !dni) {
         toast({
             title: "Error de validación",
             description: "Por favor, completa todos los campos requeridos.",
@@ -71,6 +72,7 @@ export function RegisterForm() {
     const userData: any = {
         name: `${firstName} ${lastName}`,
         email: email,
+        dni: dni,
         password: password,
         role: selectedRole,
         school: "N/A",

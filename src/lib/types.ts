@@ -10,4 +10,5 @@ export type User = {
   status: "Activo" | "Pendiente" | "Inactivo";
   grade?: string;
   course?: string;
+  dni?: string;
 };
