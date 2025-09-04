@@ -2,11 +2,14 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { getAllUsers, updateUserStatusInDb, deleteUserFromDb } from '@/lib/userService'; 
+import { getAllUsers, updateUserStatusInDb, deleteUserFromDb, addUser as addUserToDb } from '@/lib/userService'; 
 import type { User } from "@/lib/types";
+
+type NewUserPayload = Omit<User, 'id' | 'status'>;
 
 interface UsersContextType {
   users: User[];
+  addUser: (userData: NewUserPayload) => Promise<{ success: boolean; message: string; }>;
   deleteUser: (userId: string) => Promise<void>;
   enableUser: (userId: string) => Promise<void>;
   loading: boolean;
@@ -38,6 +41,19 @@ export function UsersProvider({ children }: { children: ReactNode }) {
     setUsers(newUsers);
   };
 
+  const addUser = async (userData: NewUserPayload) => {
+    try {
+      const result = await addUserToDb(userData);
+      if (result.success && result.newUser) {
+        setUsers(prevUsers => [...prevUsers, result.newUser!]);
+      }
+      return { success: result.success, message: result.message };
+    } catch (error) {
+       console.error("Error adding user via context:", error);
+       return { success: false, message: "Ocurrió un error en el servidor." };
+    }
+  };
+
   const deleteUser = async (userId: string) => {
     try {
       await deleteUserFromDb(userId);
@@ -63,7 +79,7 @@ export function UsersProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <UsersContext.Provider value={{ users, deleteUser, enableUser, loading }}>
+    <UsersContext.Provider value={{ users, addUser, deleteUser, enableUser, loading }}>
       {children}
     </UsersContext.Provider>
   );

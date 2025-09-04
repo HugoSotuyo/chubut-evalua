@@ -61,7 +61,7 @@ export async function findUserByEmail(email: string): Promise<User | null> {
     }
 }
 
-export async function addUser(userData: NewUserPayload): Promise<{ success: boolean; message: string; }> {
+export async function addUser(userData: NewUserPayload): Promise<{ success: boolean; message: string; newUser?: User }> {
     const db = getDb();
     if (!db) return { success: false, message: "La base de datos no está inicializada." };
 
@@ -88,8 +88,8 @@ export async function addUser(userData: NewUserPayload): Promise<{ success: bool
           userToAdd.course = userData.course;
         }
 
-        await addDoc(collection(db, "users"), userToAdd);
-        return { success: true, message: "Usuario registrado exitosamente." };
+        const docRef = await addDoc(collection(db, "users"), userToAdd);
+        return { success: true, message: "Usuario registrado exitosamente.", newUser: { id: docRef.id, ...userToAdd } };
     } catch (error) {
         console.error("Error adding user: ", error);
         return { success: false, message: "Ocurrió un error al registrar el usuario." };

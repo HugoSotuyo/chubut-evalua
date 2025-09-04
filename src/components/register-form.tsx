@@ -17,15 +17,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useUsers } from "@/context/users-context";
 import { useSchools } from "@/context/schools-context";
 import type { UserRole } from "@/lib/auth";
-import { addUser } from "@/lib/userService";
-
 
 export function RegisterForm() {
   const [role, setRole] = useState<UserRole | "">("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const router = useRouter();
   const { toast } = useToast();
-  const { users } = useUsers();
+  const { users, addUser } = useUsers();
   const { schools, districts } = useSchools();
 
   const schoolsWithDirectors = useMemo(() => {
