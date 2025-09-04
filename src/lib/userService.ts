@@ -1,9 +1,36 @@
 
 'use server';
 
-import { collection, query, where, getDocs, addDoc, getCountFromServer } from "firebase/firestore";
-import { db } from './firebase';
+import { initializeApp, getApps, FirebaseApp } from "firebase/app";
+import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore } from "firebase/firestore";
 import type { User } from "./types";
+
+// Firebase configuration - directly in the server file
+const firebaseConfig = {
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+};
+
+// Singleton pattern for Firebase initialization
+let app: FirebaseApp;
+let db: Firestore;
+
+function getDb() {
+    if (!app) {
+        if (getApps().length > 0) {
+            app = getApps()[0];
+        } else {
+            app = initializeApp(firebaseConfig);
+        }
+        db = getFirestore(app);
+    }
+    return db;
+}
+
 
 const initialUsers: Omit<User, 'id'>[] = [
     { name: 'Laura Martinez', email: 'laura.martinez@chubut.edu.ar', role: 'Docente', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Activo', password: '123' },
@@ -17,6 +44,7 @@ const initialUsers: Omit<User, 'id'>[] = [
 type NewUserPayload = Omit<User, 'id' | 'status'> & { password?: string };
 
 export async function findUserByEmail(email: string): Promise<User | null> {
+    const db = getDb();
     if (!db) throw new Error("Firestore database is not initialized.");
     
     const usersRef = collection(db, "users");
@@ -36,6 +64,7 @@ export async function findUserByEmail(email: string): Promise<User | null> {
 }
 
 export async function addUser(userData: NewUserPayload): Promise<{ success: boolean; message: string; }> {
+    const db = getDb();
     if (!db) return { success: false, message: "La base de datos no está inicializada." };
 
     try {
@@ -64,6 +93,7 @@ export async function addUser(userData: NewUserPayload): Promise<{ success: bool
 }
 
 export async function getAllUsers(): Promise<User[]> {
+    const db = getDb();
     if (!db) throw new Error("Firestore database is not initialized.");
     
     const users: User[] = [];
@@ -80,19 +110,26 @@ export async function getAllUsers(): Promise<User[]> {
 }
 
 export async function seedInitialUsers() {
-    if (!db) throw new Error("Firestore database is not initialized.");
+    const db = getDb();
+    if (!db) {
+        console.error("Database not available for seeding.");
+        throw new Error("Database not available.");
+    }
 
     try {
-        const snapshot = await getCountFromServer(collection(db, "users"));
+        console.log("Checking if seeding is necessary...");
+        const usersCollection = collection(db, "users");
+        const snapshot = await getCountFromServer(usersCollection);
+        
         if (snapshot.data().count > 0) {
             console.log('Database already seeded. Skipping.');
             return { success: true, message: "Database already contains users." };
         }
 
         console.log('Seeding database with', initialUsers.length, 'users.');
-        const usersRef = collection(db, "users");
         for (const user of initialUsers) {
-             await addDoc(usersRef, user);
+             await addDoc(usersCollection, user);
+             console.log(`Added user: ${user.name}`);
         }
         console.log('Seeding complete.');
         return { success: true, message: "Database seeded successfully." };
