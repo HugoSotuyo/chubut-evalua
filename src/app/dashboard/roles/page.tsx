@@ -4,7 +4,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle2, XCircle, KeyRound } from "lucide-react"
+import { CheckCircle2, XCircle, KeyRound, FileDown } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 const rolesData = [
     {
@@ -82,11 +83,58 @@ const PermissionCheck = ({ hasPermission }: { hasPermission: boolean }) => (
 
 
 export default function RolesPage() {
+
+    const handleExport = () => {
+        const headers = [
+            "Rol", "Descripción", "Gestión de Usuarios", "Gestión de Escuelas", 
+            "Gestión de Exámenes", "Gestión de Resultados", "Análisis", "Alumnos", "Admin"
+        ];
+
+        const formatPermissions = (permissions: typeof rolesData[0]['permissions']) => {
+            const formatArray = (arr: string[]) => arr.length > 0 ? `"${arr.join(', ')}"` : "No";
+            return [
+                formatArray(permissions.usuarios),
+                formatArray(permissions.escuelas),
+                formatArray(permissions.examenes),
+                formatArray(permissions.resultados),
+                permissions.analisis ? "Sí" : "No",
+                permissions.alumnos ? "Sí" : "No",
+                permissions.admin ? "Sí" : "No"
+            ];
+        };
+
+        const rows = rolesData.map(roleInfo => {
+            const permissionsText = formatPermissions(roleInfo.permissions);
+            return [`"${roleInfo.role}"`, `"${roleInfo.description}"`, ...permissionsText].join(';');
+        });
+
+        const bom = "\uFEFF";
+        const csvContent = bom + [headers.join(';'), ...rows].join("\n");
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "roles_y_permisos.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight font-headline">Roles y Permisos</h1>
-        <p className="text-muted-foreground">Descripción detallada de cada rol y sus funcionalidades en el sistema.</p>
+      <div className="flex items-center justify-between">
+        <div>
+            <h1 className="text-3xl font-bold tracking-tight font-headline">Roles y Permisos</h1>
+            <p className="text-muted-foreground">Descripción detallada de cada rol y sus funcionalidades en el sistema.</p>
+        </div>
+        <Button onClick={handleExport} variant="outline">
+            <FileDown className="mr-2 h-4 w-4" />
+            Exportar a CSV
+        </Button>
       </div>
 
       <Card>
@@ -165,4 +213,3 @@ export default function RolesPage() {
     </div>
   );
 }
-
