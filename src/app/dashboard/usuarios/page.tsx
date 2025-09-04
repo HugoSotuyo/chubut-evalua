@@ -34,7 +34,7 @@ export default function UsuariosPage() {
   const [roleFilter, setRoleFilter] = useState("all");
   const { toast } = useToast();
   const { searchTerm } = useSearch();
-  const { user } = useAuth();
+  const { user: currentUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const uniqueRoles = useMemo(() => {
@@ -43,38 +43,22 @@ export default function UsuariosPage() {
   }, [users]);
 
   const filteredUsers = useMemo(() => {
-    if (!user) return [];
+    if (!currentUser) return [];
 
     let results: User[] = users;
 
-    switch (user.role) {
-      case "Evaluador":
-        // Evaluador can see all users, only filtered by search term
-        if (searchTerm) {
-          results = results.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()));
-        }
-        return results; // Return all users, ignoring roleFilter
-      
-      case "Director":
-        // Director can see only teachers from their school
-        results = users.filter(u => u.school === user.school && u.role === "Docente");
-        break;
-
-      default:
-        // Other roles filter by the dropdown selection
-        if (roleFilter !== "all") {
-            results = results.filter(u => u.role === roleFilter);
-        }
-        break;
+    if (currentUser.role === "Director") {
+        results = users.filter(u => u.school === currentUser.school && u.role === "Docente");
+    } else if (roleFilter !== "all") {
+        results = results.filter(u => u.role === roleFilter);
     }
-
-    // Apply search term filter for roles other than Evaluador
+    
     if (searchTerm) {
       results = results.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }
     
     return results;
-  }, [users, roleFilter, searchTerm, user]);
+  }, [users, roleFilter, searchTerm, currentUser]);
 
   const handleOpenDeleteDialog = (user: User) => {
     setSelectedUser(user);
@@ -142,11 +126,11 @@ export default function UsuariosPage() {
     URL.revokeObjectURL(url);
   };
 
-  if (!user) {
+  if (!currentUser) {
     return <div>Cargando...</div>;
   }
   
-  const showRoleFilter = user.role !== "Director" && user.role !== "Evaluador";
+  const showRoleFilter = currentUser.role !== "Director";
 
   return (
     <div className="flex flex-col gap-8">
@@ -155,16 +139,18 @@ export default function UsuariosPage() {
                 <h1 className="text-3xl font-bold tracking-tight font-headline">Gestión de Usuarios</h1>
                 <p className="text-muted-foreground">Administra los roles y permisos de los usuarios del sistema.</p>
             </div>
-            <div className="flex items-center gap-2">
-                <Button onClick={() => showToast('Invitar Usuario')}>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Invitar Usuario
-                </Button>
-                <Button variant="outline" onClick={handleExport}>
-                    <FileDown className="mr-2 h-4 w-4" />
-                    Exportar Usuarios
-                </Button>
-            </div>
+            {currentUser.role !== 'Director' && (
+              <div className="flex items-center gap-2">
+                  <Button onClick={() => showToast('Invitar Usuario')}>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Invitar Usuario
+                  </Button>
+                  <Button variant="outline" onClick={handleExport}>
+                      <FileDown className="mr-2 h-4 w-4" />
+                      Exportar Usuarios
+                  </Button>
+              </div>
+            )}
         </div>
         
         {showRoleFilter && (
@@ -198,8 +184,8 @@ export default function UsuariosPage() {
 
         <Card>
             <CardHeader>
-                <CardTitle>Usuarios Registrados</CardTitle>
-                <CardDescription>Lista de todos los usuarios con acceso a la plataforma.</CardDescription>
+                <CardTitle>{currentUser.role === 'Director' ? 'Docentes de mi Escuela' : 'Usuarios Registrados'}</CardTitle>
+                <CardDescription>{currentUser.role === 'Director' ? 'Lista de todos los docentes con acceso a tu escuela.' : 'Lista de todos los usuarios con acceso a la plataforma.'}</CardDescription>
             </CardHeader>
             <CardContent>
                 <Table>
@@ -240,14 +226,16 @@ export default function UsuariosPage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                        {user.status === "Pendiente" && 
+                                        {(currentUser.role === 'Evaluador' || currentUser.role === 'Director') && user.status === "Pendiente" && (
                                             <DropdownMenuItem onSelect={() => handleEnableUser(user.id)} disabled={isSubmitting}>
-                                                {isSubmitting ? "Habilitando..." : "Habilitar Usuario"}
+                                                {isSubmitting ? "Habilitando..." : `Habilitar ${user.role}`}
                                             </DropdownMenuItem>
-                                        }
-                                        <DropdownMenuItem onSelect={() => showToast('Editar Usuario')}>Editar</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => showToast('Cambiar Contraseña')}>Cambiar Contraseña</DropdownMenuItem>
-                                        <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(user)}>Eliminar</DropdownMenuItem>
+                                        )}
+                                        {currentUser.role !== 'Director' && <DropdownMenuItem onSelect={() => showToast('Editar Usuario')}>Editar</DropdownMenuItem>}
+                                        {currentUser.role !== 'Director' && <DropdownMenuItem onSelect={() => showToast('Cambiar Contraseña')}>Cambiar Contraseña</DropdownMenuItem>}
+                                        {(currentUser.role === 'Evaluador' || currentUser.role === 'Director') && (
+                                          <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(user)}>Eliminar</DropdownMenuItem>
+                                        )}
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </TableCell>
@@ -276,3 +264,5 @@ export default function UsuariosPage() {
     </div>
   )
 }
+
+    
