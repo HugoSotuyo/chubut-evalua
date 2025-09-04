@@ -37,7 +37,6 @@ function AnalisisPageContent() {
     const [appliedFilters, setAppliedFilters] = useState(filters);
     
     useEffect(() => {
-        const examFromUrl = searchParams.get("exam");
         let initialFilters = {
             district: "all",
             school: "all",
@@ -54,6 +53,7 @@ function AnalisisPageContent() {
             initialFilters.course = user.course ?? 'all';
         }
         
+        const examFromUrl = searchParams.get("exam");
         if (examFromUrl) {
             const decodedExamName = decodeURIComponent(examFromUrl);
             const examExists = exams.some(e => e.name === decodedExamName);
@@ -75,12 +75,14 @@ function AnalisisPageContent() {
         return schools.map(s => s.name).sort();
     }, [schools]);
     
-    const getUniqueValues = (key: 'grade' | 'course') => {
-        if (!students) return [];
-        const values = students.map(item => item[key]);
-        return [...new Set(values.filter(v => v))].sort();
-    }
+    const availableGrades = useMemo(() => {
+        return [...new Set(students.map(s => s.grade).filter(Boolean))].sort();
+    }, [students]);
 
+    const availableCourses = useMemo(() => {
+        return [...new Set(students.map(s => s.course).filter(Boolean))].sort();
+    }, [students]);
+    
     const availableExams = useMemo(() => {
         if (user?.role === 'Docente') {
             return exams.filter(e => e.grade === user.grade && e.status === 'Cerrado');
@@ -99,7 +101,7 @@ function AnalisisPageContent() {
     const { dataAprobados, examAnalysisData, questionAnalysisData } = useMemo(() => {
         let filteredResults = [...results];
 
-        // Role-based pre-filtering
+        // 1. Role-based pre-filtering
         if (user?.role === 'Director') {
             filteredResults = filteredResults.filter(r => r.school === user.school);
         } else if (user?.role === 'Docente') {
@@ -110,7 +112,7 @@ function AnalisisPageContent() {
             );
         }
 
-        // Apply user-selected filters
+        // 2. Apply user-selected filters
         if (appliedFilters.exam !== 'all') {
             filteredResults = filteredResults.filter(r => r.examName === appliedFilters.exam);
         }
@@ -124,7 +126,7 @@ function AnalisisPageContent() {
             filteredResults = filteredResults.filter(r => r.course === appliedFilters.course);
         }
 
-        // --- Data Aprobados vs. Desaprobados ---
+        // --- Data: Aprobados vs. Desaprobados ---
         const aprobadosPorGrado: Record<string, { Aprobados: number, Desaprobados: number }> = {};
         filteredResults.forEach(r => {
             const grade = r.grade || 'Sin Grado';
@@ -141,7 +143,7 @@ function AnalisisPageContent() {
           .map(([grade, counts]) => ({ name: grade, ...counts }))
           .sort((a,b) => a.name.localeCompare(b.name));
 
-        // --- Data Análisis por Examen ---
+        // --- Data: Análisis por Examen ---
         const examAnalysis: Record<string, Record<string, { totalScore: number; count: number, totalMaxScore: number }>> = {};
         filteredResults.forEach(r => {
             if (!examAnalysis[r.examName]) {
@@ -167,19 +169,19 @@ function AnalisisPageContent() {
             return examRow;
         });
 
-        // --- Data Análisis por Pregunta ---
+        // --- Data: Análisis por Pregunta ---
         const questionAnalysis: Record<string, { totalScore: number, totalMaxScore: number }> = {};
         const selectedExam = exams.find(e => e.name === appliedFilters.exam);
         
         if (selectedExam) {
-            const examResults = filteredResults.filter(r => r.examId === selectedExam.id);
-            if (examResults.length > 0) {
+            const examResultsForQuestionAnalysis = filteredResults.filter(r => r.examId === selectedExam.id);
+            if (examResultsForQuestionAnalysis.length > 0) {
                  selectedExam.questions.forEach((q, index) => {
                     const questionKey = `Preg. ${index + 1}`;
                     questionAnalysis[questionKey] = { totalScore: 0, totalMaxScore: 0 };
                 });
 
-                examResults.forEach(result => {
+                examResultsForQuestionAnalysis.forEach(result => {
                     Object.entries(result.scores).forEach(([qIndex, score]) => {
                         const questionKey = `Preg. ${Number(qIndex) + 1}`;
                         if (questionAnalysis[questionKey]) {
@@ -369,7 +371,7 @@ function AnalisisPageContent() {
                                     <SelectTrigger id="filtro-grado"><SelectValue placeholder="Grado" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos</SelectItem>
-                                        {getUniqueValues("grade").map((g, i) => <SelectItem key={`${g}-${i}`} value={g as string}>{g}</SelectItem>)}
+                                        {availableGrades.map((g, i) => <SelectItem key={`${g}-${i}`} value={g as string}>{g}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -379,7 +381,7 @@ function AnalisisPageContent() {
                                     <SelectTrigger id="filtro-curso"><SelectValue placeholder="Curso" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos</SelectItem>
-                                        {getUniqueValues("course").map((c, i) => <SelectItem key={`${c}-${i}`} value={c as string}>"{c}"</SelectItem>)}
+                                        {availableCourses.map((c, i) => <SelectItem key={`${c}-${i}`} value={c as string}>"{c}"</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -606,5 +608,3 @@ export default function AnalisisPage() {
         </React.Suspense>
     )
 }
-
-    
