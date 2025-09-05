@@ -16,7 +16,7 @@ export default function PerfilPage() {
     return <div>Cargando perfil...</div>;
   }
   
-  const userInitials = user.name.split(' ').map(n => n[0]).join('');
+  const userInitials = user.name ? user.name.split(' ').map(n => n[0]).join('') : '';
 
   return (
     <div className="flex flex-col gap-8">
