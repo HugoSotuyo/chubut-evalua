@@ -70,8 +70,19 @@ export function ResultsProvider({ children }: { children: ReactNode }) {
 
   const addResult = (resultData: NewResult) => {
     const newResult: Result = {
-        ...resultData,
-        id: (Math.max(0, ...results.map(r => parseInt(r.id, 10))) + 1).toString()
+        id: (Math.max(0, ...results.map(r => parseInt(r.id, 10))) + 1).toString(),
+        studentId: resultData.studentId,
+        studentName: resultData.studentName,
+        examId: resultData.examId,
+        examName: resultData.examName,
+        school: resultData.school,
+        grade: resultData.grade,
+        course: resultData.course,
+        status: resultData.status,
+        score: resultData.score,
+        scores: resultData.scores,
+        totalScore: resultData.totalScore,
+        maxScore: resultData.maxScore,
     };
     updateResultsInStateAndStorage([...results, newResult]);
   };

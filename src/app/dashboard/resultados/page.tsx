@@ -61,18 +61,13 @@ function ResultadosPageContent() {
 
     const availableExams = useMemo(() => {
         if (!user) return [];
-        let relevantResults = allResults;
         if (user.role === 'Docente') {
-            relevantResults = allResults.filter(r => 
-                r.school === user.school && r.grade === user.grade && r.course === user.course
-            );
-        } else if (user.role === 'Director') {
-            relevantResults = allResults.filter(r => r.school === user.school);
+            return exams.filter(e => e.grade === user.grade);
         }
-
-        const examIdsWithResults = [...new Set(relevantResults.map(r => r.examId))];
-        
-        return exams.filter(e => examIdsWithResults.includes(e.id));
+        if (user.role === 'Director') {
+            return exams.filter(e => allResults.some(r => r.examId === e.id && r.school === user.school));
+        }
+        return exams;
     }, [exams, user, allResults]);
 
     const filteredResults = useMemo(() => {
