@@ -47,8 +47,9 @@ export default function CargarResultadosPage() {
     }, [selectedExamId, exams]);
     
     const totalScore = useMemo(() => {
-        return Object.values(scores).reduce((sum, score) => sum + (score || 0), 0);
-    }, [scores]);
+        if (!selectedExam) return 0;
+        return selectedExam.questions.reduce((sum, _, index) => sum + (scores[index] || 0), 0);
+    }, [scores, selectedExam]);
     
     const maxScore = useMemo(() => {
         return selectedExam?.questions.reduce((sum, q) => sum + q.puntaje, 0) ?? 0;
