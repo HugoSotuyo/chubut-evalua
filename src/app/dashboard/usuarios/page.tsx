@@ -238,13 +238,13 @@ export default function UsuariosPage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                        {(currentUser.role === 'Evaluador' || currentUser.role === 'Director') && user.status === "Pendiente" && (
+                                        {user.status === "Pendiente" && (currentUser.role === 'Evaluador' || currentUser.role === 'Director') && (
                                             <DropdownMenuItem onSelect={() => handleEnableUser(user.id)} disabled={isSubmitting}>
                                                 {isSubmitting ? "Habilitando..." : `Habilitar ${user.role}`}
                                             </DropdownMenuItem>
                                         )}
-                                        {currentUser.role !== 'Director' && <DropdownMenuItem onSelect={() => showToast('Editar Usuario')}>Editar</DropdownMenuItem>}
-                                        {currentUser.role !== 'Director' && <DropdownMenuItem onSelect={() => showToast('Cambiar Contraseña')}>Cambiar Contraseña</DropdownMenuItem>}
+                                        {currentUser.role !== 'Director' && <DropdownMenuItem onClick={() => showToast('Editar Usuario')}>Editar</DropdownMenuItem>}
+                                        {currentUser.role !== 'Director' && <DropdownMenuItem onClick={() => showToast('Cambiar Contraseña')}>Cambiar Contraseña</DropdownMenuItem>}
                                         {(currentUser.role === 'Evaluador' || currentUser.role === 'Director') && (
                                           <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(user)}>Eliminar</DropdownMenuItem>
                                         )}
