@@ -24,14 +24,14 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <UsersProvider>
-          <SchoolsProvider>
-            <AuthProvider>
-                {children}
-                <Toaster />
-            </AuthProvider>
-          </SchoolsProvider>
-        </UsersProvider>
+        <AuthProvider>
+          <UsersProvider>
+            <SchoolsProvider>
+              {children}
+              <Toaster />
+            </SchoolsProvider>
+          </UsersProvider>
+        </AuthProvider>
       </body>
     </html>
   );
