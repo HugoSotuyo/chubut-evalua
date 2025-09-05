@@ -65,29 +65,21 @@ function ResultadosPageContent() {
             return exams.filter(e => e.grade === user.grade);
         }
         if (user.role === 'Director') {
-            return exams.filter(e => allResults.some(r => r.examId === e.id && r.school === user.school));
+             return exams;
         }
         return exams;
-    }, [exams, user, allResults]);
+    }, [exams, user]);
 
     const filteredResults = useMemo(() => {
         if (!user) return [];
+
         let results = allResults;
 
-        if (user.role === "Director") {
-            results = results.filter(r => r.school === user.school);
-        } else if (user.role === "Docente") {
-            results = results.filter(r => 
-                r.school === user.school &&
-                r.grade === user.grade &&
-                r.course === user.course
-            );
-        }
-
+        // 1. Apply UI filters first
         if (appliedFilters.exam !== "all") {
             results = results.filter(r => r.examName === appliedFilters.exam);
         }
-        if (appliedFilters.school !== "all" && user.role !== "Director" && user.role !== "Docente") {
+        if (appliedFilters.school !== "all") {
             results = results.filter(r => r.school === appliedFilters.school);
         }
         if (appliedFilters.studentName) {
@@ -98,6 +90,17 @@ function ResultadosPageContent() {
         }
         if (searchTerm) {
             results = results.filter(r => r.studentName.toLowerCase().includes(searchTerm.toLowerCase()));
+        }
+
+        // 2. Then, apply role-based data visibility rules
+        if (user.role === "Director") {
+            results = results.filter(r => r.school === user.school);
+        } else if (user.role === "Docente") {
+            results = results.filter(r => 
+                r.school === user.school &&
+                r.grade === user.grade &&
+                r.course === user.course
+            );
         }
 
         return results;
