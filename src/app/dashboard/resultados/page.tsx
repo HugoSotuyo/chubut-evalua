@@ -61,13 +61,15 @@ function ResultadosPageContent() {
 
     const availableExams = useMemo(() => {
         if (user?.role === 'Docente') {
-            return exams.filter(e => e.grade === user.grade && e.status === 'Cerrado');
+            return exams.filter(e => e.grade === user.grade);
         }
         if (user?.role === 'Director') {
-            return exams.filter(e => e.status === 'Cerrado');
+            const directorSchool = user.school;
+            const examsInSchool = allResults.filter(r => r.school === directorSchool).map(r => r.examId);
+            return exams.filter(e => examsInSchool.includes(e.id));
         }
         return exams;
-    }, [exams, user]);
+    }, [exams, user, allResults]);
 
     const filteredResults = useMemo(() => {
         if (!user) return [];
@@ -368,3 +370,5 @@ export default function ResultadosPage() {
         </React.Suspense>
     )
 }
+
+    
