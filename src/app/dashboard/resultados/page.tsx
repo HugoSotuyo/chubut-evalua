@@ -60,15 +60,19 @@ function ResultadosPageContent() {
     }, []);
 
     const availableExams = useMemo(() => {
-        if (user?.role === 'Docente') {
-            return exams.filter(e => e.grade === user.grade);
+        if (!user) return [];
+        let relevantResults = allResults;
+        if (user.role === 'Docente') {
+            relevantResults = allResults.filter(r => 
+                r.school === user.school && r.grade === user.grade && r.course === user.course
+            );
+        } else if (user.role === 'Director') {
+            relevantResults = allResults.filter(r => r.school === user.school);
         }
-        if (user?.role === 'Director') {
-            const directorSchool = user.school;
-            const examsInSchool = allResults.filter(r => r.school === directorSchool).map(r => r.examId);
-            return exams.filter(e => examsInSchool.includes(e.id));
-        }
-        return exams;
+
+        const examIdsWithResults = [...new Set(relevantResults.map(r => r.examId))];
+        
+        return exams.filter(e => examIdsWithResults.includes(e.id));
     }, [exams, user, allResults]);
 
     const filteredResults = useMemo(() => {
@@ -370,5 +374,3 @@ export default function ResultadosPage() {
         </React.Suspense>
     )
 }
-
-    
