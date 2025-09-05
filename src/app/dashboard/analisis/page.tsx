@@ -36,36 +36,46 @@ function AnalisisPageContent() {
 
     const [appliedFilters, setAppliedFilters] = useState(filters);
     
+    // Effect to set initial filters based on user role
     useEffect(() => {
-        let initialFilters = {
-            district: "all",
-            school: "all",
-            grade: "all",
-            course: "all",
-            exam: "all",
-        };
+        if (user) {
+            let initialFilters = {
+                district: "all",
+                school: "all",
+                grade: "all",
+                course: "all",
+                exam: "all",
+            };
 
-        if (user?.role === 'Director') {
-            initialFilters.school = user.school;
-        } else if (user?.role === 'Docente') {
-            initialFilters.school = user.school;
-            initialFilters.grade = user.grade ?? 'all';
-            initialFilters.course = user.course ?? 'all';
+            if (user.role === 'Director') {
+                initialFilters.school = user.school;
+            } else if (user.role === 'Docente') {
+                initialFilters.school = user.school;
+                initialFilters.grade = user.grade ?? 'all';
+                initialFilters.course = user.course ?? 'all';
+            }
+            
+            setFilters(initialFilters);
+            setAppliedFilters(initialFilters);
         }
-        
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
+
+    // Effect to handle exam filter from URL
+    useEffect(() => {
         const examFromUrl = searchParams.get("exam");
         if (examFromUrl) {
             const decodedExamName = decodeURIComponent(examFromUrl);
             const examExists = exams.some(e => e.name === decodedExamName);
-            if (examExists) {
-                initialFilters.exam = decodedExamName;
+            if (examExists && decodedExamName !== filters.exam) {
+                 const newFilters = { ...filters, exam: decodedExamName };
+                 setFilters(newFilters);
+                 setAppliedFilters(newFilters);
             }
         }
-        
-        setFilters(initialFilters);
-        setAppliedFilters(initialFilters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user, searchParams, exams]);
+    }, [searchParams, exams]);
+
 
     const availableDistricts = useMemo(() => {
         return districts.sort();
