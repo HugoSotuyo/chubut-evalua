@@ -120,7 +120,7 @@ function ResultadosPageContent() {
         const headers = ["ID", "Alumno", "Examen", "Escuela", "Nota", "Estado"];
         const rows = filteredResults.map(res => [res.id, res.studentName, res.examName, res.school, res.score, res.status].join(';'));
         
-        const bom = "\uFEFF";
+        const bom = "﻿";
         const csvContent = bom + [headers.join(';'), ...rows].join("\n");
         
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
