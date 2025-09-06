@@ -25,7 +25,6 @@ export const navItems: NavItem[] = [
   { href: "/dashboard", icon: Home, label: "Inicio", roles: ["Evaluador", "Referente", "Administrador", "Director", "Docente"], showInMenu: true },
   { href: "/dashboard/examenes", icon: FileSignature, label: "Exámenes", roles: ["Evaluador", "Referente", "Director", "Docente"], showInMenu: true },
   { href: "/dashboard/resultados", icon: FileText, label: "Resultados", roles: ["Evaluador", "Referente", "Director", "Docente"], showInMenu: true },
-  { href: "/dashboard/resultados/cargar", icon: FileText, label: "Cargar Resultados", roles: ["Docente"], showInMenu: false },
   { href: "/dashboard/analisis", icon: BarChart2, label: "Análisis", roles: ["Evaluador", "Referente", "Administrador", "Director", "Docente"], showInMenu: true },
   { href: "/dashboard/usuarios", icon: Users, label: "Usuarios", roles: ["Evaluador", "Administrador", "Director"], showInMenu: true },
   { href: "/dashboard/escuelas", icon: Building, label: "Escuelas", roles: ["Evaluador", "Administrador", "Referente"], showInMenu: true },
