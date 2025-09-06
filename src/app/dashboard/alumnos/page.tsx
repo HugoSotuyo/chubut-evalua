@@ -73,6 +73,28 @@ export default function AlumnosPage() {
   };
 
   const { title: cardTitle, description: cardDescription } = getCardTexts();
+  
+  const handleExport = () => {
+    const headers = ["Nombre Completo", "DNI", "Grado", "Curso", "Escuela"];
+    const rows = studentList.map(student => 
+        [student.name, student.dni, student.grade, student.course, student.school].join(';')
+    );
+    
+    const bom = "\uFEFF";
+    const csvContent = bom + [headers.join(';'), ...rows].join("\n");
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "alumnos.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
 
   if (!user) {
     return <div>Cargando...</div>
@@ -88,7 +110,7 @@ export default function AlumnosPage() {
         <div className="flex items-center gap-2">
           {/* This button will now open a dialog managed within StudentActions */}
           <StudentActions /> 
-           <Button variant="outline" disabled> {/* Export would be a server action */}
+           <Button variant="outline" onClick={handleExport}>
             <FileDown className="mr-2 h-4 w-4" />
             Exportar Alumnos
           </Button>
