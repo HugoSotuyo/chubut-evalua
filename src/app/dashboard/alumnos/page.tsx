@@ -2,16 +2,15 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusCircle, User, FileDown } from "lucide-react";
+import { FileDown, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { getAuthUser } from "@/lib/auth"; // Mock server-side auth
+import { getAuthUser } from "@/lib/auth"; 
 import { getStudents } from "@/data/students";
 import { getResults } from "@/data/results";
 import { StudentActions } from "@/components/student-actions";
-import type { Student } from "@/context/students-context";
 
 export default async function AlumnosPage() {
-  const user = await getAuthUser(); // Pretend to get user from server session
+  const user = await getAuthUser(); 
   const allStudents = await getStudents();
   const allResults = await getResults();
 
@@ -19,25 +18,22 @@ export default async function AlumnosPage() {
     return <div>Error: Usuario no autenticado. Por favor, inicie sesión.</div>;
   }
   
-  const filteredStudents = allStudents.map(student => {
-    let studentList: Student[] = allStudents.map(student => ({
-        ...student,
-        results: allResults.filter(r => r.studentId === student.id)
-    }));
+  // Pre-process students to include their results
+  let studentList = allStudents.map(student => ({
+      ...student,
+      results: allResults.filter(r => r.studentId === student.id)
+  }));
 
-    if (user?.role === 'Docente') {
-      studentList = studentList.filter(student => 
-          student.school === user.school && 
-          student.grade === user.grade && 
-          student.course === user.course
-      );
-    } else if (user?.role === 'Director') {
-      studentList = studentList.filter(student => student.school === user.school);
-    }
-    
-    return studentList;
-  }).flat();
-
+  // Filter the processed list based on user role
+  if (user?.role === 'Docente') {
+    studentList = studentList.filter(student => 
+        student.school === user.school && 
+        student.grade === user.grade && 
+        student.course === user.course
+    );
+  } else if (user?.role === 'Director') {
+    studentList = studentList.filter(student => student.school === user.school);
+  }
 
   const getCardTexts = () => {
     switch (user.role) {
@@ -102,8 +98,8 @@ export default async function AlumnosPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredStudents.length > 0 ? (
-                filteredStudents.map((student) => (
+              {studentList.length > 0 ? (
+                studentList.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell className="font-medium">{student.name}</TableCell>
                     <TableCell>{student.dni}</TableCell>
@@ -133,4 +129,3 @@ export default async function AlumnosPage() {
     </div>
   );
 }
-
