@@ -14,9 +14,10 @@ import type { UserRole } from "@/lib/auth";
 interface ExamActionsProps {
   exam: Exam;
   userRole: UserRole;
+  onEdit: (exam: Exam) => void;
 }
 
-export function ExamActionsClient({ exam, userRole }: ExamActionsProps) {
+export function ExamActionsClient({ exam, userRole, onEdit }: ExamActionsProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -40,10 +41,6 @@ export function ExamActionsClient({ exam, userRole }: ExamActionsProps) {
       title: "Funcionalidad en Desarrollo",
       description: `El cambio de estado de exámenes estará disponible próximamente.`,
     });
-  };
-  
-  const handleEditExam = () => {
-    router.push(`/dashboard/examenes/editar/${exam.id}`);
   };
 
   const handleViewAnalysis = () => {
@@ -83,7 +80,7 @@ export function ExamActionsClient({ exam, userRole }: ExamActionsProps) {
             </>
           ) : (
             <>
-              <DropdownMenuItem onSelect={handleEditExam}>Editar</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => onEdit(exam)}>Editar</DropdownMenuItem>
               <DropdownMenuItem onSelect={handleViewAnalysis}>Ver Análisis</DropdownMenuItem>
               <DropdownMenuSeparator />
               {exam.fileDataUrl && (

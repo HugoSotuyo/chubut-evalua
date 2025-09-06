@@ -1,28 +1,31 @@
 
+"use client"
+
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FileDown, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { getAuthUser } from "@/lib/auth"; 
-import { getStudents } from "@/data/students";
-import { getResults } from "@/data/results";
+import { useAuth } from "@/context/auth-context"; 
+import { useStudents } from "@/context/students-context";
+import { useResults } from "@/context/results-context";
 import { StudentActionsClient } from "./student-actions-client";
 
-export default async function AlumnosPage() {
-  const user = await getAuthUser(); 
-  const allStudents = await getStudents();
-  const allResults = await getResults();
+export default function AlumnosPage() {
+  const { user } = useAuth(); 
+  const { students: allStudents } = useStudents();
+  const { results: allResults } = useResults();
 
   if (!user) {
     return <div>Cargando...</div>
   }
   
   // Pre-process students to include their results for badge counting
-  const studentsWithResults = allStudents.map(student => ({
+  const studentsWithResults = useMemo(() => allStudents.map(student => ({
       ...student,
       results: allResults.filter(r => r.studentId === student.id)
-  }));
+  })), [allStudents, allResults]);
 
 
   let studentList = studentsWithResults;

@@ -30,7 +30,7 @@ export function ExamsProvider({ children }: { children: ReactNode }) {
     setLoading(false);
 
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'chubut_evalua_exams') {
+      if (event.key === 'chubut_evalua_exams' || event.type === 'storage') {
         refreshExams();
       }
     };
@@ -40,23 +40,23 @@ export function ExamsProvider({ children }: { children: ReactNode }) {
     };
   }, [refreshExams]);
 
-  const addExam = async (examData: Omit<Exam, 'id' | 'status'>) => {
-    await addExamDb(examData);
+  const addExam = (examData: Omit<Exam, 'id' | 'status'>) => {
+    addExamDb(examData);
     refreshExams();
   };
 
-  const updateExam = async (updatedExamData: Omit<Exam, 'status'>) => {
-    await updateExamDb(updatedExamData);
+  const updateExam = (updatedExamData: Omit<Exam, 'status'>) => {
+    updateExamDb(updatedExamData);
     refreshExams();
   };
 
-  const deleteExam = async (examId: string) => {
-    await deleteExamDb(examId);
+  const deleteExam = (examId: string) => {
+    deleteExamDb(examId);
     refreshExams();
   };
 
-  const toggleExamStatus = async (examId: string) => {
-    await toggleExamStatusDb(examId);
+  const toggleExamStatus = (examId: string) => {
+    toggleExamStatusDb(examId);
     refreshExams();
   };
 
