@@ -18,21 +18,23 @@ export default async function AlumnosPage() {
     return <div>Error: Usuario no autenticado. Por favor, inicie sesión.</div>;
   }
   
-  // Pre-process students to include their results
-  let studentList = allStudents.map(student => ({
+  // Pre-process students to include their results for badge counting
+  const studentsWithResults = allStudents.map(student => ({
       ...student,
       results: allResults.filter(r => r.studentId === student.id)
   }));
 
   // Filter the processed list based on user role
-  if (user?.role === 'Docente') {
-    studentList = studentList.filter(student => 
+  let studentList = studentsWithResults;
+  
+  if (user.role === 'Docente') {
+    studentList = studentsWithResults.filter(student => 
         student.school === user.school && 
         student.grade === user.grade && 
         student.course === user.course
     );
-  } else if (user?.role === 'Director') {
-    studentList = studentList.filter(student => student.school === user.school);
+  } else if (user.role === 'Director') {
+    studentList = studentsWithResults.filter(student => student.school === user.school);
   }
 
   const getCardTexts = () => {
