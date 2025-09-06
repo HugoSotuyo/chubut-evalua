@@ -38,30 +38,26 @@ export default function AlumnosPage() {
   const router = useRouter();
 
   const filteredStudents = useMemo(() => {
-    if (!user) return [];
-
     let studentList = students.map(student => ({
         ...student,
         results: results.filter(r => r.studentId === student.id)
     }));
 
-    // 1. First, filter by search term if it exists
-    if (searchTerm) {
-      studentList = studentList.filter(student => 
-        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (student.dni && student.dni.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-    
-    // 2. Then, filter by role permissions
-    if (user.role === 'Docente') {
+    if (user?.role === 'Docente') {
       studentList = studentList.filter(student => 
           student.school === user.school && 
           student.grade === user.grade && 
           student.course === user.course
       );
-    } else if (user.role === 'Director') {
+    } else if (user?.role === 'Director') {
       studentList = studentList.filter(student => student.school === user.school);
+    }
+    
+    if (searchTerm) {
+      return studentList.filter(student => 
+        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (student.dni && student.dni.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
     }
     
     return studentList;

@@ -75,7 +75,18 @@ function ResultadosPageContent() {
 
         let results = allResults;
 
-        // 1. Apply UI filters first
+        // Role-based filtering first
+        if (user.role === "Director") {
+            results = results.filter(r => r.school === user.school);
+        } else if (user.role === "Docente") {
+            results = results.filter(r => 
+                r.school === user.school &&
+                r.grade === user.grade &&
+                r.course === user.course
+            );
+        }
+        
+        // Then apply UI filters
         if (appliedFilters.exam !== "all") {
             results = results.filter(r => r.examName === appliedFilters.exam);
         }
@@ -88,23 +99,14 @@ function ResultadosPageContent() {
         if (appliedFilters.status !== "all") {
             results = results.filter(r => r.status.toLowerCase() === appliedFilters.status);
         }
+
+        // Global search term
         if (searchTerm) {
             results = results.filter(r => r.studentName.toLowerCase().includes(searchTerm.toLowerCase()));
         }
 
-        // 2. Then, apply role-based data visibility rules
-        if (user.role === "Director") {
-            results = results.filter(r => r.school === user.school);
-        } else if (user.role === "Docente") {
-            results = results.filter(r => 
-                r.school === user.school &&
-                r.grade === user.grade &&
-                r.course === user.course
-            );
-        }
-
         return results;
-    }, [appliedFilters, searchTerm, user, allResults]);
+    }, [allResults, appliedFilters, searchTerm, user]);
 
     const handleFilterChange = <K extends keyof Filters>(filterName: K, value: Filters[K]) => {
         setFilters(prev => ({...prev, [filterName]: value}));
