@@ -1,216 +1,85 @@
 
-"use client"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getExams } from "@/data/exams";
+import { getAuthUser } from "@/lib/auth";
+import { PlusCircle } from "lucide-react";
+import Link from "next/link";
+import { ExamActions } from "@/components/exam-actions";
 
-import { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { MoreHorizontal, PlusCircle, Download } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import Link from "next/link"
-import { useExams } from "@/context/exams-context"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
-import type { Exam } from "@/context/exams-context";
-import { useAuth } from "@/context/auth-context";
-
-export default function ExamenesPage() {
-  const { exams, deleteExam, toggleExamStatus } = useExams();
-  const [isAlertOpen, setIsAlertOpen] = useState(false);
-  const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
-  const { toast } = useToast();
-  const router = useRouter();
-  const { user } = useAuth();
-
-  const filteredExams = useMemo(() => {
-    if (!user) return [];
-    let userExams = exams;
-
-    if (user.role === 'Docente') {
-      userExams = exams.filter(exam => exam.grade === user.grade && exam.status === 'Cerrado');
-    } else if (user.role === 'Director') {
-      userExams = exams.filter(exam => exam.status === 'Cerrado');
-    }
-    
-    return userExams;
-  }, [exams, user]);
-
-  const handleOpenDeleteDialog = (exam: Exam) => {
-    setSelectedExam(exam);
-    setIsAlertOpen(true);
-  };
-
-  const handleDeleteExam = () => {
-    if (!selectedExam) return;
-    deleteExam(selectedExam.id);
-    toast({
-        title: "Examen Eliminado",
-        description: `El examen "${selectedExam.name}" ha sido eliminado correctamente.`,
-    });
-    setIsAlertOpen(false);
-    setSelectedExam(null);
-  };
-
-  const handleToggleStatus = (exam: Exam) => {
-    toggleExamStatus(exam.id);
-    toast({
-      title: "Estado del Examen Actualizado",
-      description: `El examen "${exam.name}" ahora está ${exam.status === "Abierto" ? "Cerrado" : "Abierto"}.`,
-    });
-  };
-  
-  const handleEditExam = (exam: Exam) => {
-    router.push(`/dashboard/examenes/editar/${exam.id}`);
-  };
-
-  const handleViewAnalysis = (exam: Exam) => {
-    router.push(`/dashboard/analisis?exam=${encodeURIComponent(exam.name)}`);
-  };
-
-  const handleDownloadFile = (exam: Exam) => {
-    if (!exam.fileDataUrl || !exam.fileName) return;
-    const link = document.createElement("a");
-    link.href = exam.fileDataUrl;
-    link.download = exam.fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+export default async function ExamenesPage() {
+  const user = await getAuthUser();
+  const exams = await getExams();
 
   if (!user) {
     return <div>Cargando...</div>;
+  }
+
+  let filteredExams = exams;
+  if (user.role === 'Docente') {
+    filteredExams = exams.filter(exam => exam.grade === user.grade && exam.status === 'Cerrado');
+  } else if (user.role === 'Director') {
+    filteredExams = exams.filter(exam => exam.status === 'Cerrado');
   }
 
   const userCanCreateExams = !["Director", "Docente"].includes(user.role);
 
   return (
     <div className="flex flex-col gap-8">
-        <div className="flex items-center justify-between">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight font-headline">Gestión de Exámenes</h1>
-                <p className="text-muted-foreground">Crea, edita y administra las evaluaciones del sistema.</p>
-            </div>
-            {userCanCreateExams && (
-                <Button asChild>
-                    <Link href="/dashboard/examenes/crear">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Crear Examen
-                    </Link>
-                </Button>
-            )}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight font-headline">Gestión de Exámenes</h1>
+          <p className="text-muted-foreground">Crea, edita y administra las evaluaciones del sistema.</p>
         </div>
-        <Card>
-            <CardHeader>
-                <CardTitle>Exámenes Existentes</CardTitle>
-                <CardDescription>Lista de todos los exámenes cargados en el sistema.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Título del Examen</TableHead>
-                            <TableHead>Tema/Materia</TableHead>
-                            <TableHead>Grado</TableHead>
-                            <TableHead>Estado</TableHead>
-                            <TableHead>Fecha de Creación</TableHead>
-                            <TableHead>
-                                <span className="sr-only">Acciones</span>
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {filteredExams.map((exam) => (
-                        <TableRow key={exam.id}>
-                            <TableCell className="font-medium">{exam.name}</TableCell>
-                            <TableCell>{exam.tema}</TableCell>
-                            <TableCell>{exam.grade}</TableCell>
-                            <TableCell>
-                                <Badge variant={exam.status === "Cerrado" ? "default" : "destructive"}>{exam.status}</Badge>
-                            </TableCell>
-                            <TableCell>{exam.created}</TableCell>
-                            <TableCell>
-                                {user.role === 'Director' || user.role === 'Docente' ? (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button aria-haspopup="true" size="icon" variant="ghost">
-                                                <MoreHorizontal className="h-4 w-4" />
-                                                <span className="sr-only">Toggle menu</span>
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                            <DropdownMenuItem onSelect={() => handleViewAnalysis(exam)}>Ver Análisis</DropdownMenuItem>
-                                             {exam.fileDataUrl && (
-                                                <DropdownMenuItem onSelect={() => handleDownloadFile(exam)}>
-                                                    <Download className="mr-2 h-4 w-4"/>
-                                                    Descargar Examen
-                                                </DropdownMenuItem>
-                                            )}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                ) : (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button aria-haspopup="true" size="icon" variant="ghost">
-                                                <MoreHorizontal className="h-4 w-4" />
-                                                <span className="sr-only">Toggle menu</span>
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                            <DropdownMenuItem onSelect={() => handleEditExam(exam)}>Editar</DropdownMenuItem>
-                                            <DropdownMenuItem onSelect={() => handleViewAnalysis(exam)}>Ver Análisis</DropdownMenuItem>
-                                            <DropdownMenuSeparator />
-                                            {exam.fileDataUrl && (
-                                                <DropdownMenuItem onSelect={() => handleDownloadFile(exam)}>
-                                                    <Download className="mr-2 h-4 w-4"/>
-                                                    Descargar Examen
-                                                </DropdownMenuItem>
-                                            )}
-                                            <DropdownMenuItem onSelect={() => handleToggleStatus(exam)}>
-                                                {exam.status === "Abierto" ? "Cerrar Examen" : "Abrir Examen"}
-                                            </DropdownMenuItem>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(exam)}>
-                                                Eliminar
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                )}
-                            </TableCell>
-                        </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
-
-         <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>¿Estás seguro de que deseas eliminar este examen?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Esta acción no se puede deshacer. Se eliminará permanentemente el examen
-                        <span className="font-bold"> {selectedExam?.name}</span>.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setSelectedExam(null)}>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteExam}>Confirmar</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        {userCanCreateExams && (
+          <Button asChild>
+            <Link href="/dashboard/examenes/crear">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Crear Examen
+            </Link>
+          </Button>
+        )}
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Exámenes Existentes</CardTitle>
+          <CardDescription>Lista de todos los exámenes cargados en el sistema.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Título del Examen</TableHead>
+                <TableHead>Tema/Materia</TableHead>
+                <TableHead>Grado</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Fecha de Creación</TableHead>
+                <TableHead>
+                  <span className="sr-only">Acciones</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredExams.map((exam) => (
+                <TableRow key={exam.id}>
+                  <TableCell className="font-medium">{exam.name}</TableCell>
+                  <TableCell>{exam.tema}</TableCell>
+                  <TableCell>{exam.grade}</TableCell>
+                  <TableCell>
+                    <Badge variant={exam.status === "Cerrado" ? "default" : "destructive"}>{exam.status}</Badge>
+                  </TableCell>
+                  <TableCell>{exam.created}</TableCell>
+                  <TableCell>
+                    <ExamActions exam={exam} userRole={user.role} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }
