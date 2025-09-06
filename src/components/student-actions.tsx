@@ -2,7 +2,6 @@
 "use client"
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, PlusCircle, Trash2, FileSignature } from "lucide-react";
@@ -21,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useStudents } from "@/context/students-context";
 import { useAuth } from "@/context/auth-context";
 import type { Student } from "@/context/students-context";
+import { CargarResultadosDialog } from "./cargar-resultados-dialog";
 
 interface StudentActionsProps {
   student?: Student;
@@ -29,10 +29,10 @@ interface StudentActionsProps {
 export function StudentActions({ student }: StudentActionsProps) {
   const { students, addStudent, deleteStudent } = useStudents();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isCargarResultadosOpen, setIsCargarResultadosOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
-  const router = useRouter();
 
   const handleOpenForm = (studentToEdit: Student | null = null) => {
     setEditingStudent(studentToEdit);
@@ -101,10 +101,6 @@ export function StudentActions({ student }: StudentActionsProps) {
     handleCloseForm();
   };
 
-  const handleCargarExamen = (studentId: string) => {
-    router.push(`/dashboard/resultados/cargar/${studentId}`);
-  };
-
   // Render "Add Student" button if no student prop
   if (!student) {
     return (
@@ -130,7 +126,7 @@ export function StudentActions({ student }: StudentActionsProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-          <DropdownMenuItem onSelect={() => handleCargarExamen(student.id)}>
+          <DropdownMenuItem onSelect={() => setIsCargarResultadosOpen(true)}>
               <FileSignature className="mr-2 h-4 w-4" />
               Cargar Examen
           </DropdownMenuItem>
@@ -147,6 +143,13 @@ export function StudentActions({ student }: StudentActionsProps) {
         </DropdownMenuContent>
       </DropdownMenu>
       <FormDialog isOpen={isFormOpen} onOpenChange={setIsFormOpen} onSave={handleSaveStudent} editingStudent={editingStudent} onClose={handleCloseForm} />
+      {isCargarResultadosOpen && (
+        <CargarResultadosDialog
+          student={student}
+          isOpen={isCargarResultadosOpen}
+          onOpenChange={setIsCargarResultadosOpen}
+        />
+      )}
     </>
   );
 }
