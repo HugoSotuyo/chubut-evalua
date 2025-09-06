@@ -32,13 +32,23 @@ export default function AlumnosPage() {
     let filteredList = studentsWithResults;
   
     if (user.role === 'Docente') {
-      filteredList = studentsWithResults.filter(student => 
-          student.school === user.school && 
-          student.grade === user.grade && 
-          student.course === user.course
-      );
+      // Ensure all required properties exist before filtering
+      if (user.school && user.grade && user.course) {
+        filteredList = studentsWithResults.filter(student => 
+            student.school === user.school && 
+            student.grade === user.grade && 
+            student.course === user.course
+        );
+      } else {
+        // If properties are missing, return an empty list to be safe
+        return [];
+      }
     } else if (user.role === 'Director') {
-      filteredList = studentsWithResults.filter(student => student.school === user.school);
+       if (user.school) {
+        filteredList = studentsWithResults.filter(student => student.school === user.school);
+       } else {
+         return [];
+       }
     }
 
     return filteredList;
