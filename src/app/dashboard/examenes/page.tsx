@@ -1,32 +1,37 @@
 
+"use client"
+
+import { useState, useMemo } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getExams } from "@/data/exams";
-import { getAuthUser } from "@/lib/auth";
+import { useExams } from "@/context/exams-context";
+import { useAuth } from "@/context/auth-context";
 import { PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { ExamActionsClient } from "./exam-actions-client";
 
-export default async function ExamenesPage() {
-  const user = await getAuthUser();
-  const allExams = await getExams();
+export default function ExamenesPage() {
+  const { user } = useAuth();
+  const { exams: allExams } = useExams();
+
+  const filteredExams = useMemo(() => {
+    if (!user) return [];
+    return allExams.filter(exam => {
+        if (user.role === 'Docente') {
+            return exam.grade === user.grade && exam.status === 'Cerrado';
+        }
+        if (user.role === 'Director') {
+            return exam.status === 'Cerrado';
+        }
+        return true;
+    });
+  }, [allExams, user]);
 
   if (!user) {
     return <div>Cargando...</div>;
   }
-  
-  const filteredExams = allExams.filter(exam => {
-      if (!user) return false;
-      if (user.role === 'Docente') {
-          return exam.grade === user.grade && exam.status === 'Cerrado';
-      }
-      if (user.role === 'Director') {
-          return exam.status === 'Cerrado';
-      }
-      return true;
-  });
 
   const userCanCreateExams = !["Director", "Docente"].includes(user.role);
 

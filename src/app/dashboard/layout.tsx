@@ -10,6 +10,9 @@ import { AuthProvider, useAuth } from "@/context/auth-context";
 import { SearchProvider } from "@/context/search-context";
 import { SchoolsProvider } from "@/context/schools-context";
 import { UsersProvider } from "@/context/users-context";
+import { StudentsProvider } from "@/context/students-context";
+import { ResultsProvider } from "@/context/results-context";
+import { ExamsProvider } from "@/context/exams-context";
 
 function DashboardLayoutContent({
     children,
@@ -60,13 +63,19 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthProvider>
-        <UsersProvider>
-          <SchoolsProvider>
-            <SearchProvider>
-              <DashboardLayoutContent>{children}</DashboardLayoutContent>
-            </SearchProvider>
-          </SchoolsProvider>
-        </UsersProvider>
+      <UsersProvider>
+        <SchoolsProvider>
+          <SearchProvider>
+            <ExamsProvider>
+              <StudentsProvider>
+                <ResultsProvider>
+                  <DashboardLayoutContent>{children}</DashboardLayoutContent>
+                </ResultsProvider>
+              </StudentsProvider>
+            </ExamsProvider>
+          </SearchProvider>
+        </SchoolsProvider>
+      </UsersProvider>
     </AuthProvider>
   );
 }

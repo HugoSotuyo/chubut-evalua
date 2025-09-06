@@ -1,31 +1,9 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-
-export type Question = {
-  consigna: string;
-  respuesta: string;
-  puntaje: number;
-};
-
-export type Exam = {
-    id: string;
-    name: string;
-    tema: string;
-    grade: string;
-    created: string;
-    status: "Abierto" | "Cerrado";
-    questions: Question[];
-    fileDataUrl?: string;
-    fileName?: string;
-};
-
-const initialExams: Exam[] = [
-    { id: '1', name: 'Diagnóstico Matemática 2024', tema: 'Matemática', grade: '3er Grado', created: '2024-05-10', status: 'Cerrado', questions: [{ consigna: '2+2', respuesta: '4', puntaje: 10 }, { consigna: '5*5', respuesta: '25', puntaje: 15 }] },
-    { id: '2', name: 'Prácticas del Lenguaje - 1er Trimestre', tema: 'Lengua', grade: '3er Grado', created: '2024-04-22', status: 'Cerrado', questions: [{ consigna: 'Capital de Argentina', respuesta: 'Buenos Aires', puntaje: 10 }] },
-    { id: '3', name: 'Ciencias Naturales - Seres Vivos', tema: 'Naturales', grade: '5to Grado', created: '2024-06-01', status: 'Abierto', questions: [{ consigna: 'Planeta Tierra es el...', respuesta: '3ro', puntaje: 10 }] },
-];
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { getExamsSync, saveExamsSync, addExam as addExamDb, updateExam as updateExamDb, deleteExam as deleteExamDb, toggleExamStatus as toggleExamStatusDb } from '@/data/exams';
+import type { Exam } from '@/lib/types';
 
 interface ExamsContextType {
   exams: Exam[];
@@ -38,65 +16,48 @@ interface ExamsContextType {
 
 const ExamsContext = createContext<ExamsContextType | undefined>(undefined);
 
-const EXAMS_STORAGE_KEY = 'chubut_evalua_exams';
-
 export function ExamsProvider({ children }: { children: ReactNode }) {
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    try {
-      const storedExams = localStorage.getItem(EXAMS_STORAGE_KEY);
-      if (storedExams) {
-        setExams(JSON.parse(storedExams));
-      } else {
-        setExams(initialExams);
-        localStorage.setItem(EXAMS_STORAGE_KEY, JSON.stringify(initialExams));
-      }
-    } catch (error) {
-      console.error("Failed to access localStorage for exams:", error);
-      setExams(initialExams);
-    }
-    setLoading(false);
+  const refreshExams = useCallback(() => {
+    const data = getExamsSync();
+    setExams(data);
   }, []);
 
-  const updateExamsInStateAndStorage = (newExams: Exam[]) => {
-    setExams(newExams);
-    try {
-      localStorage.setItem(EXAMS_STORAGE_KEY, JSON.stringify(newExams));
-    } catch (error) {
-      console.error("Failed to save exams to localStorage:", error);
-    }
-  };
+  useEffect(() => {
+    refreshExams();
+    setLoading(false);
 
-  const addExam = (examData: Omit<Exam, 'id' | 'status'>) => {
-    const newExam: Exam = {
-      ...examData,
-      id: (Math.max(...exams.map(e => parseInt(e.id, 10)), 0) + 1).toString(),
-      status: "Abierto",
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'chubut_evalua_exams') {
+        refreshExams();
+      }
     };
-    updateExamsInStateAndStorage([...exams, newExam]);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [refreshExams]);
+
+  const addExam = async (examData: Omit<Exam, 'id' | 'status'>) => {
+    await addExamDb(examData);
+    refreshExams();
   };
 
-  const updateExam = (updatedExamData: Omit<Exam, 'status'>) => {
-    const newExams = exams.map(exam =>
-      exam.id === updatedExamData.id ? { ...exam, ...updatedExamData } : exam
-    );
-    updateExamsInStateAndStorage(newExams);
+  const updateExam = async (updatedExamData: Omit<Exam, 'status'>) => {
+    await updateExamDb(updatedExamData);
+    refreshExams();
   };
 
-  const deleteExam = (examId: string) => {
-    const newExams = exams.filter(exam => exam.id !== examId);
-    updateExamsInStateAndStorage(newExams);
+  const deleteExam = async (examId: string) => {
+    await deleteExamDb(examId);
+    refreshExams();
   };
 
-  const toggleExamStatus = (examId: string) => {
-    const newExams = exams.map(exam =>
-      exam.id === examId
-        ? { ...exam, status: exam.status === "Abierto" ? "Cerrado" : "Abierto" }
-        : exam
-    );
-    updateExamsInStateAndStorage(newExams);
+  const toggleExamStatus = async (examId: string) => {
+    await toggleExamStatusDb(examId);
+    refreshExams();
   };
 
   return (

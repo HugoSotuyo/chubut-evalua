@@ -5,7 +5,7 @@ import { useEffect } from "react"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import { CalendarIcon, PlusCircle, Trash2, Save, ArrowLeft, Paperclip } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -21,6 +21,7 @@ import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useExams } from "@/context/exams-context"
 import type { Exam, User } from "@/lib/types"
 
 const questionSchema = z.object({
@@ -53,9 +54,8 @@ const fileToDataUrl = (file: File): Promise<string> => {
 
 const parseDate = (dateString: string | undefined): Date => {
     if (!dateString) return new Date();
-    const date = new Date(dateString);
-    const userTimezoneOffset = date.getTimezoneOffset() * 60000;
-    return new Date(date.getTime() + userTimezoneOffset);
+    // Handles ISO strings like "2024-05-10" by parsing them as UTC
+    return parseISO(dateString);
 }
 
 interface EditFormProps {
@@ -66,6 +66,7 @@ interface EditFormProps {
 export default function EditForm({ exam: examToEdit, user }: EditFormProps) {
   const { toast } = useToast()
   const router = useRouter()
+  const { updateExam } = useExams();
   
   useEffect(() => {
     if (user && user.role === 'Docente') {
@@ -97,12 +98,31 @@ export default function EditForm({ exam: examToEdit, user }: EditFormProps) {
   })
 
   const onSubmit = async (data: ExamFormValues) => {
-    console.log("Form data submitted:", data);
+    let fileDataUrl: string | undefined = examToEdit.fileDataUrl;
+    let fileName: string | undefined = examToEdit.fileName;
+
+    if (data.file && data.file.length > 0) {
+        const file = data.file[0];
+        fileDataUrl = await fileToDataUrl(file);
+        fileName = file.name;
+    }
+
+    updateExam({
+        id: examToEdit.id,
+        name: data.titulo,
+        tema: data.tema,
+        grade: data.grade,
+        created: format(data.fechaCarga, "yyyy-MM-dd"),
+        questions: data.questions,
+        fileDataUrl,
+        fileName,
+    });
+
     toast({
-      title: "Funcionalidad en Desarrollo",
-      description: "La actualización de exámenes se implementará próximamente.",
+      title: "Examen Actualizado",
+      description: "Los cambios se han guardado correctamente.",
     })
-    // router.push("/dashboard/examenes")
+    router.push("/dashboard/examenes")
   }
 
   if (!user || !examToEdit || user.role === 'Docente') {
