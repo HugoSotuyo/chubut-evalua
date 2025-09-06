@@ -1,10 +1,8 @@
 import CargarResultadosForm from './cargar-resultados-form';
 
-export const dynamicParams = true;
-
-// This function is required by Next.js for static exports of dynamic routes.
-// We return an empty array because the actual rendering is dynamic on the client side.
 export async function generateStaticParams() {
+  // Devolvemos un array vacío para indicar que las páginas se generarán
+  // dinámicamente en el cliente y no durante la compilación estática.
   return [];
 }
 
