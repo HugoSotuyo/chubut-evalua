@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, PlusCircle, Trash2, FileSignature } from "lucide-react";
+import { MoreHorizontal, PlusCircle, Trash2, FileSignature, FileDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,14 +18,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-context";
-import { CargarResultadosDialog } from "./cargar-resultados-dialog";
+import { CargarResultadosDialog } from "@/components/cargar-resultados-dialog";
 import type { Student } from "@/lib/types";
 
 interface StudentActionsProps {
   student?: Student;
+  studentList?: Student[];
 }
 
-export function StudentActions({ student }: StudentActionsProps) {
+export function StudentActionsClient({ student, studentList = [] }: StudentActionsProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCargarResultadosOpen, setIsCargarResultadosOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -61,14 +62,44 @@ export function StudentActions({ student }: StudentActionsProps) {
     });
     handleCloseForm();
   };
+  
+  const handleExport = () => {
+    if (!studentList || studentList.length === 0) {
+        toast({ title: "No hay datos", description: "No hay alumnos para exportar."});
+        return;
+    }
+    const headers = ["Nombre Completo", "DNI", "Grado", "Curso"];
+    const rows = studentList.map(s => 
+        [s.name, s.dni, s.grade, s.course].join(';')
+    );
+    
+    const bom = "\uFEFF";
+    const csvContent = bom + [headers.join(';'), ...rows].join("\n");
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
 
-  // Render "Add Student" button if no student prop
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "alumnos.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+
+  // Render "Add Student" and "Export" buttons if no student prop
   if (!student) {
     return (
       <>
         <Button onClick={() => handleOpenForm()}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Agregar Alumno
+        </Button>
+        <Button onClick={handleExport} variant="outline">
+            <FileDown className="mr-2 h-4 w-4" />
+            Exportar Alumnos
         </Button>
         <FormDialog isOpen={isFormOpen} onOpenChange={setIsFormOpen} onSave={handleSaveStudent} editingStudent={editingStudent} onClose={handleCloseForm} />
       </>

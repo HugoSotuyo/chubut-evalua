@@ -16,7 +16,7 @@ interface ExamActionsProps {
   userRole: UserRole;
 }
 
-export function ExamActions({ exam, userRole }: ExamActionsProps) {
+export function ExamActionsClient({ exam, userRole }: ExamActionsProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isAlertOpen, setIsAlertOpen] = useState(false);
