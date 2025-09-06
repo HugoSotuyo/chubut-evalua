@@ -11,6 +11,8 @@ import { ExamsProvider } from "@/context/exams-context";
 import { StudentsProvider } from "@/context/students-context";
 import { ResultsProvider } from "@/context/results-context";
 import { SearchProvider } from "@/context/search-context";
+import { SchoolsProvider } from "@/context/schools-context";
+import { UsersProvider } from "@/context/users-context";
 
 function DashboardLayoutContent({
     children,
@@ -61,15 +63,19 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthProvider>
-        <SearchProvider>
-          <ExamsProvider>
-            <StudentsProvider>
-              <ResultsProvider>
-                <DashboardLayoutContent>{children}</DashboardLayoutContent>
-              </ResultsProvider>
-            </StudentsProvider>
-          </ExamsProvider>
-        </SearchProvider>
+        <UsersProvider>
+          <SchoolsProvider>
+            <SearchProvider>
+              <ExamsProvider>
+                <StudentsProvider>
+                  <ResultsProvider>
+                    <DashboardLayoutContent>{children}</DashboardLayoutContent>
+                  </ResultsProvider>
+                </StudentsProvider>
+              </ExamsProvider>
+            </SearchProvider>
+          </SchoolsProvider>
+        </UsersProvider>
     </AuthProvider>
   );
 }

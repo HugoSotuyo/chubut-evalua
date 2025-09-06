@@ -207,4 +207,3 @@ function FormDialog({ isOpen, onOpenChange, onSave, editingStudent, onClose }: {
     </Dialog>
   );
 }
-

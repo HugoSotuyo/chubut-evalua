@@ -9,7 +9,7 @@ type NewUserPayload = Omit<User, 'id' | 'status'>;
 
 interface UsersContextType {
   users: User[];
-  addUser: (userData: NewUserPayload) => Promise<{ success: boolean; message: string; }>;
+  addUser: (userData: NewUserPayload) => Promise<{ success: boolean; message: string; newUser?: User }>;
   deleteUser: (userId: string) => Promise<void>;
   enableUser: (userId: string) => Promise<void>;
   loading: boolean;

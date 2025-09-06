@@ -42,7 +42,7 @@ import { SidebarTrigger } from "./ui/sidebar";
 import { useSearch } from "@/context/search-context";
 import { usePathname } from "next/navigation";
 import { RoleIcon } from "./role-icon";
-import { useAuth, mockLogout } from "@/context/auth-context";
+import { mockLogout } from "@/context/auth-context";
 import type { User } from "@/context/users-context";
 
 interface DashboardHeaderProps {

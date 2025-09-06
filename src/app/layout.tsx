@@ -3,8 +3,6 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/context/auth-context';
-import { UsersProvider } from '@/context/users-context';
-import { SchoolsProvider } from '@/context/schools-context';
 
 export const metadata: Metadata = {
   title: 'Chubut evalúa',
@@ -25,12 +23,8 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
-          <UsersProvider>
-            <SchoolsProvider>
-              {children}
-              <Toaster />
-            </SchoolsProvider>
-          </UsersProvider>
+            {children}
+            <Toaster />
         </AuthProvider>
       </body>
     </html>
