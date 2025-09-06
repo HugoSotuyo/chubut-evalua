@@ -1,4 +1,3 @@
-
 import EditExamForm from "./edit-exam-form";
 
 // This is required for static export with dynamic routes.

@@ -1,4 +1,3 @@
-
 import CargarResultadosForm from "./cargar-resultados-form";
 
 // This is required for static export with dynamic routes.
