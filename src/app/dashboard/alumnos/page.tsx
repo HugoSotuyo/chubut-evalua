@@ -1,43 +1,58 @@
 
+"use client";
+
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FileDown, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { getAuthUser } from "@/lib/auth"; 
-import { getStudents } from "@/data/students";
-import { getResults } from "@/data/results";
+import { useAuth } from "@/context/auth-context"; 
+import { useStudents } from "@/context/students-context";
+import { useResults } from "@/context/results-context";
 import { StudentActions } from "@/components/student-actions";
 
-export default async function AlumnosPage() {
-  const user = await getAuthUser(); 
-  const allStudents = await getStudents();
-  const allResults = await getResults();
+export default function AlumnosPage() {
+  const { user } = useAuth(); 
+  const { students: allStudents } = useStudents();
+  const { results: allResults } = useResults();
 
-  if (!user) {
-    return <div>Error: Usuario no autenticado. Por favor, inicie sesión.</div>;
-  }
-  
   // Pre-process students to include their results for badge counting
-  const studentsWithResults = allStudents.map(student => ({
-      ...student,
-      results: allResults.filter(r => r.studentId === student.id)
-  }));
+  const studentsWithResults = useMemo(() => {
+    return allStudents.map(student => ({
+        ...student,
+        results: allResults.filter(r => r.studentId === student.id)
+    }));
+  }, [allStudents, allResults]);
 
-  // Filter the processed list based on user role
-  let studentList = studentsWithResults;
+
+  const studentList = useMemo(() => {
+    if (!user) return [];
+
+    let filteredList = studentsWithResults;
   
-  if (user.role === 'Docente') {
-    studentList = studentsWithResults.filter(student => 
-        student.school === user.school && 
-        student.grade === user.grade && 
-        student.course === user.course
-    );
-  } else if (user.role === 'Director') {
-    studentList = studentsWithResults.filter(student => student.school === user.school);
-  }
+    if (user.role === 'Docente') {
+      filteredList = studentsWithResults.filter(student => 
+          student.school === user.school && 
+          student.grade === user.grade && 
+          student.course === user.course
+      );
+    } else if (user.role === 'Director') {
+      filteredList = studentsWithResults.filter(student => student.school === user.school);
+    }
+
+    return filteredList;
+
+  }, [studentsWithResults, user]);
+
 
   const getCardTexts = () => {
+    if (!user) {
+        return {
+            title: 'Alumnos',
+            description: 'Lista de alumnos del sistema.'
+        };
+    }
     switch (user.role) {
       case 'Docente':
         return {
@@ -59,6 +74,9 @@ export default async function AlumnosPage() {
 
   const { title: cardTitle, description: cardDescription } = getCardTexts();
 
+  if (!user) {
+    return <div>Cargando...</div>
+  }
 
   return (
     <div className="flex flex-col gap-8">
