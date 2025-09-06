@@ -38,6 +38,8 @@ export default function AlumnosPage() {
   const router = useRouter();
 
   const filteredStudents = useMemo(() => {
+    if (!user) return []; // <-- FIX: Prevent rendering with incomplete data
+      
     let studentList = students.map(student => ({
         ...student,
         results: results.filter(r => r.studentId === student.id)
