@@ -7,9 +7,6 @@ import { DashboardNav } from "@/components/dashboard-nav";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
 import { GraduationCap } from "lucide-react";
 import { AuthProvider, useAuth } from "@/context/auth-context";
-import { ExamsProvider } from "@/context/exams-context";
-import { StudentsProvider } from "@/context/students-context";
-import { ResultsProvider } from "@/context/results-context";
 import { SearchProvider } from "@/context/search-context";
 import { SchoolsProvider } from "@/context/schools-context";
 import { UsersProvider } from "@/context/users-context";
@@ -66,13 +63,7 @@ export default function DashboardLayout({
         <UsersProvider>
           <SchoolsProvider>
             <SearchProvider>
-              <ExamsProvider>
-                <StudentsProvider>
-                  <ResultsProvider>
-                    <DashboardLayoutContent>{children}</DashboardLayoutContent>
-                  </ResultsProvider>
-                </StudentsProvider>
-              </ExamsProvider>
+              <DashboardLayoutContent>{children}</DashboardLayoutContent>
             </SearchProvider>
           </SchoolsProvider>
         </UsersProvider>

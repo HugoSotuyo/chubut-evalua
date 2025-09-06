@@ -7,9 +7,8 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { MoreHorizontal, Download } from "lucide-react";
-import { useExams } from "@/context/exams-context";
 import { useToast } from "@/hooks/use-toast";
-import type { Exam } from "@/context/exams-context";
+import type { Exam } from "@/lib/types";
 import type { UserRole } from "@/lib/auth";
 
 interface ExamActionsProps {
@@ -20,7 +19,6 @@ interface ExamActionsProps {
 export function ExamActions({ exam, userRole }: ExamActionsProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const { deleteExam, toggleExamStatus } = useExams();
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   const handleDeleteClick = () => {
@@ -28,19 +26,19 @@ export function ExamActions({ exam, userRole }: ExamActionsProps) {
   };
 
   const handleConfirmDelete = () => {
-    deleteExam(exam.id);
+    // deleteExam(exam.id);
     toast({
-        title: "Examen Eliminado",
-        description: `El examen "${exam.name}" ha sido eliminado correctamente.`,
+        title: "Funcionalidad en Desarrollo",
+        description: `La eliminación de exámenes estará disponible próximamente.`,
     });
     setIsAlertOpen(false);
   };
 
   const handleToggleStatus = () => {
-    toggleExamStatus(exam.id);
+    // toggleExamStatus(exam.id);
     toast({
-      title: "Estado del Examen Actualizado",
-      description: `El examen "${exam.name}" ahora está ${exam.status === "Abierto" ? "Cerrado" : "Abierto"}.`,
+      title: "Funcionalidad en Desarrollo",
+      description: `El cambio de estado de exámenes estará disponible próximamente.`,
     });
   };
   

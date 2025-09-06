@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, PlusCircle, Trash2, FileSignature } from "lucide-react";
@@ -17,17 +17,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useStudents } from "@/context/students-context";
 import { useAuth } from "@/context/auth-context";
-import type { Student } from "@/context/students-context";
 import { CargarResultadosDialog } from "./cargar-resultados-dialog";
+import type { Student } from "@/lib/types";
 
 interface StudentActionsProps {
   student?: Student;
 }
 
 export function StudentActions({ student }: StudentActionsProps) {
-  const { students, addStudent, deleteStudent } = useStudents();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCargarResultadosOpen, setIsCargarResultadosOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -45,13 +43,9 @@ export function StudentActions({ student }: StudentActionsProps) {
   };
 
   const handleDeleteStudent = (studentId: string) => {
-    const studentToDelete = students.find(s => s.id === studentId);
-    if (!studentToDelete) return;
-
-    deleteStudent(studentId);
     toast({
-      title: "Alumno Eliminado",
-      description: `El alumno ${studentToDelete.name} ha sido eliminado.`,
+      title: "Funcionalidad en Desarrollo",
+      description: `La eliminación de alumnos estará disponible próximamente.`,
     });
   };
 
@@ -61,43 +55,10 @@ export function StudentActions({ student }: StudentActionsProps) {
         toast({ title: "Error", description: "No se ha podido identificar al usuario.", variant: "destructive"});
         return;
     }
-
-    const formData = new FormData(e.currentTarget);
-    const studentData = {
-      name: formData.get("name") as string,
-      dni: formData.get("dni") as string,
-    };
-    
-    if (!editingStudent && students.some(s => s.dni === studentData.dni)) {
-      toast({
-        title: "DNI Duplicado",
-        description: `Ya existe un alumno con el DNI ${studentData.dni}.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (editingStudent) {
-      // TODO: Implement updateStudent in context
-      console.log("Updating student:", { ...editingStudent, ...studentData });
-      toast({
-        title: "Alumno Actualizado (Simulación)",
-        description: `Los datos de ${studentData.name} han sido actualizados.`,
-      });
-    } else {
-      addStudent({
-        name: studentData.name,
-        dni: studentData.dni,
-        school: user.school,
-        grade: user.grade || "Sin Grado",
-        course: user.course || "Sin Curso",
-      });
-      toast({
-        title: "Alumno Agregado",
-        description: `${studentData.name} ha sido agregado a la lista.`,
-      });
-    }
-
+    toast({
+      title: "Funcionalidad en Desarrollo",
+      description: `El guardado de alumnos estará disponible próximamente.`,
+    });
     handleCloseForm();
   };
 
@@ -156,6 +117,17 @@ export function StudentActions({ student }: StudentActionsProps) {
 
 // Separate dialog component to keep the main component cleaner
 function FormDialog({ isOpen, onOpenChange, onSave, editingStudent, onClose }: { isOpen: boolean, onOpenChange: (open: boolean) => void, onSave: (e: React.FormEvent<HTMLFormElement>) => void, editingStudent: Student | null, onClose: () => void }) {
+  const [name, setName] = useState(editingStudent?.name || "");
+  const [dni, setDni] = useState(editingStudent?.dni || "");
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(editingStudent?.name || "");
+      setDni(editingStudent?.dni || "");
+    }
+  }, [isOpen, editingStudent]);
+
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -178,7 +150,8 @@ function FormDialog({ isOpen, onOpenChange, onSave, editingStudent, onClose }: {
               <Input
                 id="name"
                 name="name"
-                defaultValue={editingStudent?.name}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="col-span-3"
                 required
               />
@@ -190,7 +163,8 @@ function FormDialog({ isOpen, onOpenChange, onSave, editingStudent, onClose }: {
               <Input
                 id="dni"
                 name="dni"
-                defaultValue={editingStudent?.dni}
+                value={dni}
+                onChange={(e) => setDni(e.target.value)}
                 className="col-span-3"
                 required
                 readOnly={!!editingStudent}

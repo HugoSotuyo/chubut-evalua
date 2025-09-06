@@ -1,10 +1,9 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
-import { useExams } from "@/context/exams-context";
-import { useResults } from "@/context/results-context";
+import { getExams } from "@/data/exams";
 import { useToast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import type { Student } from "@/context/students-context";
+import type { Student, Exam } from "@/lib/types";
 
 interface CargarResultadosDialogProps {
     student: Student;
@@ -23,19 +22,23 @@ interface CargarResultadosDialogProps {
 
 export function CargarResultadosDialog({ student, isOpen, onOpenChange }: CargarResultadosDialogProps) {
     const { user } = useAuth();
-    const { exams } = useExams();
-    const { addResult, resultExists } = useResults();
     const { toast } = useToast();
+    const [exams, setExams] = useState<Exam[]>([]);
 
     const [selectedExamId, setSelectedExamId] = useState<string>("");
     const [scores, setScores] = useState<Record<number, number>>({});
 
-    const availableExams = useMemo(() => {
-        if (user?.role === 'Docente') {
-            return exams.filter(e => e.status === 'Cerrado' && e.grade === user.grade);
-        }
-        return exams.filter(e => e.status === 'Abierto');
-    }, [exams, user]);
+    useEffect(() => {
+        const fetchExams = async () => {
+            const allExams = await getExams();
+            if (user?.role === 'Docente') {
+                setExams(allExams.filter(e => e.status === 'Cerrado' && e.grade === user.grade));
+            } else {
+                 setExams(allExams.filter(e => e.status === 'Abierto'));
+            }
+        };
+        fetchExams();
+    }, [user]);
 
     const selectedExam = useMemo(() => {
         return exams.find(e => e.id === selectedExamId);
@@ -75,31 +78,9 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
             return;
         }
 
-        if (resultExists(student.id, selectedExam.id)) {
-            toast({ variant: "destructive", title: "Error", description: "Este alumno ya tiene un resultado cargado para este examen." });
-            return;
-        }
-
-        const scorePercentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
-
-        addResult({
-            studentId: student.id,
-            studentName: student.name,
-            examId: selectedExam.id,
-            examName: selectedExam.name,
-            school: student.school,
-            grade: student.grade,
-            course: student.course,
-            score: scorePercentage,
-            status: scorePercentage >= 60 ? "Aprobado" : "Desaprobado", // Asumiendo 60 como nota de corte
-            scores,
-            totalScore,
-            maxScore
-        });
-
         toast({
-            title: "Resultados Guardados",
-            description: `Se han guardado las notas de ${student.name} para el examen ${selectedExam.name}.`
+            title: "Funcionalidad en Desarrollo",
+            description: `El guardado de resultados estará disponible próximamente.`
         });
 
         onOpenChange(false); // Close dialog on success
@@ -125,8 +106,9 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
                                         <SelectValue placeholder="Elige una evaluación" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {availableExams.map(exam => {
-                                            const isLoaded = resultExists(student.id, exam.id);
+                                        {exams.map(exam => {
+                                            // Logic for isLoaded would need a new data source
+                                            const isLoaded = false; // Placeholder
                                             return (
                                                 <SelectItem key={exam.id} value={exam.id} disabled={isLoaded}>
                                                     {exam.name} {isLoaded && "(Cargado)"}

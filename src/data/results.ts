@@ -1,5 +1,5 @@
 
-import type { Result } from "@/context/results-context";
+import type { Result } from "@/lib/types";
 
 const initialResults: Result[] = [
     { id: '1', studentId: '1', studentName: 'Juan Perez', examId: '1', examName: 'Diagnóstico Matemática 2024', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Aprobado', score: 80, scores: {0: 8, 1: 12}, totalScore: 20, maxScore: 25 },

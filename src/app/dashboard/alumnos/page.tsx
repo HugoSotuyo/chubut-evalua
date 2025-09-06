@@ -1,68 +1,51 @@
 
-"use client";
-
-import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FileDown, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/context/auth-context"; 
-import { useStudents } from "@/context/students-context";
-import { useResults } from "@/context/results-context";
-import { StudentActions } from "@/components/student-actions";
+import { getAuthUser } from "@/lib/auth"; 
+import { getStudents } from "@/data/students";
+import { getResults } from "@/data/results";
+import { StudentActionsClient } from "./student-actions-client";
 
-export default function AlumnosPage() {
-  const { user } = useAuth(); 
-  const { students: allStudents } = useStudents();
-  const { results: allResults } = useResults();
+export default async function AlumnosPage() {
+  const user = await getAuthUser(); 
+  const allStudents = await getStudents();
+  const allResults = await getResults();
 
-  // Pre-process students to include their results for badge counting
-  const studentsWithResults = useMemo(() => {
-    return allStudents.map(student => ({
-        ...student,
-        results: allResults.filter(r => r.studentId === student.id)
-    }));
-  }, [allStudents, allResults]);
-
-
-  const studentList = useMemo(() => {
-    if (!user) return [];
-
-    let filteredList = studentsWithResults;
+  if (!user) {
+    return <div>Cargando...</div>
+  }
   
-    if (user.role === 'Docente') {
-      // Ensure all required properties exist before filtering
-      if (user.school && user.grade && user.course) {
-        filteredList = studentsWithResults.filter(student => 
-            student.school === user.school && 
-            student.grade === user.grade && 
-            student.course === user.course
-        );
-      } else {
-        // If properties are missing, return an empty list to be safe
-        return [];
-      }
-    } else if (user.role === 'Director') {
-       if (user.school) {
-        filteredList = studentsWithResults.filter(student => student.school === user.school);
-       } else {
-         return [];
-       }
+  // Pre-process students to include their results for badge counting
+  const studentsWithResults = allStudents.map(student => ({
+      ...student,
+      results: allResults.filter(r => r.studentId === student.id)
+  }));
+
+
+  let studentList = studentsWithResults;
+  
+  if (user.role === 'Docente') {
+    if (user.school && user.grade && user.course) {
+      studentList = studentsWithResults.filter(student => 
+          student.school === user.school && 
+          student.grade === user.grade && 
+          student.course === user.course
+      );
+    } else {
+      studentList = [];
     }
-
-    return filteredList;
-
-  }, [studentsWithResults, user]);
-
-
+  } else if (user.role === 'Director') {
+     if (user.school) {
+      studentList = studentsWithResults.filter(student => student.school === user.school);
+     } else {
+       studentList = [];
+     }
+  }
+  
   const getCardTexts = () => {
-    if (!user) {
-        return {
-            title: 'Alumnos',
-            description: 'Lista de alumnos del sistema.'
-        };
-    }
     switch (user.role) {
       case 'Docente':
         return {
@@ -83,32 +66,6 @@ export default function AlumnosPage() {
   };
 
   const { title: cardTitle, description: cardDescription } = getCardTexts();
-  
-  const handleExport = () => {
-    const headers = ["Nombre Completo", "DNI", "Grado", "Curso", "Escuela"];
-    const rows = studentList.map(student => 
-        [student.name, student.dni, student.grade, student.course, student.school].join(';')
-    );
-    
-    const bom = "\uFEFF";
-    const csvContent = bom + [headers.join(';'), ...rows].join("\n");
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "alumnos.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-
-  if (!user) {
-    return <div>Cargando...</div>
-  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -119,11 +76,7 @@ export default function AlumnosPage() {
         </div>
         <div className="flex items-center gap-2">
           {/* This button will now open a dialog managed within StudentActions */}
-          <StudentActions /> 
-           <Button variant="outline" onClick={handleExport}>
-            <FileDown className="mr-2 h-4 w-4" />
-            Exportar Alumnos
-          </Button>
+          <StudentActionsClient studentList={studentList} /> 
         </div>
       </div>
 
@@ -163,7 +116,7 @@ export default function AlumnosPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                        <StudentActions student={student} />
+                        <StudentActionsClient student={student} />
                     </TableCell>
                   </TableRow>
                 ))
@@ -181,3 +134,4 @@ export default function AlumnosPage() {
     </div>
   );
 }
+

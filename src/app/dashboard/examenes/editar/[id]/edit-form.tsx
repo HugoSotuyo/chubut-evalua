@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -20,9 +20,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
-import { useExams } from "@/context/exams-context"
-import { useAuth } from "@/context/auth-context"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { Exam, User } from "@/lib/types"
 
 const questionSchema = z.object({
   consigna: z.string().min(1, "La consigna es requerida."),
@@ -59,16 +58,15 @@ const parseDate = (dateString: string | undefined): Date => {
     return new Date(date.getTime() + userTimezoneOffset);
 }
 
-export default function EditForm({ params }: { params: { id: string } }) {
+interface EditFormProps {
+    exam: Exam;
+    user: User;
+}
+
+export default function EditForm({ exam: examToEdit, user }: EditFormProps) {
   const { toast } = useToast()
   const router = useRouter()
-  const { exams, updateExam } = useExams()
-  const { user } = useAuth();
-  const { id: examId } = params;
-
-  const examToEdit = exams.find(e => e.id === examId);
-  const [currentFileName, setCurrentFileName] = useState(examToEdit?.fileName || "");
-
+  
   useEffect(() => {
     if (user && user.role === 'Docente') {
       toast({
@@ -99,32 +97,12 @@ export default function EditForm({ params }: { params: { id: string } }) {
   })
 
   const onSubmit = async (data: ExamFormValues) => {
-    if (!examToEdit) return;
-
-    let fileDataUrl = examToEdit.fileDataUrl;
-    let fileName = examToEdit.fileName;
-
-    if (data.file && data.file.length > 0) {
-        const file = data.file[0];
-        fileDataUrl = await fileToDataUrl(file);
-        fileName = file.name;
-    }
-    
-    updateExam({
-      id: examToEdit.id,
-      name: data.titulo,
-      tema: data.tema,
-      grade: data.grade,
-      created: format(data.fechaCarga, "yyyy-MM-dd"),
-      questions: data.questions,
-      fileDataUrl,
-      fileName,
-    });
+    console.log("Form data submitted:", data);
     toast({
-      title: "Examen Actualizado",
-      description: `El examen "${data.titulo}" ha sido actualizado exitosamente.`,
+      title: "Funcionalidad en Desarrollo",
+      description: "La actualización de exámenes se implementará próximamente.",
     })
-    router.push("/dashboard/examenes")
+    // router.push("/dashboard/examenes")
   }
 
   if (!user || !examToEdit || user.role === 'Docente') {
@@ -263,10 +241,10 @@ export default function EditForm({ params }: { params: { id: string } }) {
                     </FormItem>
                 )}
                 />
-            {currentFileName && (
+            {examToEdit.fileName && (
                 <div className="flex items-center space-x-2 text-sm col-span-full">
                     <Paperclip className="h-4 w-4" />
-                    <span>Archivo actual: {currentFileName}</span>
+                    <span>Archivo actual: {examToEdit.fileName}</span>
                 </div>
             )}
           </CardContent>
