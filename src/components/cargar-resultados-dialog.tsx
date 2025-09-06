@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
-import { getExams } from "@/data/exams";
+import { getExamsSync } from "@/data/exams";
 import { useToast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
 
     useEffect(() => {
         const fetchExams = async () => {
-            const allExams = await getExams();
+            const allExams = getExamsSync();
             if (user?.role === 'Docente') {
                 setExams(allExams.filter(e => e.status === 'Cerrado' && e.grade === user.grade));
             } else {
