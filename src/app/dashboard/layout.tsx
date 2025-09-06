@@ -62,20 +62,6 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AuthProvider>
-      <UsersProvider>
-        <SchoolsProvider>
-          <SearchProvider>
-            <ExamsProvider>
-              <StudentsProvider>
-                <ResultsProvider>
-                  <DashboardLayoutContent>{children}</DashboardLayoutContent>
-                </ResultsProvider>
-              </StudentsProvider>
-            </ExamsProvider>
-          </SearchProvider>
-        </SchoolsProvider>
-      </UsersProvider>
-    </AuthProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
   );
 }
