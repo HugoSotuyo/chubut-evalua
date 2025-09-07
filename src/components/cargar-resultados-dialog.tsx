@@ -3,7 +3,8 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
-import { getExamsSync } from "@/data/exams";
+import { useExams } from "@/context/exams-context";
+import { useResults } from "@/context/results-context";
 import { useToast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,27 +23,33 @@ interface CargarResultadosDialogProps {
 
 export function CargarResultadosDialog({ student, isOpen, onOpenChange }: CargarResultadosDialogProps) {
     const { user } = useAuth();
+    const { exams } = useExams();
+    const { addResult, resultExists } = useResults();
     const { toast } = useToast();
-    const [exams, setExams] = useState<Exam[]>([]);
 
     const [selectedExamId, setSelectedExamId] = useState<string>("");
     const [scores, setScores] = useState<Record<number, number>>({});
 
-    useEffect(() => {
-        const fetchExams = async () => {
-            const allExams = getExamsSync();
-            if (user?.role === 'Docente') {
-                setExams(allExams.filter(e => e.status === 'Cerrado' && e.grade === user.grade));
-            } else {
-                 setExams(allExams.filter(e => e.status === 'Abierto'));
-            }
-        };
-        fetchExams();
-    }, [user]);
+    const availableExams = useMemo(() => {
+        if (!user) return [];
+        let filtered = [];
+         if (user?.role === 'Docente') {
+            filtered = exams.filter(e => e.status === 'Cerrado' && e.grade === user.grade);
+        } else {
+             filtered = exams.filter(e => e.status === 'Abierto');
+        }
+        // Filter out exams the student has already taken
+        return filtered.filter(exam => !resultExists(student.id, exam.id));
+    }, [user, exams, student, resultExists]);
 
     const selectedExam = useMemo(() => {
         return exams.find(e => e.id === selectedExamId);
     }, [selectedExamId, exams]);
+    
+    // Reset scores when exam changes
+    useEffect(() => {
+        setScores({});
+    }, [selectedExamId])
 
     const totalScore = useMemo(() => {
         if (!selectedExam) return 0;
@@ -78,12 +85,30 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
             return;
         }
 
-        toast({
-            title: "Funcionalidad en Desarrollo",
-            description: `El guardado de resultados estará disponible próximamente.`
+        const percentageScore = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
+        const approvalThreshold = 60; // As defined in admin page
+
+        addResult({
+            studentId: student.id,
+            studentName: student.name,
+            examId: selectedExam.id,
+            examName: selectedExam.name,
+            school: student.school,
+            grade: student.grade,
+            course: student.course,
+            status: percentageScore >= approvalThreshold ? "Aprobado" : "Desaprobado",
+            score: percentageScore,
+            scores: scores,
+            totalScore: totalScore,
+            maxScore: maxScore
         });
 
-        onOpenChange(false); // Close dialog on success
+        toast({
+            title: "Resultados Guardados",
+            description: `La calificación de ${student.name} para "${selectedExam.name}" ha sido guardada.`,
+        });
+
+        onOpenChange(false);
     };
 
     return (
@@ -101,20 +126,16 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
                         <div className="grid md:grid-cols-3 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="examen">Seleccionar Examen</Label>
-                                <Select onValueChange={setSelectedExamId} value={selectedExamId}>
+                                <Select onValueChange={setSelectedExamId} value={selectedExamId} required>
                                     <SelectTrigger id="examen">
                                         <SelectValue placeholder="Elige una evaluación" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {exams.map(exam => {
-                                            // Logic for isLoaded would need a new data source
-                                            const isLoaded = false; // Placeholder
-                                            return (
-                                                <SelectItem key={exam.id} value={exam.id} disabled={isLoaded}>
-                                                    {exam.name} {isLoaded && "(Cargado)"}
-                                                </SelectItem>
-                                            )
-                                        })}
+                                        {availableExams.length > 0 ? availableExams.map(exam => (
+                                            <SelectItem key={exam.id} value={exam.id}>
+                                                {exam.name}
+                                            </SelectItem>
+                                        )) : <SelectItem value="none" disabled>No hay exámenes disponibles para cargar</SelectItem>}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -147,6 +168,7 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
                                                         className="text-center"
                                                         max={q.puntaje}
                                                         min={0}
+                                                        required
                                                     />
                                                 </TableCell>
                                             </TableRow>
@@ -167,7 +189,7 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
                              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                                 Cancelar
                             </Button>
-                            <Button type="submit">
+                            <Button type="submit" disabled={!selectedExamId}>
                                 <Save className="mr-2 h-4 w-4" />
                                 Guardar Resultados
                             </Button>
