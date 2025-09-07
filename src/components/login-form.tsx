@@ -59,7 +59,7 @@ export function LoginForm() {
             description: `Bienvenido, ${evaluatorUser.name}.`,
           });
           sessionStorage.setItem('currentUser', JSON.stringify(evaluatorUser));
-          setTimeout(() => router.push('/dashboard'), 50);
+          router.push('/dashboard');
         } else {
           toast({
             variant: "destructive",
@@ -97,7 +97,7 @@ export function LoginForm() {
             description: `Bienvenido, ${foundUser.name}.`,
           });
           sessionStorage.setItem('currentUser', JSON.stringify(foundUser));
-          setTimeout(() => router.push('/dashboard'), 50);
+          router.push('/dashboard');
         } else if (foundUser.status === "Pendiente") {
           toast({
             variant: "default",

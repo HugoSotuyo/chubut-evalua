@@ -29,20 +29,20 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
-          <UsersProvider>
-            <SchoolsProvider>
-              <SearchProvider>
-                <ExamsProvider>
-                  <StudentsProvider>
-                    <ResultsProvider>
-                      {children}
-                      <Toaster />
-                    </ResultsProvider>
-                  </StudentsProvider>
-                </ExamsProvider>
-              </SearchProvider>
-            </SchoolsProvider>
-          </UsersProvider>
+            <UsersProvider>
+                <SchoolsProvider>
+                    <SearchProvider>
+                        <ExamsProvider>
+                            <StudentsProvider>
+                                <ResultsProvider>
+                                    {children}
+                                    <Toaster />
+                                </ResultsProvider>
+                            </StudentsProvider>
+                        </ExamsProvider>
+                    </SearchProvider>
+                </SchoolsProvider>
+            </UsersProvider>
         </AuthProvider>
       </body>
     </html>

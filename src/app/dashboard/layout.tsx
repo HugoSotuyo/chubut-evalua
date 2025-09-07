@@ -26,7 +26,6 @@ function DashboardLayoutContent({
     }
 
     if (!user) {
-        // This can be a more elaborate error component
         return <div className="flex h-screen w-full items-center justify-center">Error: Usuario no autenticado. Por favor, inicie sesión.</div>;
     }
 
@@ -62,6 +61,20 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+      <AuthProvider>
+        <UsersProvider>
+          <SchoolsProvider>
+            <SearchProvider>
+              <ExamsProvider>
+                <StudentsProvider>
+                  <ResultsProvider>
+                    <DashboardLayoutContent>{children}</DashboardLayoutContent>
+                  </ResultsProvider>
+                </StudentsProvider>
+              </ExamsProvider>
+            </SearchProvider>
+          </SchoolsProvider>
+        </UsersProvider>
+      </AuthProvider>
   );
 }
