@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label"
 import { useSearch } from "@/context/search-context";
 import { useAuth } from "@/context/auth-context";
 import { useResults } from "@/context/results-context";
-import type { Result } from "@/context/results-context";
+import type { Result } from "@/lib/types";
 import { useExams } from "@/context/exams-context"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
@@ -33,7 +33,6 @@ export default function ResultadosPage() {
     const { results: allResults, deleteResult, loading: resultsLoading } = useResults();
     const { exams, loading: examsLoading } = useExams();
     const { searchTerm } = useSearch();
-    const searchParams = useSearchParams();
     const { toast } = useToast();
     
     const [filters, setFilters] = useState<Filters>({
@@ -47,34 +46,27 @@ export default function ResultadosPage() {
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
     const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
     const [selectedResult, setSelectedResult] = useState<Result | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Initial filter setup based on user role
     useEffect(() => {
         if (user) {
-            setFilters(prev => ({
-                ...prev,
-                school: user?.role === "Director" || user?.role === "Docente" ? user.school : "all",
-            }))
+            const initialSchool = (user.role === "Director" || user.role === "Docente") ? user.school : "all";
+            const initialFilters = {
+                exam: "all",
+                school: initialSchool,
+                studentName: "",
+                status: "all",
+            };
+            setFilters(initialFilters);
+            setAppliedFilters(initialFilters);
         }
-    }, [user])
-
-    useEffect(() => {
-        const examFromUrl = searchParams.get("exam");
-        if (examFromUrl) {
-            const decodedExamName = decodeURIComponent(examFromUrl);
-            const newFilters = { ...filters, exam: decodedExamName };
-            setFilters(newFilters);
-            setAppliedFilters(newFilters);
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [user]);
 
     const availableExams = useMemo(() => {
         if (!user) return [];
         if (user.role === 'Docente') {
             return exams.filter(e => e.grade === user.grade);
-        }
-        if (user.role === 'Director') {
-             return exams;
         }
         return exams;
     }, [exams, user]);
@@ -149,16 +141,27 @@ export default function ResultadosPage() {
         setIsDeleteAlertOpen(true);
     };
 
-    const handleConfirmDelete = () => {
-        if (selectedResult) {
-            deleteResult(selectedResult.id);
-            toast({
-                title: "Resultado Anulado",
-                description: `El resultado del examen para ${selectedResult.studentName} ha sido eliminado.`,
-            });
+    const handleConfirmDelete = async () => {
+        if (selectedResult && !isSubmitting) {
+            setIsSubmitting(true);
+            try {
+                await deleteResult(selectedResult.id);
+                toast({
+                    title: "Resultado Anulado",
+                    description: `El resultado del examen para ${selectedResult.studentName} ha sido eliminado.`,
+                });
+            } catch (error) {
+                 toast({
+                    title: "Error",
+                    description: "No se pudo anular el resultado.",
+                    variant: "destructive"
+                });
+            } finally {
+                setIsSubmitting(false);
+                setIsDeleteAlertOpen(false);
+                setSelectedResult(null);
+            }
         }
-        setIsDeleteAlertOpen(false);
-        setSelectedResult(null);
     };
 
     const handleOpenDetailsDialog = (result: Result) => {
@@ -168,7 +171,7 @@ export default function ResultadosPage() {
     
     const getUniqueValues = (key: 'school') => {
         const values = allResults.map(item => item[key]);
-        return [...new Set(values)];
+        return [...new Set(values)].sort();
     }
     
     const examForDetails = useMemo(() => {
@@ -245,8 +248,8 @@ export default function ResultadosPage() {
                             <SelectTrigger id="filtro-estado"><SelectValue placeholder="Estado" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todos</SelectItem>
-                                <SelectItem value="aprobado">Aprobado</SelectItem>
-                                <SelectItem value="desaprobado">Desaprobado</SelectItem>
+                                <SelectItem value="Aprobado">Aprobado</SelectItem>
+                                <SelectItem value="Desaprobado">Desaprobado</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -300,7 +303,7 @@ export default function ResultadosPage() {
                                                 <Eye className="mr-2 h-4 w-4" />
                                                 Ver Detalles
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(result)}>
+                                            <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(result)} disabled={isSubmitting}>
                                                 <Trash2 className="mr-2 h-4 w-4" />
                                                 Anular Resultado
                                             </DropdownMenuItem>
@@ -325,7 +328,9 @@ export default function ResultadosPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel onClick={() => setSelectedResult(null)}>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirmDelete}>Confirmar</AlertDialogAction>
+                        <AlertDialogAction onClick={handleConfirmDelete} disabled={isSubmitting}>
+                            {isSubmitting ? "Anulando..." : "Confirmar"}
+                        </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

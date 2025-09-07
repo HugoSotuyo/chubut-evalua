@@ -1,126 +1,76 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-
-export type School = {
-  id: string;
-  name: string;
-  district: string;
-  status: "Activa" | "Inactiva";
-};
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { getAllSchools, addSchool as addSchoolDb, updateSchool as updateSchoolDb, deleteSchool as deleteSchoolDb, toggleSchoolStatus as toggleSchoolStatusDb, getAllDistricts, addDistrict as addDistrictDb } from '@/lib/schoolsService';
+import type { School } from '@/lib/types';
 
 type NewSchool = Omit<School, 'id' | 'status'>;
-
-const initialSchools: School[] = [
-    { id: "1", name: "Escuela N° 123", district: "Distrito I", status: "Activa" },
-    { id: "2", name: "Escuela N° 456", district: "Distrito II", status: "Activa" },
-    { id: "3", name: "Escuela N° 789", district: "Distrito I", status: "Inactiva" },
-];
-
-const initialDistricts: string[] = ["Distrito I", "Distrito II", "Distrito III"];
 
 interface SchoolsContextType {
   schools: School[];
   districts: string[];
-  addSchool: (school: NewSchool) => void;
-  updateSchool: (school: School) => void;
-  deleteSchool: (schoolId: string) => void;
-  toggleSchoolStatus: (schoolId: string) => void;
-  addDistrict: (districtName: string) => { success: boolean; message: string };
+  addSchool: (school: NewSchool) => Promise<void>;
+  updateSchool: (school: School) => Promise<void>;
+  deleteSchool: (schoolId: string) => Promise<void>;
+  toggleSchoolStatus: (schoolId: string) => Promise<void>;
+  addDistrict: (districtName: string) => Promise<{ success: boolean; message: string }>;
   loading: boolean;
 }
 
 const SchoolsContext = createContext<SchoolsContextType | undefined>(undefined);
-
-const SCHOOLS_STORAGE_KEY = 'chubut_evalua_schools';
-const DISTRICTS_STORAGE_KEY = 'chubut_evalua_districts';
 
 export function SchoolsProvider({ children }: { children: ReactNode }) {
   const [schools, setSchools] = useState<School[]>([]);
   const [districts, setDistricts] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const refreshData = useCallback(async () => {
+    setLoading(true);
     try {
-      const storedSchools = localStorage.getItem(SCHOOLS_STORAGE_KEY);
-      const storedDistricts = localStorage.getItem(DISTRICTS_STORAGE_KEY);
-
-      if (storedSchools) {
-        setSchools(JSON.parse(storedSchools));
-      } else {
-        setSchools(initialSchools);
-        localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(initialSchools));
-      }
-
-      if (storedDistricts) {
-        setDistricts(JSON.parse(storedDistricts));
-      } else {
-        setDistricts(initialDistricts);
-        localStorage.setItem(DISTRICTS_STORAGE_KEY, JSON.stringify(initialDistricts));
-      }
+        const [schoolsData, districtsData] = await Promise.all([
+            getAllSchools(),
+            getAllDistricts()
+        ]);
+        setSchools(schoolsData);
+        setDistricts(districtsData);
     } catch (error) {
-      console.error("Failed to access localStorage for schools/districts:", error);
-      setSchools(initialSchools);
-      setDistricts(initialDistricts);
+        console.error("Failed to fetch schools/districts:", error);
+    } finally {
+        setLoading(false);
     }
-    setLoading(false);
   }, []);
 
-  const updateSchoolsInStateAndStorage = (newSchools: School[]) => {
-    setSchools(newSchools);
-    try {
-        localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(newSchools));
-    } catch (error) {
-        console.error("Failed to save schools to localStorage:", error);
-    }
-  };
+  useEffect(() => {
+    refreshData();
+  }, [refreshData]);
 
-  const updateDistrictsInStateAndStorage = (newDistricts: string[]) => {
-    setDistricts(newDistricts);
-    try {
-        localStorage.setItem(DISTRICTS_STORAGE_KEY, JSON.stringify(newDistricts));
-    } catch (error) {
-        console.error("Failed to save districts to localStorage:", error);
-    }
-  };
-
-
-  const addSchool = (schoolData: NewSchool) => {
-    const newSchool: School = {
-        id: (Math.max(0, ...schools.map(s => parseInt(s.id, 10))) + 1).toString(),
-        ...schoolData,
-        status: "Activa"
-    };
-    updateSchoolsInStateAndStorage([...schools, newSchool]);
+  const addSchool = async (schoolData: NewSchool) => {
+    await addSchoolDb(schoolData);
+    await refreshData();
   };
   
-  const updateSchool = (updatedSchool: School) => {
-    const newSchools = schools.map(s => s.id === updatedSchool.id ? updatedSchool : s);
-    updateSchoolsInStateAndStorage(newSchools);
+  const updateSchool = async (updatedSchool: School) => {
+    await updateSchoolDb(updatedSchool);
+    await refreshData();
   };
   
-  const deleteSchool = (schoolId: string) => {
-    const newSchools = schools.filter(s => s.id !== schoolId);
-    updateSchoolsInStateAndStorage(newSchools);
+  const deleteSchool = async (schoolId: string) => {
+    await deleteSchoolDb(schoolId);
+    await refreshData();
   };
 
-  const toggleSchoolStatus = (schoolId: string) => {
-    const newSchools = schools.map(s => {
-        if (s.id === schoolId) {
-            return { ...s, status: s.status === "Activa" ? "Inactiva" : "Activa" };
-        }
-        return s;
-    });
-    updateSchoolsInStateAndStorage(newSchools);
+  const toggleSchoolStatus = async (schoolId: string) => {
+    await toggleSchoolStatusDb(schoolId);
+    await refreshData();
   };
   
-  const addDistrict = (districtName: string): { success: boolean; message: string } => {
-    if (districts.some(d => d.toLowerCase() === districtName.toLowerCase())) {
-        return { success: false, message: `El distrito "${districtName}" ya existe.` };
+  const addDistrict = async (districtName: string): Promise<{ success: boolean; message: string }> => {
+    const result = await addDistrictDb(districtName);
+    if (result.success) {
+      await refreshData();
     }
-    updateDistrictsInStateAndStorage([...districts, districtName]);
-    return { success: true, message: `El distrito "${districtName}" ha sido agregado.` };
+    return result;
   };
 
   const value = { 

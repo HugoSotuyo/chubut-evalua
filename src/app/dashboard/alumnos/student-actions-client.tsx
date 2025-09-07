@@ -34,6 +34,7 @@ export function StudentActionsClient({ student, studentList = [] }: StudentActio
   const { toast } = useToast();
   const { user } = useAuth();
   const { addStudent, updateStudent, deleteStudent } = useStudents();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleOpenForm = (studentToEdit: Student | null = null) => {
     setEditingStudent(studentToEdit);
@@ -45,56 +46,71 @@ export function StudentActionsClient({ student, studentList = [] }: StudentActio
     setIsFormOpen(false);
   };
 
-  const handleDeleteStudent = (studentId: string) => {
-    deleteStudent(studentId);
-    toast({
-      title: "Alumno Eliminado",
-      description: `El alumno ha sido eliminado correctamente.`,
-    });
+  const handleDeleteStudent = async (studentId: string) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await deleteStudent(studentId);
+      toast({
+        title: "Alumno Eliminado",
+        description: `El alumno ha sido eliminado correctamente.`,
+      });
+    } catch (error) {
+      toast({ title: "Error", description: "No se pudo eliminar al alumno.", variant: "destructive"});
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleSaveStudent = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveStudent = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user || !user.school) {
+    if (!user || !user.school || isSubmitting) {
         toast({ title: "Error", description: "No se ha podido identificar al usuario o su escuela.", variant: "destructive"});
         return;
     }
     
+    setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
     const name = formData.get("name") as string;
     const dni = formData.get("dni") as string;
 
-    if (editingStudent) {
-      // Update existing student
-      updateStudent({
-        ...editingStudent,
-        name,
-        dni,
-      });
-      toast({
-        title: "Alumno Actualizado",
-        description: `Los datos de ${name} se han actualizado.`,
-      });
-    } else {
-       // Add new student
-      if (!user.grade || !user.course) {
-          toast({ title: "Error", description: "Faltan datos de grado o curso del docente.", variant: "destructive"});
-          return;
+    try {
+      if (editingStudent) {
+        // Update existing student
+        await updateStudent({
+          ...editingStudent,
+          name,
+          dni,
+        });
+        toast({
+          title: "Alumno Actualizado",
+          description: `Los datos de ${name} se han actualizado.`,
+        });
+      } else {
+         // Add new student
+        if (!user.grade || !user.course) {
+            toast({ title: "Error", description: "Faltan datos de grado o curso del docente.", variant: "destructive"});
+            setIsSubmitting(false);
+            return;
+        }
+        await addStudent({
+          name,
+          dni,
+          school: user.school,
+          grade: user.grade,
+          course: user.course,
+        });
+        toast({
+          title: "Alumno Agregado",
+          description: `${name} ha sido agregado al curso.`,
+        });
       }
-      addStudent({
-        name,
-        dni,
-        school: user.school,
-        grade: user.grade,
-        course: user.course,
-      });
-      toast({
-        title: "Alumno Agregado",
-        description: `${name} ha sido agregado al curso.`,
-      });
+      handleCloseForm();
+    } catch (error) {
+        toast({ title: "Error", description: "No se pudo guardar el alumno.", variant: "destructive"});
+    } finally {
+        setIsSubmitting(false);
     }
-
-    handleCloseForm();
   };
   
   const handleExport = () => {
@@ -135,7 +151,7 @@ export function StudentActionsClient({ student, studentList = [] }: StudentActio
             <FileDown className="mr-2 h-4 w-4" />
             Exportar Alumnos
         </Button>
-        <FormDialog isOpen={isFormOpen} onOpenChange={setIsFormOpen} onSave={handleSaveStudent} editingStudent={editingStudent} onClose={handleCloseForm} />
+        <FormDialog isOpen={isFormOpen} onOpenChange={setIsFormOpen} onSave={handleSaveStudent} editingStudent={editingStudent} onClose={handleCloseForm} isSubmitting={isSubmitting} />
       </>
     );
   }
@@ -162,13 +178,14 @@ export function StudentActionsClient({ student, studentList = [] }: StudentActio
           <DropdownMenuItem
             className="text-destructive"
             onSelect={() => handleDeleteStudent(student.id)}
+            disabled={isSubmitting}
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Eliminar
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <FormDialog isOpen={isFormOpen} onOpenChange={setIsFormOpen} onSave={handleSaveStudent} editingStudent={editingStudent} onClose={handleCloseForm} />
+      <FormDialog isOpen={isFormOpen} onOpenChange={setIsFormOpen} onSave={handleSaveStudent} editingStudent={editingStudent} onClose={handleCloseForm} isSubmitting={isSubmitting} />
       {isCargarResultadosOpen && (
         <CargarResultadosDialog
           student={student}
@@ -181,7 +198,7 @@ export function StudentActionsClient({ student, studentList = [] }: StudentActio
 }
 
 // Separate dialog component to keep the main component cleaner
-function FormDialog({ isOpen, onOpenChange, onSave, editingStudent, onClose }: { isOpen: boolean, onOpenChange: (open: boolean) => void, onSave: (e: React.FormEvent<HTMLFormElement>) => void, editingStudent: Student | null, onClose: () => void }) {
+function FormDialog({ isOpen, onOpenChange, onSave, editingStudent, onClose, isSubmitting }: { isOpen: boolean, onOpenChange: (open: boolean) => void, onSave: (e: React.FormEvent<HTMLFormElement>) => void, editingStudent: Student | null, onClose: () => void, isSubmitting: boolean }) {
   const [name, setName] = useState(editingStudent?.name || "");
   const [dni, setDni] = useState(editingStudent?.dni || "");
 
@@ -219,6 +236,7 @@ function FormDialog({ isOpen, onOpenChange, onSave, editingStudent, onClose }: {
                 onChange={(e) => setName(e.target.value)}
                 className="col-span-3"
                 required
+                disabled={isSubmitting}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -233,16 +251,17 @@ function FormDialog({ isOpen, onOpenChange, onSave, editingStudent, onClose }: {
                 className="col-span-3"
                 required
                 readOnly={!!editingStudent}
+                disabled={isSubmitting}
               />
             </div>
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="secondary" onClick={onClose}>
+              <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
                 Cancelar
               </Button>
             </DialogClose>
-            <Button type="submit">Guardar</Button>
+            <Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Guardando..." : "Guardar"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

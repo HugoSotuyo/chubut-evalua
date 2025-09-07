@@ -2,15 +2,15 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
-import { getExamsSync, saveExamsSync, addExam as addExamDb, updateExam as updateExamDb, deleteExam as deleteExamDb, toggleExamStatus as toggleExamStatusDb } from '@/data/exams';
+import { getAllExams, addExam as addExamDb, updateExam as updateExamDb, deleteExam as deleteExamDb, toggleExamStatus as toggleExamStatusDb } from '@/lib/examsService';
 import type { Exam } from '@/lib/types';
 
 interface ExamsContextType {
   exams: Exam[];
-  addExam: (exam: Omit<Exam, 'id' | 'status'>) => void;
-  updateExam: (exam: Omit<Exam, 'status'>) => void;
-  deleteExam: (examId: string) => void;
-  toggleExamStatus: (examId: string) => void;
+  addExam: (exam: Omit<Exam, 'id' | 'status'>) => Promise<void>;
+  updateExam: (exam: Omit<Exam, 'status'>) => Promise<void>;
+  deleteExam: (examId: string) => Promise<void>;
+  toggleExamStatus: (examId: string) => Promise<void>;
   loading: boolean;
 }
 
@@ -20,44 +20,40 @@ export function ExamsProvider({ children }: { children: ReactNode }) {
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const refreshExams = useCallback(() => {
-    const data = getExamsSync();
-    setExams(data);
+  const refreshExams = useCallback(async () => {
+    setLoading(true);
+    try {
+        const data = await getAllExams();
+        setExams(data);
+    } catch (error) {
+        console.error("Failed to fetch exams:", error);
+    } finally {
+        setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
     refreshExams();
-    setLoading(false);
-
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'chubut_evalua_exams' || event.type === 'storage') {
-        refreshExams();
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
   }, [refreshExams]);
 
-  const addExam = (examData: Omit<Exam, 'id' | 'status'>) => {
-    addExamDb(examData);
-    refreshExams();
+  const addExam = async (examData: Omit<Exam, 'id' | 'status'>) => {
+    await addExamDb(examData);
+    await refreshExams();
   };
 
-  const updateExam = (updatedExamData: Omit<Exam, 'status'>) => {
-    updateExamDb(updatedExamData);
-    refreshExams();
+  const updateExam = async (updatedExamData: Omit<Exam, 'status'>) => {
+    await updateExamDb(updatedExamData);
+    await refreshExams();
   };
 
-  const deleteExam = (examId: string) => {
-    deleteExamDb(examId);
-    refreshExams();
+  const deleteExam = async (examId: string) => {
+    await deleteExamDb(examId);
+    await refreshExams();
   };
 
-  const toggleExamStatus = (examId: string) => {
-    toggleExamStatusDb(examId);
-    refreshExams();
+  const toggleExamStatus = async (examId: string) => {
+    await toggleExamStatusDb(examId);
+    await refreshExams();
   };
 
   return (

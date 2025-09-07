@@ -23,26 +23,43 @@ export function ExamActionsClient({ exam, userRole, onEdit }: ExamActionsProps) 
   const { toast } = useToast();
   const { deleteExam, toggleExamStatus } = useExams();
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleDeleteClick = () => {
     setIsAlertOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    deleteExam(exam.id);
-    toast({
-        title: "Examen Eliminado",
-        description: `El examen "${exam.name}" ha sido eliminado correctamente.`,
-    });
-    setIsAlertOpen(false);
+  const handleConfirmDelete = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+        await deleteExam(exam.id);
+        toast({
+            title: "Examen Eliminado",
+            description: `El examen "${exam.name}" ha sido eliminado correctamente.`,
+        });
+    } catch (error) {
+        toast({ title: "Error", description: "No se pudo eliminar el examen.", variant: "destructive"});
+    } finally {
+        setIsAlertOpen(false);
+        setIsSubmitting(false);
+    }
   };
 
-  const handleToggleStatus = () => {
-    toggleExamStatus(exam.id);
-    toast({
-      title: "Estado del Examen Actualizado",
-      description: `El examen "${exam.name}" ahora está ${exam.status === "Abierto" ? "Cerrado" : "Abierto"}.`,
-    });
+  const handleToggleStatus = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+        await toggleExamStatus(exam.id);
+        toast({
+          title: "Estado del Examen Actualizado",
+          description: `El examen "${exam.name}" ahora está ${exam.status === "Abierto" ? "Cerrado" : "Abierto"}.`,
+        });
+    } catch (error) {
+        toast({ title: "Error", description: "No se pudo actualizar el estado del examen.", variant: "destructive"});
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   const handleViewAnalysis = () => {
@@ -91,11 +108,11 @@ export function ExamActionsClient({ exam, userRole, onEdit }: ExamActionsProps) 
                   Descargar Examen
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onSelect={handleToggleStatus}>
+              <DropdownMenuItem onSelect={handleToggleStatus} disabled={isSubmitting}>
                 {exam.status === "Abierto" ? "Cerrar Examen" : "Abrir Examen"}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive" onSelect={handleDeleteClick}>
+              <DropdownMenuItem className="text-destructive" onSelect={handleDeleteClick} disabled={isSubmitting}>
                 Eliminar
               </DropdownMenuItem>
             </>
@@ -114,7 +131,9 @@ export function ExamActionsClient({ exam, userRole, onEdit }: ExamActionsProps) 
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete}>Confirmar</AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirmDelete} disabled={isSubmitting}>
+                {isSubmitting ? "Eliminando..." : "Confirmar"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

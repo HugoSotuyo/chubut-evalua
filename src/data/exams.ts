@@ -1,5 +1,9 @@
 
+
 import type { Exam } from "@/lib/types";
+
+// This file is now deprecated and will be removed.
+// All logic has been moved to src/lib/examsService.ts
 
 const initialExams: Exam[] = [
     { id: '1', name: 'Diagnóstico Matemática 2024', tema: 'Matemática', grade: '3er Grado', created: '2024-05-10', status: 'Cerrado', questions: [{ consigna: '2+2', respuesta: '4', puntaje: 10 }, { consigna: '5*5', respuesta: '25', puntaje: 15 }] },
@@ -9,6 +13,7 @@ const initialExams: Exam[] = [
 
 
 export function getExamsSync(): Exam[] {
+  console.warn("getExamsSync is deprecated. Use services from examsService instead.");
   if (typeof window !== 'undefined') {
     const storedExams = localStorage.getItem('chubut_evalua_exams');
     if (storedExams) {
@@ -23,6 +28,7 @@ export function getExamsSync(): Exam[] {
 }
 
 export function saveExamsSync(updatedExams: Exam[]) {
+  console.warn("saveExamsSync is deprecated. Use services from examsService instead.");
   if (typeof window !== 'undefined') {
     localStorage.setItem('chubut_evalua_exams', JSON.stringify(updatedExams));
     // Optionally, you might want a way to notify other parts of the app

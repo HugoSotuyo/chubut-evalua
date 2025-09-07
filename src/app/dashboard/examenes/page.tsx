@@ -28,7 +28,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import type { Exam, User } from "@/lib/types"
+import type { Exam } from "@/lib/types"
 
 
 const questionSchema = z.object({
@@ -73,6 +73,7 @@ export default function ExamenesPage() {
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingExam, setEditingExam] = useState<Exam | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const filteredExams = useMemo(() => {
     if (!user) return [];
@@ -129,33 +130,40 @@ export default function ExamenesPage() {
   })
 
   const onSubmit = async (data: ExamFormValues) => {
-    if (!editingExam) return;
+    if (!editingExam || isSubmitting) return;
+    setIsSubmitting(true);
 
-    let fileDataUrl: string | undefined = editingExam.fileDataUrl;
-    let fileName: string | undefined = editingExam.fileName;
+    try {
+      let fileDataUrl: string | undefined = editingExam.fileDataUrl;
+      let fileName: string | undefined = editingExam.fileName;
 
-    if (data.file && data.file.length > 0) {
-        const file = data.file[0];
-        fileDataUrl = await fileToDataUrl(file);
-        fileName = file.name;
+      if (data.file && data.file.length > 0) {
+          const file = data.file[0];
+          fileDataUrl = await fileToDataUrl(file);
+          fileName = file.name;
+      }
+
+      await updateExam({
+          id: editingExam.id,
+          name: data.titulo,
+          tema: data.tema,
+          grade: data.grade,
+          created: format(data.fechaCarga, "yyyy-MM-dd"),
+          questions: data.questions,
+          fileDataUrl,
+          fileName,
+      });
+
+      toast({
+        title: "Examen Actualizado",
+        description: "Los cambios se han guardado correctamente.",
+      })
+      handleCloseEditDialog();
+    } catch (error) {
+       toast({ title: "Error", description: "No se pudo actualizar el examen.", variant: "destructive"});
+    } finally {
+        setIsSubmitting(false);
     }
-
-    updateExam({
-        id: editingExam.id,
-        name: data.titulo,
-        tema: data.tema,
-        grade: data.grade,
-        created: format(data.fechaCarga, "yyyy-MM-dd"),
-        questions: data.questions,
-        fileDataUrl,
-        fileName,
-    });
-
-    toast({
-      title: "Examen Actualizado",
-      description: "Los cambios se han guardado correctamente.",
-    })
-    handleCloseEditDialog();
   }
 
 
@@ -245,7 +253,7 @@ export default function ExamenesPage() {
                         <FormItem>
                           <FormLabel>Tema / Materia</FormLabel>
                           <FormControl>
-                            <Input placeholder="Ej: Matemática" {...field} />
+                            <Input placeholder="Ej: Matemática" {...field} disabled={isSubmitting}/>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -258,7 +266,7 @@ export default function ExamenesPage() {
                         <FormItem>
                           <FormLabel>Título del Examen</FormLabel>
                           <FormControl>
-                            <Input placeholder="Ej: Diagnóstico de 1er Trimestre" {...field} />
+                            <Input placeholder="Ej: Diagnóstico de 1er Trimestre" {...field} disabled={isSubmitting}/>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -270,7 +278,7 @@ export default function ExamenesPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Grado</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Selecciona un grado" />
@@ -304,6 +312,7 @@ export default function ExamenesPage() {
                                     "w-full pl-3 text-left font-normal",
                                     !field.value && "text-muted-foreground"
                                   )}
+                                  disabled={isSubmitting}
                                 >
                                   {field.value ? (
                                     format(field.value, "PPP")
@@ -320,6 +329,7 @@ export default function ExamenesPage() {
                                 selected={field.value}
                                 onSelect={field.onChange}
                                 initialFocus
+                                disabled={isSubmitting}
                               />
                             </PopoverContent>
                           </Popover>
@@ -334,7 +344,7 @@ export default function ExamenesPage() {
                             <FormItem>
                                 <FormLabel>Adjuntar Archivo Nuevo</FormLabel>
                                  <FormControl>
-                                    <Input type="file" {...form.register("file")} />
+                                    <Input type="file" {...form.register("file")} disabled={isSubmitting}/>
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -366,7 +376,7 @@ export default function ExamenesPage() {
                                             <FormItem className="md:col-span-8">
                                             <FormLabel>Consigna</FormLabel>
                                             <FormControl>
-                                                <Textarea placeholder="Escribe el enunciado de la pregunta..." {...field} />
+                                                <Textarea placeholder="Escribe el enunciado de la pregunta..." {...field} disabled={isSubmitting}/>
                                             </FormControl>
                                             <FormMessage />
                                             </FormItem>
@@ -379,7 +389,7 @@ export default function ExamenesPage() {
                                             <FormItem className="md:col-span-2">
                                             <FormLabel>Respuesta Correcta</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Ej: 42" {...field} />
+                                                <Input placeholder="Ej: 42" {...field} disabled={isSubmitting}/>
                                             </FormControl>
                                             <FormMessage />
                                             </FormItem>
@@ -392,7 +402,7 @@ export default function ExamenesPage() {
                                             <FormItem className="md:col-span-2">
                                             <FormLabel>Puntaje</FormLabel>
                                             <FormControl>
-                                                <Input type="number" {...field} />
+                                                <Input type="number" {...field} disabled={isSubmitting}/>
                                             </FormControl>
                                             <FormMessage />
                                             </FormItem>
@@ -406,6 +416,7 @@ export default function ExamenesPage() {
                                         size="icon"
                                         className="absolute top-2 right-2"
                                         onClick={() => remove(index)}
+                                        disabled={isSubmitting}
                                         >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -417,6 +428,7 @@ export default function ExamenesPage() {
                             type="button"
                             variant="outline"
                             onClick={() => append({ consigna: "", respuesta: "", puntaje: 10 })}
+                            disabled={isSubmitting}
                             >
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Agregar otra Consigna
@@ -427,13 +439,13 @@ export default function ExamenesPage() {
 
               <DialogFooter>
                 <DialogClose asChild>
-                  <Button type="button" variant="secondary" onClick={handleCloseEditDialog}>
+                  <Button type="button" variant="secondary" onClick={handleCloseEditDialog} disabled={isSubmitting}>
                     Cancelar
                   </Button>
                 </DialogClose>
-                <Button type="submit">
+                <Button type="submit" disabled={isSubmitting}>
                   <Save className="mr-2 h-4 w-4" />
-                  Guardar Cambios
+                  {isSubmitting ? "Guardando..." : "Guardar Cambios"}
                 </Button>
               </DialogFooter>
             </form>

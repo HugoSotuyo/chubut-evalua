@@ -1,86 +1,55 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import type { Result } from './results-context';
-
-export type Student = {
-  id: string;
-  name: string;
-  dni: string;
-  grade: string;
-  course: string;
-  school: string;
-  results?: Result[];
-};
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { getAllStudents, addStudent as addStudentDb, updateStudent as updateStudentDb, deleteStudent as deleteStudentDb } from '@/lib/studentsService';
+import type { Student } from '@/lib/types';
 
 type NewStudent = Omit<Student, 'id' | 'results'>;
 
-const initialStudents: Student[] = [
-    { id: '1', name: 'Juan Perez', dni: '40123456', grade: '3er Grado', course: 'A', school: 'Escuela N° 123' },
-    { id: '2', name: 'Maria Lopez', dni: '41987654', grade: '3er Grado', course: 'A', school: 'Escuela N° 123' },
-    { id: '3', name: 'Pedro Gonzalez', dni: '42345678', grade: '5to Grado', course: 'B', school: 'Escuela N° 456' },
-];
-
 interface StudentsContextType {
   students: Student[];
-  addStudent: (student: NewStudent) => void;
-  updateStudent: (student: Student) => void;
-  deleteStudent: (studentId: string) => void;
+  addStudent: (student: NewStudent) => Promise<void>;
+  updateStudent: (student: Omit<Student, 'results'>) => Promise<void>;
+  deleteStudent: (studentId: string) => Promise<void>;
   loading: boolean;
 }
 
 const StudentsContext = createContext<StudentsContextType | undefined>(undefined);
 
-const STUDENTS_STORAGE_KEY = 'chubut_evalua_students';
-
 export function StudentsProvider({ children }: { children: ReactNode }) {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let storedStudents;
+  const refreshStudents = useCallback(async () => {
+    setLoading(true);
     try {
-      storedStudents = localStorage.getItem(STUDENTS_STORAGE_KEY);
-      if (storedStudents) {
-        setStudents(JSON.parse(storedStudents));
-      } else {
-        setStudents(initialStudents);
-        localStorage.setItem(STUDENTS_STORAGE_KEY, JSON.stringify(initialStudents));
-      }
+      const data = await getAllStudents();
+      setStudents(data);
     } catch (error) {
-      console.error("Failed to access localStorage for students:", error);
-      setStudents(initialStudents);
+      console.error("Failed to fetch students:", error);
     } finally {
         setLoading(false);
     }
   }, []);
 
-  const updateStudentsInStateAndStorage = (newStudents: Student[]) => {
-    setStudents(newStudents);
-    try {
-      localStorage.setItem(STUDENTS_STORAGE_KEY, JSON.stringify(newStudents));
-    } catch (error) {
-      console.error("Failed to save students to localStorage:", error);
-    }
-  };
+  useEffect(() => {
+    refreshStudents();
+  }, [refreshStudents]);
 
-  const addStudent = (studentData: NewStudent) => {
-    const newStudent: Student = {
-        ...studentData,
-        id: ((students.length > 0 ? Math.max(...students.map(s => parseInt(s.id, 10))) : 0) + 1).toString(),
-    };
-    updateStudentsInStateAndStorage([...students, newStudent]);
+  const addStudent = async (studentData: NewStudent) => {
+    await addStudentDb(studentData);
+    await refreshStudents();
   };
   
-  const updateStudent = (updatedStudent: Student) => {
-      const newStudents = students.map(s => s.id === updatedStudent.id ? updatedStudent : s);
-      updateStudentsInStateAndStorage(newStudents);
+  const updateStudent = async (updatedStudent: Omit<Student, 'results'>) => {
+      await updateStudentDb(updatedStudent);
+      await refreshStudents();
   };
 
-  const deleteStudent = (studentId: string) => {
-    const newStudents = students.filter(student => student.id !== studentId);
-    updateStudentsInStateAndStorage(newStudents);
+  const deleteStudent = async (studentId: string) => {
+    await deleteStudentDb(studentId);
+    await refreshStudents();
   };
 
   return (

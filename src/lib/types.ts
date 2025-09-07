@@ -1,4 +1,5 @@
 
+
 import type { UserRole } from "@/lib/auth";
 
 export type User = {
@@ -57,3 +58,11 @@ export type Result = {
   totalScore: number;
   maxScore: number;
 };
+
+export type School = {
+  id: string;
+  name: string;
+  district: string;
+  status: "Activa" | "Inactiva";
+};
+

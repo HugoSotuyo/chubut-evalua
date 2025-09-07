@@ -1,39 +1,17 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-
-export type Result = {
-  id: string;
-  studentId: string;
-  studentName: string;
-  examId: string;
-  examName: string;
-  school: string;
-  grade: string;
-  course: string;
-  status: "Aprobado" | "Desaprobado";
-  score: number; // Percentage score
-  scores: Record<number, number>; // Score per question
-  totalScore: number;
-  maxScore: number;
-};
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { getAllResults, addResult as addResultDb, deleteResult as deleteResultDb, resultExists as resultExistsDb } from '@/lib/resultsService';
+import type { Result } from '@/lib/types';
 
 type NewResult = Omit<Result, 'id'>;
 
-const initialResults: Result[] = [
-    { id: '1', studentId: '1', studentName: 'Juan Perez', examId: '1', examName: 'Diagnóstico Matemática 2024', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Aprobado', score: 80, scores: {0: 8, 1: 12}, totalScore: 20, maxScore: 25 },
-    { id: '2', studentId: '2', studentName: 'Maria Lopez', examId: '1', examName: 'Diagnóstico Matemática 2024', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Desaprobado', score: 40, scores: {0: 5, 1: 5}, totalScore: 10, maxScore: 25},
-    { id: '3', studentId: '1', studentName: 'Juan Perez', examId: '2', examName: 'Prácticas del Lenguaje - 1er Trimestre', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Aprobado', score: 100, scores: {0: 10}, totalScore: 10, maxScore: 10 },
-];
-
-const RESULTS_STORAGE_KEY = 'chubut_evalua_results';
-
 interface ResultsContextType {
   results: Result[];
-  addResult: (result: NewResult) => void;
-  deleteResult: (resultId: string) => void;
-  resultExists: (studentId: string, examId: string) => boolean;
+  addResult: (result: NewResult) => Promise<void>;
+  deleteResult: (resultId: string) => Promise<void>;
+  resultExists: (studentId: string, examId: string) => Promise<boolean>;
   loading: boolean;
 }
 
@@ -43,57 +21,35 @@ export function ResultsProvider({ children }: { children: ReactNode }) {
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const refreshResults = useCallback(async () => {
+    setLoading(true);
     try {
-        const storedResults = localStorage.getItem(RESULTS_STORAGE_KEY);
-        if (storedResults) {
-            setResults(JSON.parse(storedResults));
-        } else {
-            setResults(initialResults);
-            localStorage.setItem(RESULTS_STORAGE_KEY, JSON.stringify(initialResults));
-        }
+        const data = await getAllResults();
+        setResults(data);
     } catch (error) {
-        console.error("Failed to access localStorage for results:", error);
-        setResults(initialResults);
+        console.error("Failed to fetch results:", error);
+    } finally {
+        setLoading(false);
     }
-    setLoading(false);
   }, []);
 
-  const updateResultsInStateAndStorage = (newResults: Result[]) => {
-    setResults(newResults);
-    try {
-        localStorage.setItem(RESULTS_STORAGE_KEY, JSON.stringify(newResults));
-    } catch (error) {
-        console.error("Failed to save results to localStorage:", error);
-    }
-  };
+  useEffect(() => {
+    refreshResults();
+  }, [refreshResults]);
 
-  const addResult = (resultData: NewResult) => {
-    const newResult: Result = {
-        id: (Math.max(0, ...results.map(r => parseInt(r.id, 10))) + 1).toString(),
-        studentId: resultData.studentId,
-        studentName: resultData.studentName,
-        examId: resultData.examId,
-        examName: resultData.examName,
-        school: resultData.school,
-        grade: resultData.grade,
-        course: resultData.course,
-        status: resultData.status,
-        score: resultData.score,
-        scores: resultData.scores,
-        totalScore: resultData.totalScore,
-        maxScore: resultData.maxScore,
-    };
-    updateResultsInStateAndStorage([...results, newResult]);
+
+  const addResult = async (resultData: NewResult) => {
+    await addResultDb(resultData);
+    await refreshResults();
   };
   
-  const deleteResult = (resultId: string) => {
-    const newResults = results.filter(result => result.id !== resultId);
-    updateResultsInStateAndStorage(newResults);
+  const deleteResult = async (resultId: string) => {
+    await deleteResultDb(resultId);
+    await refreshResults();
   };
   
-  const resultExists = (studentId: string, examId: string): boolean => {
-    return results.some(r => r.studentId === studentId && r.examId === examId);
+  const resultExists = async (studentId: string, examId: string): Promise<boolean> => {
+    return await resultExistsDb(studentId, examId);
   }
 
   return (

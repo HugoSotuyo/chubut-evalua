@@ -29,18 +29,35 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
 
     const [selectedExamId, setSelectedExamId] = useState<string>("");
     const [scores, setScores] = useState<Record<number, number>>({});
+    const [availableExams, setAvailableExams] = useState<Exam[]>([]);
+    const [isLoadingExams, setIsLoadingExams] = useState(true);
 
-    const availableExams = useMemo(() => {
-        if (!user) return [];
-        let filtered = [];
-         if (user?.role === 'Docente') {
-            filtered = exams.filter(e => e.status === 'Cerrado' && e.grade === user.grade);
-        } else {
-             filtered = exams.filter(e => e.status === 'Abierto');
+    useEffect(() => {
+        const fetchAndFilterExams = async () => {
+            if (!user || !student) return;
+
+            setIsLoadingExams(true);
+            let filtered = [];
+            if (user?.role === 'Docente') {
+                filtered = exams.filter(e => e.status === 'Cerrado' && e.grade === user.grade);
+            } else {
+                filtered = exams.filter(e => e.status === 'Abierto');
+            }
+
+            // Asynchronously filter out exams the student has already taken
+            const studentHasTakenPromises = filtered.map(exam => resultExists(student.id, exam.id));
+            const hasTakenResults = await Promise.all(studentHasTakenPromises);
+            
+            const finalAvailableExams = filtered.filter((_, index) => !hasTakenResults[index]);
+
+            setAvailableExams(finalAvailableExams);
+            setIsLoadingExams(false);
+        };
+
+        if (isOpen) {
+            fetchAndFilterExams();
         }
-        // Filter out exams the student has already taken
-        return filtered.filter(exam => !resultExists(student.id, exam.id));
-    }, [user, exams, student, resultExists]);
+    }, [user, exams, student, resultExists, isOpen]);
 
     const selectedExam = useMemo(() => {
         return exams.find(e => e.id === selectedExamId);
@@ -78,7 +95,7 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedExam) {
             toast({ variant: "destructive", title: "Error", description: "Por favor, selecciona un examen." });
@@ -88,7 +105,7 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
         const percentageScore = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
         const approvalThreshold = 60; // As defined in admin page
 
-        addResult({
+        await addResult({
             studentId: student.id,
             studentName: student.name,
             examId: selectedExam.id,
@@ -126,12 +143,12 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
                         <div className="grid md:grid-cols-3 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="examen">Seleccionar Examen</Label>
-                                <Select onValueChange={setSelectedExamId} value={selectedExamId} required>
+                                <Select onValueChange={setSelectedExamId} value={selectedExamId} required disabled={isLoadingExams}>
                                     <SelectTrigger id="examen">
-                                        <SelectValue placeholder="Elige una evaluación" />
+                                        <SelectValue placeholder={isLoadingExams ? "Cargando exámenes..." : "Elige una evaluación"} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {availableExams.length > 0 ? availableExams.map(exam => (
+                                        {!isLoadingExams && availableExams.length > 0 ? availableExams.map(exam => (
                                             <SelectItem key={exam.id} value={exam.id}>
                                                 {exam.name}
                                             </SelectItem>
