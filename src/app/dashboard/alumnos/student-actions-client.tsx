@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-context";
+import { useStudents } from "@/context/students-context";
 import { CargarResultadosDialog } from "@/components/cargar-resultados-dialog";
 import type { Student } from "@/lib/types";
 
@@ -32,6 +33,7 @@ export function StudentActionsClient({ student, studentList = [] }: StudentActio
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { addStudent, updateStudent, deleteStudent } = useStudents();
 
   const handleOpenForm = (studentToEdit: Student | null = null) => {
     setEditingStudent(studentToEdit);
@@ -44,22 +46,54 @@ export function StudentActionsClient({ student, studentList = [] }: StudentActio
   };
 
   const handleDeleteStudent = (studentId: string) => {
+    deleteStudent(studentId);
     toast({
-      title: "Funcionalidad en Desarrollo",
-      description: `La eliminación de alumnos estará disponible próximamente.`,
+      title: "Alumno Eliminado",
+      description: `El alumno ha sido eliminado correctamente.`,
     });
   };
 
   const handleSaveStudent = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user) {
-        toast({ title: "Error", description: "No se ha podido identificar al usuario.", variant: "destructive"});
+    if (!user || !user.school) {
+        toast({ title: "Error", description: "No se ha podido identificar al usuario o su escuela.", variant: "destructive"});
         return;
     }
-    toast({
-      title: "Funcionalidad en Desarrollo",
-      description: `El guardado de alumnos estará disponible próximamente.`,
-    });
+    
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get("name") as string;
+    const dni = formData.get("dni") as string;
+
+    if (editingStudent) {
+      // Update existing student
+      updateStudent({
+        ...editingStudent,
+        name,
+        dni,
+      });
+      toast({
+        title: "Alumno Actualizado",
+        description: `Los datos de ${name} se han actualizado.`,
+      });
+    } else {
+       // Add new student
+      if (!user.grade || !user.course) {
+          toast({ title: "Error", description: "Faltan datos de grado o curso del docente.", variant: "destructive"});
+          return;
+      }
+      addStudent({
+        name,
+        dni,
+        school: user.school,
+        grade: user.grade,
+        course: user.course,
+      });
+      toast({
+        title: "Alumno Agregado",
+        description: `${name} ha sido agregado al curso.`,
+      });
+    }
+
     handleCloseForm();
   };
   

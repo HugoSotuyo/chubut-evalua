@@ -25,6 +25,7 @@ const initialStudents: Student[] = [
 interface StudentsContextType {
   students: Student[];
   addStudent: (student: NewStudent) => void;
+  updateStudent: (student: Student) => void;
   deleteStudent: (studentId: string) => void;
   loading: boolean;
 }
@@ -38,8 +39,9 @@ export function StudentsProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let storedStudents;
     try {
-      const storedStudents = localStorage.getItem(STUDENTS_STORAGE_KEY);
+      storedStudents = localStorage.getItem(STUDENTS_STORAGE_KEY);
       if (storedStudents) {
         setStudents(JSON.parse(storedStudents));
       } else {
@@ -49,8 +51,9 @@ export function StudentsProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Failed to access localStorage for students:", error);
       setStudents(initialStudents);
+    } finally {
+        setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const updateStudentsInStateAndStorage = (newStudents: Student[]) => {
@@ -65,9 +68,14 @@ export function StudentsProvider({ children }: { children: ReactNode }) {
   const addStudent = (studentData: NewStudent) => {
     const newStudent: Student = {
         ...studentData,
-        id: (Math.max(0, ...students.map(s => parseInt(s.id, 10))) + 1).toString(),
+        id: ((students.length > 0 ? Math.max(...students.map(s => parseInt(s.id, 10))) : 0) + 1).toString(),
     };
     updateStudentsInStateAndStorage([...students, newStudent]);
+  };
+  
+  const updateStudent = (updatedStudent: Student) => {
+      const newStudents = students.map(s => s.id === updatedStudent.id ? updatedStudent : s);
+      updateStudentsInStateAndStorage(newStudents);
   };
 
   const deleteStudent = (studentId: string) => {
@@ -76,7 +84,7 @@ export function StudentsProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <StudentsContext.Provider value={{ students, addStudent, deleteStudent, loading }}>
+    <StudentsContext.Provider value={{ students, addStudent, updateStudent, deleteStudent, loading }}>
       {children}
     </StudentsContext.Provider>
   );
