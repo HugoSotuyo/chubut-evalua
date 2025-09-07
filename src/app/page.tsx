@@ -3,8 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { LoginForm } from "@/components/login-form";
 import { GraduationCap } from "lucide-react";
+import { SuspenseWrapper } from "@/components/suspense-wrapper";
 
 export default function LoginPage() {
+
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">
       <div className="flex items-center justify-center py-12">
@@ -15,7 +17,9 @@ export default function LoginPage() {
               Ingresa tu DNI/email y contraseña para acceder al sistema
             </p>
           </div>
-          <LoginForm />
+          <SuspenseWrapper>
+            <LoginForm />
+          </SuspenseWrapper>
           <div className="mt-4 text-center text-sm">
             ¿No tienes una cuenta?{" "}
             <Link href="/register" className="underline">
