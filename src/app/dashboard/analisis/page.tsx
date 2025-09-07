@@ -16,14 +16,13 @@ import { useExams } from "@/context/exams-context";
 import { useResults } from "@/context/results-context"
 import { useSchools } from "@/context/schools-context"
 import { useStudents } from "@/context/students-context"
-import type { Result } from "@/context/results-context"
 
-function AnalisisPageContent() {
-    const { user } = useAuth();
-    const { exams } = useExams();
-    const { results } = useResults();
-    const { schools, districts } = useSchools();
-    const { students } = useStudents();
+export default function AnalisisPage() {
+    const { user, loading: authLoading } = useAuth();
+    const { exams, loading: examsLoading } = useExams();
+    const { results, loading: resultsLoading } = useResults();
+    const { schools, districts, loading: schoolsLoading } = useSchools();
+    const { students, loading: studentsLoading } = useStudents();
     const searchParams = useSearchParams();
 
     const [filters, setFilters] = useState({
@@ -320,8 +319,8 @@ function AnalisisPageContent() {
     }, [examAnalysisData]);
 
 
-    if (!user) {
-        return <div>Cargando...</div>;
+    if (authLoading || examsLoading || resultsLoading || schoolsLoading || studentsLoading || !user) {
+        return <div className="flex h-screen w-full items-center justify-center">Cargando...</div>;
     }
 
     const showGeneralFilters = user.role !== 'Director' && user.role !== 'Docente';
@@ -608,13 +607,5 @@ function AnalisisPageContent() {
                 </Button>
             </div>
         </div>
-    )
-}
-
-export default function AnalisisPage() {
-    return (
-        <React.Suspense fallback={<div>Cargando...</div>}>
-            <AnalisisPageContent />
-        </React.Suspense>
     )
 }

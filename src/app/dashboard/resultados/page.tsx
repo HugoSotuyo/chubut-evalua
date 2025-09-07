@@ -28,17 +28,17 @@ type Filters = {
     status: string;
 }
 
-function ResultadosPageContent() {
-    const { user } = useAuth();
-    const { results: allResults, deleteResult } = useResults();
-    const { exams } = useExams();
+export default function ResultadosPage() {
+    const { user, loading: authLoading } = useAuth();
+    const { results: allResults, deleteResult, loading: resultsLoading } = useResults();
+    const { exams, loading: examsLoading } = useExams();
     const { searchTerm } = useSearch();
     const searchParams = useSearchParams();
     const { toast } = useToast();
     
     const [filters, setFilters] = useState<Filters>({
         exam: "all",
-        school: user?.role === "Director" || user?.role === "Docente" ? user.school : "all",
+        school: "all",
         studentName: "",
         status: "all",
     });
@@ -47,6 +47,15 @@ function ResultadosPageContent() {
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
     const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
     const [selectedResult, setSelectedResult] = useState<Result | null>(null);
+
+    useEffect(() => {
+        if (user) {
+            setFilters(prev => ({
+                ...prev,
+                school: user?.role === "Director" || user?.role === "Docente" ? user.school : "all",
+            }))
+        }
+    }, [user])
 
     useEffect(() => {
         const examFromUrl = searchParams.get("exam");
@@ -167,8 +176,8 @@ function ResultadosPageContent() {
         return exams.find(e => e.id === selectedResult.examId) ?? null;
     }, [selectedResult, exams]);
 
-    if (!user) {
-        return <div>Cargando...</div>;
+    if (authLoading || resultsLoading || examsLoading) {
+        return <div className="flex h-screen w-full items-center justify-center">Cargando...</div>;
     }
 
     return (
@@ -207,7 +216,7 @@ function ResultadosPageContent() {
                             </SelectContent>
                         </Select>
                     </div>
-                    {user.role !== 'Director' && user.role !== 'Docente' && (
+                    {user && user.role !== 'Director' && user.role !== 'Docente' && (
                         <div className="grid gap-2">
                             <Label htmlFor="filtro-escuela">Escuela</Label>
                             <Select onValueChange={(value) => handleFilterChange("school", value)} value={filters.school}>
@@ -364,13 +373,5 @@ function ResultadosPageContent() {
             </Dialog>
 
         </div>
-    )
-}
-
-export default function ResultadosPage() {
-    return (
-        <React.Suspense fallback={<div>Cargando...</div>}>
-            <ResultadosPageContent />
-        </React.Suspense>
     )
 }
