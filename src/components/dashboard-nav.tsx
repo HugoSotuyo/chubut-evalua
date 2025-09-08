@@ -10,6 +10,8 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import { navItems } from "@/data/menus";
+import { LogOut } from "lucide-react";
+import { mockLogout } from "@/context/auth-context";
 
 
 interface DashboardNavProps {
@@ -48,6 +50,18 @@ export function DashboardNav({ userRole }: DashboardNavProps) {
           </Link>
         </SidebarMenuItem>
       ))}
+       <SidebarMenuItem className="mt-auto">
+          <SidebarMenuButton
+            onClick={mockLogout}
+            tooltip={{
+              children: "Cerrar Sesión",
+              className: "bg-destructive text-destructive-foreground"
+            }}
+          >
+            <LogOut />
+            <span>Cerrar Sesión</span>
+          </SidebarMenuButton>
+      </SidebarMenuItem>
     </SidebarMenu>
   );
 }
