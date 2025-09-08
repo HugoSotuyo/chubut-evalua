@@ -66,3 +66,9 @@ export type School = {
   status: "Activa" | "Inactiva";
 };
 
+export type Course = {
+  id: string;
+  grade: string;
+  section: string;
+  school: string;
+};

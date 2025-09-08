@@ -1,4 +1,5 @@
 
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
@@ -9,6 +10,7 @@ import { SearchProvider } from '@/context/search-context';
 import { ExamsProvider } from '@/context/exams-context';
 import { StudentsProvider } from '@/context/students-context';
 import { ResultsProvider } from '@/context/results-context';
+import { CoursesProvider } from '@/context/courses-context';
 
 export const metadata: Metadata = {
   title: 'Chubut evalúa',
@@ -35,7 +37,9 @@ export default function RootLayout({
                         <ExamsProvider>
                             <StudentsProvider>
                                 <ResultsProvider>
-                                    {children}
+                                    <CoursesProvider>
+                                        {children}
+                                    </CoursesProvider>
                                     <Toaster />
                                 </ResultsProvider>
                             </StudentsProvider>
