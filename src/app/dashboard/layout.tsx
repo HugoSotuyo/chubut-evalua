@@ -14,7 +14,6 @@ import { UsersProvider } from "@/context/users-context";
 import { StudentsProvider } from "@/context/students-context";
 import { ResultsProvider } from "@/context/results-context";
 import { ExamsProvider } from "@/context/exams-context";
-import { CoursesProvider } from "@/context/courses-context";
 
 function DashboardLayoutContent({
     children,
@@ -70,9 +69,7 @@ export default function DashboardLayout({
               <ExamsProvider>
                 <StudentsProvider>
                   <ResultsProvider>
-                    <CoursesProvider>
-                        <DashboardLayoutContent>{children}</DashboardLayoutContent>
-                    </CoursesProvider>
+                    <DashboardLayoutContent>{children}</DashboardLayoutContent>
                   </ResultsProvider>
                 </StudentsProvider>
               </ExamsProvider>
