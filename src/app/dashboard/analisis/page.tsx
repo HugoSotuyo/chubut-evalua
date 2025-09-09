@@ -569,7 +569,9 @@ export default function AnalisisPage() {
                                     dataKey={`${gradeName}_Rendimiento`}
                                     fill={getGradeColor(gradeName, 'main')}
                                     barSize={20}
-                                />,
+                                >
+                                    <LabelList dataKey={`${gradeName}_Rendimiento`} position="top" formatter={(value: number) => `${value.toFixed(0)}%`} />
+                                </Bar>,
                                 <Bar 
                                     key={`${gradeName}_Aprobados`}
                                     name={`${gradeName} - Aprobados`} 
@@ -657,5 +659,7 @@ export default function AnalisisPage() {
         </div>
     )
 }
+
+    
 
     
