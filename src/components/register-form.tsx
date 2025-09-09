@@ -176,7 +176,7 @@ export function RegisterForm() {
               </SelectTrigger>
               <SelectContent>
                 {districts.map(district => (
-                    <SelectItem key={district} value={district}>{district}</SelectItem>
+                    <SelectItem key={district.id} value={district.name}>{district.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
