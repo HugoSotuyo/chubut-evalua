@@ -198,10 +198,8 @@ export default function AnalisisPage() {
             Object.entries(data.byGrade).forEach(([grade, gradeData]) => {
                 const total = gradeData.count;
                 if (total > 0) {
-                    const aprobadosPercent = (gradeData.aprobados / total) * 100;
-                    const desaprobadosPercent = 100 - aprobadosPercent;
-                    examRow[`${grade}_Aprobados`] = aprobadosPercent;
-                    examRow[`${grade}_Desaprobados`] = desaprobadosPercent;
+                    examRow[`${grade}_Aprobados`] = (gradeData.aprobados / total) * 100;
+                    examRow[`${grade}_Desaprobados`] = ((total - gradeData.aprobados) / total) * 100;
                     examRow[`${grade}_Rendimiento`] = (gradeData.totalScore / gradeData.totalMaxScore) * 100;
                     examRow[`${grade}_count`] = total;
                     examRow[`${grade}_aprobadosCount`] = gradeData.aprobados;
@@ -604,13 +602,10 @@ export default function AnalisisPage() {
                                         dataKey={`${gradeName}_Aprobados`} 
                                         position="center" 
                                         formatter={(value: number, _name: any, props: any) => {
-                                            if (value > 0) {
-                                                let label = `${value.toFixed(0)}%`;
-                                                if (props && props.payload && props.payload[`${gradeName}_aprobadosCount`] !== undefined) {
-                                                    const count = props.payload[`${gradeName}_aprobadosCount`];
-                                                    if (count > 0) label += ` (${count})`;
-                                                }
-                                                return label;
+                                            if (value > 0 && props && props.payload) {
+                                                const count = props.payload[`${gradeName}_aprobadosCount`];
+                                                if (count > 0) return `${value.toFixed(0)}% (${count})`;
+                                                return `${value.toFixed(0)}%`;
                                             }
                                             return '';
                                         }} 
@@ -629,13 +624,10 @@ export default function AnalisisPage() {
                                         dataKey={`${gradeName}_Desaprobados`} 
                                         position="center" 
                                         formatter={(value: number, _name: any, props: any) => {
-                                            if (value > 0) {
-                                                 let label = `${value.toFixed(0)}%`;
-                                                 if (props && props.payload && props.payload[`${gradeName}_desaprobadosCount`] !== undefined) {
-                                                     const count = props.payload[`${gradeName}_desaprobadosCount`];
-                                                     if (count > 0) label += ` (${count})`;
-                                                 }
-                                                 return label;
+                                            if (value > 0 && props && props.payload) {
+                                                 const count = props.payload[`${gradeName}_desaprobadosCount`];
+                                                 if (count > 0) return `${value.toFixed(0)}% (${count})`;
+                                                 return `${value.toFixed(0)}%`;
                                             }
                                             return '';
                                         }}
@@ -713,6 +705,7 @@ export default function AnalisisPage() {
     
 
     
+
 
 
 
