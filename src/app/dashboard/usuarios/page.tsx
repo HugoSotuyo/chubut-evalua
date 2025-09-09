@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Ellipsis, UserPlus, Filter, FileDown } from "lucide-react"
+import { Ellipsis, UserPlus, Filter, FileDown, Eye } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
   AlertDialog,
@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -26,10 +27,12 @@ import { useUsers } from "@/context/users-context";
 import type { User } from "@/context/users-context";
 import { RoleIcon } from "@/components/role-icon";
 import { useAuth } from "@/context/auth-context";
+import { Input } from "@/components/ui/input";
 
 export default function UsuariosPage() {
   const { users, deleteUser, enableUser } = useUsers();
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [roleFilter, setRoleFilter] = useState("all");
   const { toast } = useToast();
@@ -64,6 +67,11 @@ export default function UsuariosPage() {
     setSelectedUser(user);
     setIsAlertOpen(true);
   };
+  
+  const handleOpenProfileDialog = (user: User) => {
+    setSelectedUser(user);
+    setIsProfileDialogOpen(true);
+  }
 
   const handleDeleteUser = async () => {
     if (!selectedUser || isSubmitting) return;
@@ -242,6 +250,12 @@ export default function UsuariosPage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                                        {currentUser.role === 'Director' && (
+                                            <DropdownMenuItem onSelect={() => handleOpenProfileDialog(user)}>
+                                                <Eye className="mr-2 h-4 w-4" />
+                                                Ver Perfil
+                                            </DropdownMenuItem>
+                                        )}
                                         {user.status === "Pendiente" && (currentUser.role === 'Evaluador' || currentUser.role === 'Director') && (
                                             <DropdownMenuItem onSelect={() => handleEnableUser(user.id)} disabled={isSubmitting}>
                                                 {isSubmitting ? "Habilitando..." : `Habilitar ${user.role}`}
@@ -279,6 +293,66 @@ export default function UsuariosPage() {
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+
+        <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Perfil del Usuario</DialogTitle>
+                    <DialogDescription>
+                        Información detallada del usuario seleccionado.
+                    </DialogDescription>
+                </DialogHeader>
+                {selectedUser && (
+                    <div className="grid gap-4 py-4">
+                        <div className="flex items-center gap-4">
+                             <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-2xl font-bold">
+                                {selectedUser.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-semibold">{selectedUser.name}</h2>
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                    <RoleIcon role={selectedUser.role} className="h-4 w-4" />
+                                    <span>{selectedUser.role}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input id="email" value={selectedUser.email} readOnly />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="escuela">Escuela</Label>
+                            <Input id="escuela" value={selectedUser.school} readOnly />
+                        </div>
+                        {selectedUser.grade && (
+                            <div className="space-y-2">
+                                <Label htmlFor="grado">Grado</Label>
+                                <Input id="grado" value={selectedUser.grade} readOnly />
+                            </div>
+                        )}
+                        {selectedUser.course && (
+                            <div className="space-y-2">
+                                <Label htmlFor="curso">Curso</Label>
+                                <Input id="curso" value={selectedUser.course} readOnly />
+                            </div>
+                        )}
+                        <div className="space-y-2">
+                            <Label>Estado</Label>
+                            <div>
+                                <Badge variant={selectedUser.status === "Pendiente" ? "secondary" : (selectedUser.status === "Activo" ? "default" : "destructive")}>
+                                    {selectedUser.status}
+                                </Badge>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button onClick={() => setIsProfileDialogOpen(false)}>Cerrar</Button>
+                    </DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
   )
 }
