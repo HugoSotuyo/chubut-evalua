@@ -48,9 +48,9 @@ export function ResultsProvider({ children }: { children: ReactNode }) {
     await refreshResults();
   };
   
-  const resultExists = async (studentId: string, examId: string): Promise<boolean> => {
+  const resultExists = useCallback(async (studentId: string, examId: string): Promise<boolean> => {
     return await resultExistsDb(studentId, examId);
-  }
+  }, []);
 
   return (
     <ResultsContext.Provider value={{ results, addResult, deleteResult, resultExists, loading }}>
