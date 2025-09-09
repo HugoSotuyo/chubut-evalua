@@ -303,14 +303,17 @@ export default function AnalisisPage() {
             return (
             <div className="p-2 bg-background border rounded-lg shadow-lg">
                 <p className="font-bold">{`${label}`}</p>
-                {payload.map((pld: any, index: number) => (
-                <p key={index} style={{ color: pld.fill }}>
-                    {pld.name.includes("Rendimiento") || pld.name.includes("_Aprobados") || pld.name.includes("_Desaprobados")
-                        ? `${pld.name.split('_')[1] || pld.name.split('_')[0]}: ${pld.value.toFixed(1)}%`
-                        : `${pld.name}: ${pld.value}`
-                    }
-                </p>
-                ))}
+                {payload.map((pld: any, index: number) => {
+                    const name = pld.name || '';
+                    const isPercentage = name.includes("Rendimiento") || name.includes("_Aprobados") || name.includes("_Desaprobados");
+                    const displayName = name.split('_')[1] || name.split('_')[0] || name;
+                    
+                    return (
+                        <p key={index} style={{ color: pld.fill }}>
+                            {`${displayName}: ${pld.value.toFixed(1)}${isPercentage ? '%' : ''}`}
+                        </p>
+                    )
+                })}
             </div>
             );
         }
@@ -575,19 +578,15 @@ export default function AnalisisPage() {
                                     fill={getGradeColor(gradeName, 'main')}
                                     barSize={20}
                                 >
-                                     <LabelList 
-                                        dataKey={`${gradeName}_Rendimiento`} 
-                                        position="top" 
-                                        formatter={(value: number, _name: any, props: any) => {
+                                     <LabelList
+                                        dataKey={`${gradeName}_Rendimiento`}
+                                        position="top"
+                                        formatter={(value: number) => {
                                             if (value > 0) {
-                                                let label = `${value.toFixed(0)}%`;
-                                                if (props && props.payload && props.payload[`${gradeName}_count`] > 0) {
-                                                    label += ` (${props.payload[`${gradeName}_count`]})`;
-                                                }
-                                                return label;
+                                                return `${value.toFixed(0)}%`;
                                             }
                                             return '';
-                                        }} 
+                                        }}
                                     />
                                 </Bar>,
                                 <Bar 
@@ -708,6 +707,7 @@ export default function AnalisisPage() {
 
 
     
+
 
 
 
