@@ -77,7 +77,7 @@ export default function AnalisisPage() {
 
 
     const availableDistricts = useMemo(() => {
-        return districts.sort();
+        return districts.sort((a, b) => a.name.localeCompare(b.name)).map(d => d.name);
     }, [districts]);
 
     const availableSchools = useMemo(() => {
@@ -93,7 +93,7 @@ export default function AnalisisPage() {
     }, [students]);
     
     const availableExams = useMemo(() => {
-        if (user?.role === 'Docente') {
+        if (user?.role === 'Docente' && user.grade) {
             return exams.filter(e => e.grade === user.grade && e.status === 'Cerrado');
         }
         return exams;
@@ -111,9 +111,9 @@ export default function AnalisisPage() {
         let filteredResults = [...results];
 
         // 1. Role-based pre-filtering
-        if (user?.role === 'Director') {
+        if (user?.role === 'Director' && user.school) {
             filteredResults = filteredResults.filter(r => r.school === user.school);
-        } else if (user?.role === 'Docente') {
+        } else if (user?.role === 'Docente' && user.school && user.grade && user.course) {
             filteredResults = filteredResults.filter(r => 
                 r.school === user.school &&
                 r.grade === user.grade &&
