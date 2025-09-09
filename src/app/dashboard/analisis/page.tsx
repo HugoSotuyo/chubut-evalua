@@ -575,13 +575,13 @@ export default function AnalisisPage() {
                                     fill={getGradeColor(gradeName, 'main')}
                                     barSize={20}
                                 >
-                                    <LabelList 
+                                     <LabelList 
                                         dataKey={`${gradeName}_Rendimiento`} 
                                         position="top" 
                                         formatter={(value: number, _name: any, props: any) => {
                                             if (value > 0) {
                                                 let label = `${value.toFixed(0)}%`;
-                                                if (props && props.payload && props.payload[`${gradeName}_count`] > 0) {
+                                                if (props?.payload?.[`${gradeName}_count`] > 0) {
                                                     label += ` (${props.payload[`${gradeName}_count`]})`;
                                                 }
                                                 return label;
@@ -602,8 +602,8 @@ export default function AnalisisPage() {
                                         dataKey={`${gradeName}_Aprobados`} 
                                         position="center" 
                                         formatter={(value: number, _name: any, props: any) => {
-                                            if (value > 0 && props && props.payload) {
-                                                const count = props.payload[`${gradeName}_aprobadosCount`];
+                                            if (value > 0) {
+                                                const count = props?.payload?.[`${gradeName}_aprobadosCount`];
                                                 if (count > 0) return `${value.toFixed(0)}% (${count})`;
                                                 return `${value.toFixed(0)}%`;
                                             }
@@ -624,8 +624,8 @@ export default function AnalisisPage() {
                                         dataKey={`${gradeName}_Desaprobados`} 
                                         position="center" 
                                         formatter={(value: number, _name: any, props: any) => {
-                                            if (value > 0 && props && props.payload) {
-                                                 const count = props.payload[`${gradeName}_desaprobadosCount`];
+                                            if (value > 0) {
+                                                 const count = props?.payload?.[`${gradeName}_desaprobadosCount`];
                                                  if (count > 0) return `${value.toFixed(0)}% (${count})`;
                                                  return `${value.toFixed(0)}%`;
                                             }
@@ -709,3 +709,6 @@ export default function AnalisisPage() {
 
 
 
+
+
+    
