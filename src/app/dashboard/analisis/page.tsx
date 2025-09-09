@@ -602,7 +602,13 @@ export default function AnalisisPage() {
                                         dataKey={`${gradeName}_aprobadosCount`}
                                         position="center" 
                                         className="fill-white font-bold" 
-                                        formatter={(value: number) => (value > 0 ? value : '')} 
+                                        formatter={(value: number, _name: any, props: any) => {
+                                            if (value > 0) {
+                                                const percentage = props.payload[`${gradeName}_Aprobados`];
+                                                return `${value} (${percentage.toFixed(0)}%)`;
+                                            }
+                                            return '';
+                                        }}
                                      />
                                 </Bar>,
                                 <Bar
@@ -617,7 +623,13 @@ export default function AnalisisPage() {
                                         dataKey={`${gradeName}_desaprobadosCount`}
                                         position="center" 
                                         className="fill-white font-bold" 
-                                        formatter={(value: number) => (value > 0 ? value : '')}
+                                        formatter={(value: number, _name: any, props: any) => {
+                                            if (value > 0) {
+                                                const percentage = props.payload[`${gradeName}_Desaprobados`];
+                                                return `${value} (${percentage.toFixed(0)}%)`;
+                                            }
+                                            return '';
+                                        }}
                                     />
                                 </Bar>
                             ])}
@@ -698,4 +710,5 @@ export default function AnalisisPage() {
 
 
     
+
 
