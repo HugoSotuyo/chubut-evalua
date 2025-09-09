@@ -598,23 +598,17 @@ export default function AnalisisPage() {
                                     fill={getGradeColor(gradeName, 'approved')}
                                     barSize={40}
                                 >
-                                     <LabelList 
-                                        dataKey={`${gradeName}_aprobadosCount`}
-                                        position="center" 
-                                        className="fill-white font-bold" 
-                                        formatter={(value: number, _name: any, props: any) => {
+                                     <LabelList
+                                        dataKey={`${gradeName}_Aprobados`}
+                                        position="center"
+                                        className="fill-white font-bold"
+                                        formatter={(value: number) => {
                                             if (value > 0) {
-                                                if (props && props.payload) {
-                                                    const percentage = props.payload[`${gradeName}_Aprobados`];
-                                                    if (typeof percentage === 'number') {
-                                                        return `${value} (${percentage.toFixed(0)}%)`;
-                                                    }
-                                                }
-                                                return `${value}`;
+                                                return `${value.toFixed(0)}%`;
                                             }
                                             return '';
                                         }}
-                                     />
+                                    />
                                 </Bar>,
                                 <Bar
                                     key={`${gradeName}_Desaprobados`}
@@ -624,19 +618,13 @@ export default function AnalisisPage() {
                                     fill={getGradeColor(gradeName, 'disapproved')}
                                     barSize={40}
                                 >
-                                    <LabelList 
-                                        dataKey={`${gradeName}_desaprobadosCount`}
-                                        position="center" 
-                                        className="fill-white font-bold" 
-                                        formatter={(value: number, _name: any, props: any) => {
-                                             if (value > 0) {
-                                                if (props && props.payload) {
-                                                    const percentage = props.payload[`${gradeName}_Desaprobados`];
-                                                    if (typeof percentage === 'number') {
-                                                        return `${value} (${percentage.toFixed(0)}%)`;
-                                                    }
-                                                }
-                                                return `${value}`;
+                                    <LabelList
+                                        dataKey={`${gradeName}_Desaprobados`}
+                                        position="center"
+                                        className="fill-white font-bold"
+                                        formatter={(value: number) => {
+                                            if (value > 0) {
+                                                return `${value.toFixed(0)}%`;
                                             }
                                             return '';
                                         }}
@@ -720,6 +708,7 @@ export default function AnalisisPage() {
 
 
     
+
 
 
 
