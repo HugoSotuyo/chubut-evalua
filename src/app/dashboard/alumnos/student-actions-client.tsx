@@ -33,7 +33,7 @@ export function StudentActionsClient({ student, studentList = [] }: StudentActio
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { addStudent, updateStudent, deleteStudent } = useStudents();
+  const { students, addStudent, updateStudent, deleteStudent } = useStudents();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleOpenForm = (studentToEdit: Student | null = null) => {
@@ -87,12 +87,25 @@ export function StudentActionsClient({ student, studentList = [] }: StudentActio
           description: `Los datos de ${name} se han actualizado.`,
         });
       } else {
-         // Add new student
+        // Add new student
         if (!user.grade || !user.course) {
             toast({ title: "Error", description: "Faltan datos de grado o curso del docente.", variant: "destructive"});
             setIsSubmitting(false);
             return;
         }
+
+        // Check for existing DNI
+        const dniExists = students.some(s => s.dni === dni);
+        if (dniExists) {
+            toast({
+                variant: "destructive",
+                title: "DNI Duplicado",
+                description: "Ya existe un alumno con este DNI en el sistema.",
+            });
+            setIsSubmitting(false);
+            return;
+        }
+
         await addStudent({
           name,
           dni,
