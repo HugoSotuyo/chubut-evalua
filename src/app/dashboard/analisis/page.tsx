@@ -581,7 +581,7 @@ export default function AnalisisPage() {
                                         formatter={(value: number, _name: any, props: any) => {
                                             if (value > 0) {
                                                 let label = `${value.toFixed(0)}%`;
-                                                if (props?.payload?.[`${gradeName}_count`] > 0) {
+                                                if (props && props.payload && props.payload[`${gradeName}_count`] > 0) {
                                                     label += ` (${props.payload[`${gradeName}_count`]})`;
                                                 }
                                                 return label;
@@ -599,15 +599,10 @@ export default function AnalisisPage() {
                                     barSize={40}
                                 >
                                      <LabelList 
+                                        dataKey={`${gradeName}_aprobadosCount`}
                                         position="center" 
                                         className="fill-white font-bold" 
-                                        formatter={(_value: number, _name: any, props: any) => {
-                                            const count = props?.payload?.[`${gradeName}_aprobadosCount`];
-                                            if (count > 0) {
-                                                return `${count}`;
-                                            }
-                                            return '';
-                                        }} 
+                                        formatter={(value: number) => (value > 0 ? value : '')} 
                                      />
                                 </Bar>,
                                 <Bar
@@ -619,15 +614,10 @@ export default function AnalisisPage() {
                                     barSize={40}
                                 >
                                     <LabelList 
+                                        dataKey={`${gradeName}_desaprobadosCount`}
                                         position="center" 
                                         className="fill-white font-bold" 
-                                        formatter={(_value: number, _name: any, props: any) => {
-                                            const count = props?.payload?.[`${gradeName}_desaprobadosCount`];
-                                            if (count > 0) {
-                                                return `${count}`;
-                                            }
-                                            return '';
-                                        }}
+                                        formatter={(value: number) => (value > 0 ? value : '')}
                                     />
                                 </Bar>
                             ])}
@@ -708,3 +698,4 @@ export default function AnalisisPage() {
 
 
     
+
