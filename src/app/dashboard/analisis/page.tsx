@@ -124,7 +124,8 @@ export default function AnalisisPage() {
     }
     
     const { dataAprobados, examAnalysisData, questionAnalysisData } = useMemo(() => {
-        let filteredResults = [...results];
+        const existingExamIds = new Set(exams.map(e => e.id));
+        let filteredResults = results.filter(r => existingExamIds.has(r.examId));
 
         // 1. Role-based pre-filtering
         if (user?.role === 'Director' && user.school) {
@@ -706,6 +707,7 @@ export default function AnalisisPage() {
 
 
     
+
 
 
 
