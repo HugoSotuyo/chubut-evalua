@@ -604,8 +604,13 @@ export default function AnalisisPage() {
                                         className="fill-white font-bold" 
                                         formatter={(value: number, _name: any, props: any) => {
                                             if (value > 0) {
-                                                const percentage = props.payload[`${gradeName}_Aprobados`];
-                                                return `${value} (${percentage.toFixed(0)}%)`;
+                                                if (props && props.payload) {
+                                                    const percentage = props.payload[`${gradeName}_Aprobados`];
+                                                    if (typeof percentage === 'number') {
+                                                        return `${value} (${percentage.toFixed(0)}%)`;
+                                                    }
+                                                }
+                                                return `${value}`;
                                             }
                                             return '';
                                         }}
@@ -624,9 +629,14 @@ export default function AnalisisPage() {
                                         position="center" 
                                         className="fill-white font-bold" 
                                         formatter={(value: number, _name: any, props: any) => {
-                                            if (value > 0) {
-                                                const percentage = props.payload[`${gradeName}_Desaprobados`];
-                                                return `${value} (${percentage.toFixed(0)}%)`;
+                                             if (value > 0) {
+                                                if (props && props.payload) {
+                                                    const percentage = props.payload[`${gradeName}_Desaprobados`];
+                                                    if (typeof percentage === 'number') {
+                                                        return `${value} (${percentage.toFixed(0)}%)`;
+                                                    }
+                                                }
+                                                return `${value}`;
                                             }
                                             return '';
                                         }}
@@ -710,5 +720,6 @@ export default function AnalisisPage() {
 
 
     
+
 
 
