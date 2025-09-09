@@ -18,6 +18,21 @@ import { useResults } from "@/context/results-context"
 import { useSchools } from "@/context/schools-context"
 import { useStudents } from "@/context/students-context"
 
+const GRADE_COLORS: Record<string, string> = {
+    "1er Grado": "hsl(var(--chart-1))",
+    "2do Grado": "hsl(var(--chart-5))",
+    "3er Grado": "hsl(var(--chart-2))",
+    "4to Grado": "hsl(var(--chart-4))",
+    "5to Grado": "hsl(var(--primary))",
+    "6to Grado": "hsl(var(--chart-3))",
+};
+
+const getGradeColor = (grade: string | undefined): string => {
+    if (!grade) return "hsl(var(--muted-foreground))";
+    return GRADE_COLORS[grade] || "hsl(var(--muted-foreground))";
+};
+
+
 export default function AnalisisPage() {
     const { user, loading: authLoading } = useAuth();
     const { exams, loading: examsLoading } = useExams();
@@ -553,15 +568,14 @@ export default function AnalisisPage() {
                             <Tooltip content={<CustomTooltip />} />
                             <Legend />
 
-                            {gradeDataKeys.map((dataKey, index) => {
+                            {gradeDataKeys.map((dataKey) => {
                                 const gradeName = dataKey.replace('_rendimiento', '');
-                                const colorKey = `chart-${(index % 2) + 1}` as const;
                                 return (
                                     <Bar 
                                         key={dataKey}
                                         name={`${gradeName} - Rendimiento`} 
                                         dataKey={dataKey} 
-                                        fill={`hsl(var(--${colorKey}))`} 
+                                        fill={getGradeColor(gradeName)}
                                         barSize={40}
                                     >
                                         <LabelList dataKey={dataKey} position="top" formatter={(value: number) => `${value.toFixed(0)}%`} />
@@ -646,3 +660,5 @@ export default function AnalisisPage() {
         </div>
     )
 }
+
+    
