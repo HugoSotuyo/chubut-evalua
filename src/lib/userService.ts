@@ -1,5 +1,4 @@
 
-
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import type { User } from "./types";
