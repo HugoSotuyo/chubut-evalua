@@ -581,11 +581,12 @@ export default function AnalisisPage() {
                                         dataKey={`${gradeName}_Rendimiento`} 
                                         position="top" 
                                         formatter={(value: number, _name: any, props: any) => {
-                                            if (props && props.payload && props.payload[`${gradeName}_count`] > 0) {
-                                                return `${value.toFixed(0)}% (${props.payload[`${gradeName}_count`]})`;
-                                            }
                                             if (value > 0) {
-                                               return `${value.toFixed(0)}%`;
+                                                let label = `${value.toFixed(0)}%`;
+                                                if (props && props.payload && props.payload[`${gradeName}_count`] > 0) {
+                                                    label += ` (${props.payload[`${gradeName}_count`]})`;
+                                                }
+                                                return label;
                                             }
                                             return '';
                                         }} 
@@ -603,9 +604,13 @@ export default function AnalisisPage() {
                                         dataKey={`${gradeName}_Aprobados`} 
                                         position="center" 
                                         formatter={(value: number, _name: any, props: any) => {
-                                            if (value > 0 && props && props.payload && props.payload[`${gradeName}_aprobadosCount`] !== undefined) {
-                                                const count = props.payload[`${gradeName}_aprobadosCount`];
-                                                return `${value.toFixed(0)}% (${count})`;
+                                            if (value > 0) {
+                                                let label = `${value.toFixed(0)}%`;
+                                                if (props && props.payload && props.payload[`${gradeName}_aprobadosCount`] !== undefined) {
+                                                    const count = props.payload[`${gradeName}_aprobadosCount`];
+                                                    if (count > 0) label += ` (${count})`;
+                                                }
+                                                return label;
                                             }
                                             return '';
                                         }} 
@@ -624,9 +629,13 @@ export default function AnalisisPage() {
                                         dataKey={`${gradeName}_Desaprobados`} 
                                         position="center" 
                                         formatter={(value: number, _name: any, props: any) => {
-                                            if (value > 0 && props && props.payload && props.payload[`${gradeName}_desaprobadosCount`] !== undefined) {
-                                                const count = props.payload[`${gradeName}_desaprobadosCount`];
-                                                return `${value.toFixed(0)}% (${count})`;
+                                            if (value > 0) {
+                                                 let label = `${value.toFixed(0)}%`;
+                                                 if (props && props.payload && props.payload[`${gradeName}_desaprobadosCount`] !== undefined) {
+                                                     const count = props.payload[`${gradeName}_desaprobadosCount`];
+                                                     if (count > 0) label += ` (${count})`;
+                                                 }
+                                                 return label;
                                             }
                                             return '';
                                         }}
@@ -704,5 +713,6 @@ export default function AnalisisPage() {
     
 
     
+
 
 
