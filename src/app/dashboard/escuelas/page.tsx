@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useMemo } from "react";
@@ -6,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { MoreHorizontal, PlusCircle, Building, Filter, FileDown, Map } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Building, Filter, FileDown, Map, Trash2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
   AlertDialog,
@@ -33,10 +34,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useSearch } from "@/context/search-context";
 import { useSchools } from "@/context/schools-context";
-import type { School } from "@/lib/types";
+import { useAuth } from "@/context/auth-context";
+import type { School, District } from "@/lib/types";
 
 
 export default function EscuelasPage() {
+  const { user } = useAuth();
   const { 
     schools, 
     districts, 
@@ -45,15 +48,21 @@ export default function EscuelasPage() {
     deleteSchool, 
     toggleSchoolStatus, 
     addDistrict,
+    deleteDistrict,
     loading,
   } = useSchools();
 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isDeleteDistrictAlertOpen, setIsDeleteDistrictAlertOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddSchoolDialogOpen, setIsAddSchoolDialogOpen] = useState(false);
   const [isAddDistrictDialogOpen, setIsAddDistrictDialogOpen] = useState(false);
+  const [isDeleteDistrictDialogOpen, setIsDeleteDistrictDialogOpen] = useState(false);
+
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
+  const [selectedDistrict, setSelectedDistrict] = useState<District | null>(null);
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
+  
   const [districtFilter, setDistrictFilter] = useState("all");
   const { toast } = useToast();
   const { searchTerm } = useSearch();
@@ -74,6 +83,10 @@ export default function EscuelasPage() {
     setSelectedSchool(school);
     setIsAlertOpen(true);
   };
+  
+  const handleOpenDeleteDistrictDialog = () => {
+    setIsDeleteDistrictDialogOpen(true);
+  };
 
   const handleOpenEditDialog = (school: School) => {
     setEditingSchool({ ...school });
@@ -93,6 +106,24 @@ export default function EscuelasPage() {
     } finally {
       setIsAlertOpen(false);
       setSelectedSchool(null);
+    }
+  };
+  
+  const handleDeleteDistrict = async () => {
+    if (!selectedDistrict) return;
+    try {
+      const result = await deleteDistrict(selectedDistrict.id);
+      toast({
+        title: result.success ? "Distrito Eliminado" : "Error al Eliminar",
+        description: result.message,
+        variant: result.success ? "default" : "destructive",
+      });
+    } catch (error) {
+      toast({ title: "Error", description: "No se pudo eliminar el distrito.", variant: "destructive"});
+    } finally {
+      setIsDeleteDistrictAlertOpen(false);
+      setSelectedDistrict(null);
+      setIsDeleteDistrictDialogOpen(false); // Close the selection dialog
     }
   };
 
@@ -170,7 +201,7 @@ export default function EscuelasPage() {
         return;
     }
     
-    const districtExists = districts.some(d => d.toLowerCase() === name.trim().toLowerCase());
+    const districtExists = districts.some(d => d.name.toLowerCase() === name.trim().toLowerCase());
     
     if (districtExists) {
         toast({
@@ -223,10 +254,11 @@ export default function EscuelasPage() {
     URL.revokeObjectURL(url);
   };
   
-  if (loading) {
+  if (loading || !user) {
       return <div className="flex h-screen w-full items-center justify-center">Cargando...</div>;
   }
 
+  const isEvaluador = user.role === 'Evaluador';
 
   return (
     <div className="flex flex-col gap-8">
@@ -236,6 +268,12 @@ export default function EscuelasPage() {
                 <p className="text-muted-foreground">Administra las escuelas y distritos del sistema.</p>
             </div>
             <div className="flex items-center gap-2">
+                {isEvaluador && (
+                    <Button onClick={handleOpenDeleteDistrictDialog} variant="destructive">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Eliminar Distrito
+                    </Button>
+                )}
                 <Button onClick={() => setIsAddDistrictDialogOpen(true)} variant="outline">
                     <Map className="mr-2 h-4 w-4" />
                     Agregar Distrito
@@ -269,7 +307,7 @@ export default function EscuelasPage() {
                             <SelectContent>
                                 <SelectItem value="all">Todos los Distritos</SelectItem>
                                 {districts.map((district, index) => (
-                                    <SelectItem key={`${district}-${index}`} value={district}>{district}</SelectItem>
+                                    <SelectItem key={`${district.id}-${index}`} value={district.name}>{district.name}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -358,6 +396,22 @@ export default function EscuelasPage() {
             </AlertDialogContent>
         </AlertDialog>
 
+        <AlertDialog open={isDeleteDistrictAlertOpen} onOpenChange={setIsDeleteDistrictAlertOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>¿Estás seguro de que quieres eliminar el distrito?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                       Esta acción eliminará permanentemente el distrito <span className="font-bold">{selectedDistrict?.name}</span>. 
+                       Solo podrás eliminar un distrito si no tiene escuelas asociadas.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setSelectedDistrict(null)}>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteDistrict}>Confirmar</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
@@ -391,7 +445,7 @@ export default function EscuelasPage() {
                                     <SelectValue placeholder="Selecciona un distrito" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {districts.map((d, index) => <SelectItem key={`${d}-${index}`} value={d}>{d}</SelectItem>)}
+                                    {districts.map((d, index) => <SelectItem key={`${d.id}-${index}`} value={d.name}>{d.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -435,7 +489,7 @@ export default function EscuelasPage() {
                                     <SelectValue placeholder="Selecciona un distrito" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {districts.map((d, index) => <SelectItem key={`${d}-${index}`} value={d}>{d}</SelectItem>)}
+                                    {districts.map((d, index) => <SelectItem key={`${d.id}-${index}`} value={d.name}>{d.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -474,6 +528,49 @@ export default function EscuelasPage() {
                         <Button type="submit">Guardar Distrito</Button>
                     </DialogFooter>
                 </form>
+            </DialogContent>
+        </Dialog>
+        
+        <Dialog open={isDeleteDistrictDialogOpen} onOpenChange={setIsDeleteDistrictDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Eliminar un Distrito</DialogTitle>
+                    <DialogDescription>
+                        Selecciona el distrito que deseas eliminar. Esta acción es irreversible.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <Label htmlFor="district-to-delete">Distrito</Label>
+                    <Select onValueChange={(value) => setSelectedDistrict(districts.find(d => d.id === value) || null)}>
+                        <SelectTrigger id="district-to-delete">
+                            <SelectValue placeholder="Selecciona un distrito para eliminar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {districts.map((d) => (
+                                <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button type="button" variant="secondary">Cancelar</Button>
+                    </DialogClose>
+                    <Button 
+                        type="button" 
+                        variant="destructive"
+                        onClick={() => {
+                            if (selectedDistrict) {
+                                setIsDeleteDistrictAlertOpen(true);
+                            } else {
+                                toast({ title: "Error", description: "Debes seleccionar un distrito.", variant: "destructive" });
+                            }
+                        }}
+                        disabled={!selectedDistrict}
+                    >
+                        Eliminar Distrito
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
 

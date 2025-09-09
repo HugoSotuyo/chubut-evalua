@@ -1,20 +1,31 @@
 
+
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
-import { getAllSchools, addSchool as addSchoolDb, updateSchool as updateSchoolDb, deleteSchool as deleteSchoolDb, toggleSchoolStatus as toggleSchoolStatusDb, getAllDistricts, addDistrict as addDistrictDb } from '@/lib/schoolsService';
-import type { School } from '@/lib/types';
+import { 
+    getAllSchools, 
+    addSchool as addSchoolDb, 
+    updateSchool as updateSchoolDb, 
+    deleteSchool as deleteSchoolDb, 
+    toggleSchoolStatus as toggleSchoolStatusDb, 
+    getAllDistricts, 
+    addDistrict as addDistrictDb,
+    deleteDistrict as deleteDistrictDb
+} from '@/lib/schoolsService';
+import type { School, District } from '@/lib/types';
 
 type NewSchool = Omit<School, 'id' | 'status'>;
 
 interface SchoolsContextType {
   schools: School[];
-  districts: string[];
+  districts: District[];
   addSchool: (school: NewSchool) => Promise<void>;
   updateSchool: (school: School) => Promise<void>;
   deleteSchool: (schoolId: string) => Promise<void>;
   toggleSchoolStatus: (schoolId: string) => Promise<void>;
   addDistrict: (districtName: string) => Promise<{ success: boolean; message: string }>;
+  deleteDistrict: (districtId: string) => Promise<{ success: boolean; message: string }>;
   loading: boolean;
 }
 
@@ -22,7 +33,7 @@ const SchoolsContext = createContext<SchoolsContextType | undefined>(undefined);
 
 export function SchoolsProvider({ children }: { children: ReactNode }) {
   const [schools, setSchools] = useState<School[]>([]);
-  const [districts, setDistricts] = useState<string[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refreshData = useCallback(async () => {
@@ -73,6 +84,14 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
     return result;
   };
 
+  const deleteDistrict = async (districtId: string): Promise<{ success: boolean; message: string }> => {
+    const result = await deleteDistrictDb(districtId);
+    if (result.success) {
+      await refreshData();
+    }
+    return result;
+  };
+
   const value = { 
     schools, 
     districts,
@@ -81,6 +100,7 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
     deleteSchool, 
     toggleSchoolStatus,
     addDistrict,
+    deleteDistrict,
     loading 
   };
 
