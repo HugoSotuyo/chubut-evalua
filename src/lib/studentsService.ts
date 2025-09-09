@@ -5,7 +5,6 @@ import type { Student } from "./types";
 
 type NewStudent = Omit<Student, 'id' | 'results'>;
 
-// NOTE: This should be the same config as in other service files
 const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
@@ -49,7 +48,7 @@ async function seedInitialStudents() {
 
 export async function getAllStudents(): Promise<Student[]> {
     const db = getDb();
-    await seedInitialStudents(); // Seed if needed
+    await seedInitialStudents();
     const studentsCollection = collection(db, "students");
     const querySnapshot = await getDocs(studentsCollection);
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
@@ -64,7 +63,7 @@ export async function updateStudent(updatedStudent: Omit<Student, 'results'>) {
     const db = getDb();
     const studentRef = doc(db, "students", updatedStudent.id);
     const dataToUpdate = { ...updatedStudent };
-    delete (dataToUpdate as any).id; // Don't save the id as a field in the document
+    delete (dataToUpdate as any).id;
     await updateDoc(studentRef, dataToUpdate);
 }
 

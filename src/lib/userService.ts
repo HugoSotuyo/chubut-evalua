@@ -2,9 +2,7 @@
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import type { User } from "./types";
-import { getAllSchools, getAllDistricts } from "./schoolsService"; // Import from the correct service
 
-// Firebase configuration - directly in the server file
 const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
@@ -14,7 +12,6 @@ const firebaseConfig = {
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
 };
 
-// Singleton pattern for Firebase initialization
 let app: FirebaseApp;
 let db: Firestore;
 
@@ -42,8 +39,6 @@ type NewUserPayload = Omit<User, 'id' | 'status'>;
 
 export async function findUserByEmail(email: string): Promise<User | null> {
     const db = getDb();
-    if (!db) throw new Error("Firestore database is not initialized.");
-    
     const usersRef = collection(db, "users");
     const q = query(usersRef, where("email", "==", email));
     
@@ -97,8 +92,7 @@ export async function addUser(userData: NewUserPayload): Promise<{ success: bool
 
 export async function getAllUsers(): Promise<User[]> {
     const db = getDb();
-    if (!db) throw new Error("Firestore database is not initialized.");
-    
+    await seedInitialUsers();
     const users: User[] = [];
     try {
         const querySnapshot = await getDocs(collection(db, "users"));
@@ -114,34 +108,19 @@ export async function getAllUsers(): Promise<User[]> {
 
 export async function seedInitialUsers() {
     const db = getDb();
-    if (!db) {
-        console.error("Database not available for seeding.");
-        throw new Error("Database not available.");
-    }
-
-    try {
-        const usersCollection = collection(db, "users");
-        const snapshot = await getCountFromServer(usersCollection);
-        
-        if (snapshot.data().count > 0) {
-            return { success: true, message: "Database already contains users." };
-        }
-
-        // Now that schools/districts are also in firestore, we don't need to pass them.
+    const usersCollection = collection(db, "users");
+    const snapshot = await getCountFromServer(usersCollection);
+    
+    if (snapshot.data().count === 0) {
+        console.log("Seeding initial users...");
         for (const user of initialUsers) {
              await addDoc(usersCollection, user);
         }
-        return { success: true, message: "Database seeded successfully." };
-    } catch (error) {
-        console.error("Error seeding users:", error);
-        throw new Error("Failed to seed database.");
     }
 }
 
 export async function updateUserStatusInDb(userId: string, newStatus: "Activo" | "Inactivo" | "Pendiente") {
     const db = getDb();
-    if (!db) throw new Error("Firestore database is not initialized.");
-
     try {
         const userRef = doc(db, "users", userId);
         await updateDoc(userRef, {
@@ -155,8 +134,6 @@ export async function updateUserStatusInDb(userId: string, newStatus: "Activo" |
 
 export async function deleteUserFromDb(userId: string) {
     const db = getDb();
-    if (!db) throw new Error("Firestore database is not initialized.");
-
     try {
         const userRef = doc(db, "users", userId);
         await deleteDoc(userRef);

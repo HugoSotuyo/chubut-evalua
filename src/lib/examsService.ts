@@ -3,7 +3,6 @@ import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getFirestore, collection, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc, query, where } from "firebase/firestore";
 import type { Exam } from "./types";
 
-// NOTE: This should be the same config as in other service files
 const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
@@ -47,7 +46,7 @@ async function seedInitialExams() {
 
 export async function getAllExams(): Promise<Exam[]> {
     const db = getDb();
-    await seedInitialExams(); // Seed if needed
+    await seedInitialExams();
     const examsCollection = collection(db, "exams");
     const querySnapshot = await getDocs(examsCollection);
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Exam));
@@ -65,7 +64,6 @@ export async function addExam(examData: Omit<Exam, 'id' | 'status'>) {
 export async function updateExam(updatedExamData: Omit<Exam, 'status'>) {
     const db = getDb();
     const examRef = doc(db, "exams", updatedExamData.id);
-    // Firestore does not allow 'id' field to be written in the document data itself
     const dataToUpdate = { ...updatedExamData };
     delete (dataToUpdate as any).id;
     await updateDoc(examRef, dataToUpdate);
@@ -80,7 +78,7 @@ export async function deleteExam(examId: string) {
 export async function toggleExamStatus(examId: string) {
     const db = getDb();
     const examRef = doc(db, "exams", examId);
-    const exams = await getAllExams(); // Inefficient, but simple. A transaction would be better.
+    const exams = await getAllExams();
     const exam = exams.find(e => e.id === examId);
     if (exam) {
         const newStatus = exam.status === "Abierto" ? "Cerrado" : "Abierto";

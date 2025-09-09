@@ -5,7 +5,6 @@ import type { Result } from "./types";
 
 type NewResult = Omit<Result, 'id'>;
 
-// NOTE: This should be the same config as in other service files
 const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
@@ -49,7 +48,7 @@ async function seedInitialResults() {
 
 export async function getAllResults(): Promise<Result[]> {
     const db = getDb();
-    await seedInitialResults(); // Seed if needed
+    await seedInitialResults();
     const resultsCollection = collection(db, "results");
     const querySnapshot = await getDocs(resultsCollection);
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Result));

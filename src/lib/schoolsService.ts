@@ -5,7 +5,6 @@ import type { School } from "./types";
 
 type NewSchool = Omit<School, 'id' | 'status'>;
 
-// NOTE: This should be the same config as in other service files
 const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
@@ -34,31 +33,24 @@ const initialSchools: Omit<School, 'id'>[] = [
     { name: "Escuela N° 789", district: "Distrito I", status: "Inactiva" },
 ];
 
-const initialDistricts: string[] = ["Distrito I", "Distrito II", "Distrito III"];
+const initialDistricts: string[] = ["Distrito I", "Distrito II", "Distrito III", "Distrito IV", "Distrito V"];
 
-async function seedInitialData() {
+
+async function seedCollection(collectionName: string, initialData: any[]) {
     const db = getDb();
-    const schoolsCollection = collection(db, "schools");
-    const districtsCollection = collection(db, "districts");
-
-    const schoolsSnapshot = await getCountFromServer(schoolsCollection);
-    if (schoolsSnapshot.data().count === 0) {
-        console.log("Seeding initial schools...");
-        const schoolPromises = initialSchools.map(schoolData => addDoc(schoolsCollection, schoolData));
-        await Promise.all(schoolPromises);
-    }
-
-    const districtsSnapshot = await getCountFromServer(districtsCollection);
-    if (districtsSnapshot.data().count === 0) {
-        console.log("Seeding initial districts...");
-        const districtPromises = initialDistricts.map(districtName => addDoc(districtsCollection, { name: districtName }));
-        await Promise.all(districtPromises);
+    const collectionRef = collection(db, collectionName);
+    const snapshot = await getCountFromServer(collectionRef);
+    if (snapshot.data().count === 0) {
+        console.log(`Seeding initial ${collectionName}...`);
+        for (const item of initialData) {
+            await addDoc(collectionRef, item);
+        }
     }
 }
 
 export async function getAllSchools(): Promise<School[]> {
     const db = getDb();
-    await seedInitialData(); 
+    await seedCollection("schools", initialSchools.map(s => ({...s})));
     const schoolsCollection = collection(db, "schools");
     const querySnapshot = await getDocs(schoolsCollection);
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
@@ -66,7 +58,7 @@ export async function getAllSchools(): Promise<School[]> {
 
 export async function getAllDistricts(): Promise<string[]> {
     const db = getDb();
-    await seedInitialData(); 
+    await seedCollection("districts", initialDistricts.map(name => ({name})));
     const districtsCollection = collection(db, "districts");
     const querySnapshot = await getDocs(districtsCollection);
     return querySnapshot.docs.map(doc => doc.data().name as string).sort();
@@ -98,7 +90,7 @@ export async function deleteSchool(schoolId: string) {
 export async function toggleSchoolStatus(schoolId: string) {
     const db = getDb();
     const schoolRef = doc(db, "schools", schoolId);
-    const schools = await getAllSchools(); // Inefficient, but simple.
+    const schools = await getAllSchools();
     const school = schools.find(s => s.id === schoolId);
     if (school) {
         const newStatus = school.status === "Activa" ? "Inactiva" : "Activa";
