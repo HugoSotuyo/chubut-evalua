@@ -599,17 +599,15 @@ export default function AnalisisPage() {
                                     barSize={40}
                                 >
                                      <LabelList 
-                                        dataKey={`${gradeName}_Aprobados`} 
                                         position="center" 
-                                        formatter={(value: number, _name: any, props: any) => {
-                                            if (value > 0) {
-                                                const count = props?.payload?.[`${gradeName}_aprobadosCount`];
-                                                if (count > 0) return `${value.toFixed(0)}% (${count})`;
-                                                return `${value.toFixed(0)}%`;
+                                        className="fill-white font-bold" 
+                                        formatter={(_value: number, _name: any, props: any) => {
+                                            const count = props?.payload?.[`${gradeName}_aprobadosCount`];
+                                            if (count > 0) {
+                                                return `${count}`;
                                             }
                                             return '';
                                         }} 
-                                        className="fill-white font-bold" 
                                      />
                                 </Bar>,
                                 <Bar
@@ -621,17 +619,15 @@ export default function AnalisisPage() {
                                     barSize={40}
                                 >
                                     <LabelList 
-                                        dataKey={`${gradeName}_Desaprobados`} 
                                         position="center" 
-                                        formatter={(value: number, _name: any, props: any) => {
-                                            if (value > 0) {
-                                                 const count = props?.payload?.[`${gradeName}_desaprobadosCount`];
-                                                 if (count > 0) return `${value.toFixed(0)}% (${count})`;
-                                                 return `${value.toFixed(0)}%`;
+                                        className="fill-white font-bold" 
+                                        formatter={(_value: number, _name: any, props: any) => {
+                                            const count = props?.payload?.[`${gradeName}_desaprobadosCount`];
+                                            if (count > 0) {
+                                                return `${count}`;
                                             }
                                             return '';
                                         }}
-                                        className="fill-white font-bold" 
                                     />
                                 </Bar>
                             ])}
