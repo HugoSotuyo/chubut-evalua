@@ -15,12 +15,12 @@ import {
 } from '@/lib/schoolsService';
 import type { School, District } from '@/lib/types';
 
-type NewSchool = Omit<School, 'id' | 'status'>;
+type NewSchool = Omit<School, 'id' | 'status' | 'districtId'>;
 
 interface SchoolsContextType {
   schools: School[];
   districts: District[];
-  addSchool: (school: NewSchool) => Promise<void>;
+  addSchool: (school: NewSchool, districtId: string) => Promise<void>;
   updateSchool: (school: School) => Promise<void>;
   deleteSchool: (schoolId: string) => Promise<void>;
   toggleSchoolStatus: (schoolId: string) => Promise<void>;
@@ -56,8 +56,8 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
     refreshData();
   }, [refreshData]);
 
-  const addSchool = async (schoolData: NewSchool) => {
-    await addSchoolDb(schoolData);
+  const addSchool = async (schoolData: NewSchool, districtId: string) => {
+    await addSchoolDb(schoolData, districtId);
     await refreshData();
   };
   

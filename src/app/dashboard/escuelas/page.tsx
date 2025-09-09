@@ -162,28 +162,30 @@ export default function EscuelasPage() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const name = formData.get("school-name") as string;
-    const district = formData.get("school-district") as string;
+    const districtId = formData.get("school-district") as string;
 
-    if (!name || !district) {
+    const selectedDistrict = districts.find(d => d.id === districtId);
+
+    if (!name || !selectedDistrict) {
         toast({ title: "Error", description: "El nombre y el distrito son requeridos.", variant: "destructive"});
         return;
     }
 
     const schoolExists = schools.some(
-      school => school.name.toLowerCase() === name.toLowerCase() && school.district === district
+      school => school.name.toLowerCase() === name.toLowerCase() && school.district === selectedDistrict.name
     );
 
     if (schoolExists) {
         toast({
             title: "Escuela Duplicada",
-            description: `La escuela "${name}" ya existe en el distrito "${district}".`,
+            description: `La escuela "${name}" ya existe en el distrito "${selectedDistrict.name}".`,
             variant: "destructive"
         });
         return;
     }
 
     try {
-        await addSchool({ name, district });
+        await addSchool({ name, district: selectedDistrict.name }, selectedDistrict.id);
         toast({ title: "Escuela Agregada", description: `La escuela ${name} ha sido agregada.` });
         setIsAddSchoolDialogOpen(false);
     } catch (error) {
@@ -439,7 +441,12 @@ export default function EscuelasPage() {
                             </Label>
                             <Select
                                 value={editingSchool.district}
-                                onValueChange={(value) => setEditingSchool({ ...editingSchool, district: value })}
+                                onValueChange={(value) => {
+                                    const selected = districts.find(d => d.name === value);
+                                    if(selected) {
+                                        setEditingSchool({ ...editingSchool, district: selected.name, districtId: selected.id })
+                                    }
+                                }}
                             >
                                 <SelectTrigger className="col-span-3">
                                     <SelectValue placeholder="Selecciona un distrito" />
@@ -489,7 +496,7 @@ export default function EscuelasPage() {
                                     <SelectValue placeholder="Selecciona un distrito" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {districts.map((d, index) => <SelectItem key={`${d.id}-${index}`} value={d.name}>{d.name}</SelectItem>)}
+                                    {districts.map((d, index) => <SelectItem key={`${d.id}-${index}`} value={d.id}>{d.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>

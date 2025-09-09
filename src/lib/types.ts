@@ -63,6 +63,7 @@ export type School = {
   id: string;
   name: string;
   district: string;
+  districtId: string;
   status: "Activa" | "Inactiva";
 };
 
