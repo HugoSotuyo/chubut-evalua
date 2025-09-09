@@ -44,23 +44,21 @@ async function seedInitialData() {
     const schoolsSnapshot = await getCountFromServer(schoolsCollection);
     if (schoolsSnapshot.data().count === 0) {
         console.log("Seeding initial schools...");
-        for (const schoolData of initialSchools) {
-            await addDoc(schoolsCollection, schoolData);
-        }
+        const schoolPromises = initialSchools.map(schoolData => addDoc(schoolsCollection, schoolData));
+        await Promise.all(schoolPromises);
     }
 
     const districtsSnapshot = await getCountFromServer(districtsCollection);
     if (districtsSnapshot.data().count === 0) {
         console.log("Seeding initial districts...");
-        for (const districtName of initialDistricts) {
-            await addDoc(districtsCollection, { name: districtName });
-        }
+        const districtPromises = initialDistricts.map(districtName => addDoc(districtsCollection, { name: districtName }));
+        await Promise.all(districtPromises);
     }
 }
 
 export async function getAllSchools(): Promise<School[]> {
     const db = getDb();
-    await seedInitialData(); // Seed if needed
+    await seedInitialData(); 
     const schoolsCollection = collection(db, "schools");
     const querySnapshot = await getDocs(schoolsCollection);
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
@@ -68,7 +66,7 @@ export async function getAllSchools(): Promise<School[]> {
 
 export async function getAllDistricts(): Promise<string[]> {
     const db = getDb();
-    await seedInitialData(); // Seed if needed
+    await seedInitialData(); 
     const districtsCollection = collection(db, "districts");
     const querySnapshot = await getDocs(districtsCollection);
     return querySnapshot.docs.map(doc => doc.data().name as string).sort();
