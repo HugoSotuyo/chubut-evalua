@@ -28,6 +28,7 @@ export default {
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
+          light: 'hsl(var(--primary-light))',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
@@ -50,10 +51,15 @@ export default {
         ring: 'hsl(var(--ring))',
         chart: {
           '1': 'hsl(var(--chart-1))',
+          '1-light': 'hsl(var(--chart-1-light))',
           '2': 'hsl(var(--chart-2))',
+          '2-light': 'hsl(var(--chart-2-light))',
           '3': 'hsl(var(--chart-3))',
+          '3-light': 'hsl(var(--chart-3-light))',
           '4': 'hsl(var(--chart-4))',
+          '4-light': 'hsl(var(--chart-4-light))',
           '5': 'hsl(var(--chart-5))',
+          '5-light': 'hsl(var(--chart-5-light))',
         },
         sidebar: {
           DEFAULT: 'hsl(var(--sidebar-background))',
