@@ -581,10 +581,13 @@ export default function AnalisisPage() {
                                         dataKey={`${gradeName}_Rendimiento`} 
                                         position="top" 
                                         formatter={(value: number, _name: any, props: any) => {
-                                            if (props.payload[`${gradeName}_count`] > 0) {
+                                            if (props && props.payload && props.payload[`${gradeName}_count`] > 0) {
                                                 return `${value.toFixed(0)}% (${props.payload[`${gradeName}_count`]})`;
                                             }
-                                            return `${value.toFixed(0)}%`;
+                                            if (value > 0) {
+                                               return `${value.toFixed(0)}%`;
+                                            }
+                                            return '';
                                         }} 
                                     />
                                 </Bar>,
@@ -600,8 +603,8 @@ export default function AnalisisPage() {
                                         dataKey={`${gradeName}_Aprobados`} 
                                         position="center" 
                                         formatter={(value: number, _name: any, props: any) => {
-                                            const count = props.payload[`${gradeName}_aprobadosCount`];
-                                            if (value > 0) {
+                                            if (value > 0 && props && props.payload && props.payload[`${gradeName}_aprobadosCount`] !== undefined) {
+                                                const count = props.payload[`${gradeName}_aprobadosCount`];
                                                 return `${value.toFixed(0)}% (${count})`;
                                             }
                                             return '';
@@ -621,8 +624,8 @@ export default function AnalisisPage() {
                                         dataKey={`${gradeName}_Desaprobados`} 
                                         position="center" 
                                         formatter={(value: number, _name: any, props: any) => {
-                                            const count = props.payload[`${gradeName}_desaprobadosCount`];
-                                            if (value > 0) {
+                                            if (value > 0 && props && props.payload && props.payload[`${gradeName}_desaprobadosCount`] !== undefined) {
+                                                const count = props.payload[`${gradeName}_desaprobadosCount`];
                                                 return `${value.toFixed(0)}% (${count})`;
                                             }
                                             return '';
@@ -701,4 +704,5 @@ export default function AnalisisPage() {
     
 
     
+
 
