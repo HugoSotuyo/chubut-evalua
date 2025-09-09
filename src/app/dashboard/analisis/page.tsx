@@ -199,13 +199,20 @@ export default function AnalisisPage() {
                 const total = gradeData.count;
                 if (total > 0) {
                     const aprobadosPercent = (gradeData.aprobados / total) * 100;
+                    const desaprobadosPercent = 100 - aprobadosPercent;
                     examRow[`${grade}_Aprobados`] = aprobadosPercent;
-                    examRow[`${grade}_Desaprobados`] = 100 - aprobadosPercent;
+                    examRow[`${grade}_Desaprobados`] = desaprobadosPercent;
                     examRow[`${grade}_Rendimiento`] = (gradeData.totalScore / gradeData.totalMaxScore) * 100;
+                    examRow[`${grade}_count`] = total;
+                    examRow[`${grade}_aprobadosCount`] = gradeData.aprobados;
+                    examRow[`${grade}_desaprobadosCount`] = total - gradeData.aprobados;
                 } else {
                     examRow[`${grade}_Aprobados`] = 0;
                     examRow[`${grade}_Desaprobados`] = 0;
                     examRow[`${grade}_Rendimiento`] = 0;
+                    examRow[`${grade}_count`] = 0;
+                    examRow[`${grade}_aprobadosCount`] = 0;
+                    examRow[`${grade}_desaprobadosCount`] = 0;
                 }
                 examRow[`${grade}_totalScore`] = gradeData.totalScore;
                 examRow[`${grade}_totalMaxScore`] = gradeData.totalMaxScore;
@@ -570,7 +577,16 @@ export default function AnalisisPage() {
                                     fill={getGradeColor(gradeName, 'main')}
                                     barSize={20}
                                 >
-                                    <LabelList dataKey={`${gradeName}_Rendimiento`} position="top" formatter={(value: number) => `${value.toFixed(0)}%`} />
+                                    <LabelList 
+                                        dataKey={`${gradeName}_Rendimiento`} 
+                                        position="top" 
+                                        formatter={(value: number, _name: any, props: any) => {
+                                            if (props.payload[`${gradeName}_count`] > 0) {
+                                                return `${value.toFixed(0)}% (${props.payload[`${gradeName}_count`]})`;
+                                            }
+                                            return `${value.toFixed(0)}%`;
+                                        }} 
+                                    />
                                 </Bar>,
                                 <Bar 
                                     key={`${gradeName}_Aprobados`}
@@ -580,7 +596,18 @@ export default function AnalisisPage() {
                                     fill={getGradeColor(gradeName, 'approved')}
                                     barSize={40}
                                 >
-                                     <LabelList dataKey={`${gradeName}_Aprobados`} position="center" formatter={(v: number) => v > 0 ? `${v.toFixed(0)}%` : ''} className="fill-white font-bold" />
+                                     <LabelList 
+                                        dataKey={`${gradeName}_Aprobados`} 
+                                        position="center" 
+                                        formatter={(value: number, _name: any, props: any) => {
+                                            const count = props.payload[`${gradeName}_aprobadosCount`];
+                                            if (value > 0) {
+                                                return `${value.toFixed(0)}% (${count})`;
+                                            }
+                                            return '';
+                                        }} 
+                                        className="fill-white font-bold" 
+                                     />
                                 </Bar>,
                                 <Bar
                                     key={`${gradeName}_Desaprobados`}
@@ -590,7 +617,18 @@ export default function AnalisisPage() {
                                     fill={getGradeColor(gradeName, 'disapproved')}
                                     barSize={40}
                                 >
-                                    <LabelList dataKey={`${gradeName}_Desaprobados`} position="center" formatter={(v: number) => v > 0 ? `${v.toFixed(0)}%` : ''} className="fill-white font-bold" />
+                                    <LabelList 
+                                        dataKey={`${gradeName}_Desaprobados`} 
+                                        position="center" 
+                                        formatter={(value: number, _name: any, props: any) => {
+                                            const count = props.payload[`${gradeName}_desaprobadosCount`];
+                                            if (value > 0) {
+                                                return `${value.toFixed(0)}% (${count})`;
+                                            }
+                                            return '';
+                                        }}
+                                        className="fill-white font-bold" 
+                                    />
                                 </Bar>
                             ])}
                         </BarChart>
@@ -663,3 +701,4 @@ export default function AnalisisPage() {
     
 
     
+
