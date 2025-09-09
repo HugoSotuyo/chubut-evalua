@@ -4,7 +4,7 @@ import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getFirestore, collection, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc, query, where, limit } from "firebase/firestore";
 import type { School, District } from "./types";
 
-type NewSchool = Omit<School, 'id' | 'status'>;
+type NewSchool = Omit<School, 'id' | 'status' | 'districtId'>;
 
 const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -38,31 +38,33 @@ const initialDistricts: string[] = ["Distrito I", "Distrito II", "Distrito III",
 
 async function seedInitialData() {
     const db = getDb();
-    const schoolsCollection = collection(db, "schools");
     const districtsCollection = collection(db, "districts");
-
     const districtsSnapshot = await getCountFromServer(districtsCollection);
+    
     if (districtsSnapshot.data().count === 0) {
         console.log("Seeding initial districts...");
         const districtPromises = initialDistricts.map(name => addDoc(districtsCollection, { name }));
-        await Promise.all(districtPromises);
-    }
-    
-    // We need to get the districts with their IDs to associate them with schools
-    const allDistricts = await getAllDistricts();
-
-    const schoolsSnapshot = await getCountFromServer(schoolsCollection);
-    if (schoolsSnapshot.data().count === 0) {
-        console.log("Seeding initial schools...");
-        const schoolPromises = initialSchools.map(school => {
-            const district = allDistricts.find(d => d.name === school.district);
-            const schoolData = {
-                ...school,
-                districtId: district ? district.id : null
-            };
-            return addDoc(schoolsCollection, schoolData);
-        });
-        await Promise.all(schoolPromises);
+        const districtDocs = await Promise.all(districtPromises);
+        
+        // Now seed schools
+        const schoolsCollection = collection(db, "schools");
+        const schoolsSnapshot = await getCountFromServer(schoolsCollection);
+        if (schoolsSnapshot.data().count === 0) {
+            console.log("Seeding initial schools...");
+            // We need the full district objects to get their IDs
+            const allDistricts = await getDocs(districtsCollection).then(snap => snap.docs.map(d => ({id: d.id, ...d.data()} as District)));
+            const schoolPromises = initialSchools.map(school => {
+                const district = allDistricts.find(d => d.name === school.district);
+                const schoolData = {
+                    name: school.name,
+                    district: school.district,
+                    status: school.status,
+                    districtId: district ? district.id : null
+                };
+                return addDoc(schoolsCollection, schoolData);
+            });
+            await Promise.all(schoolPromises);
+        }
     }
 }
 
