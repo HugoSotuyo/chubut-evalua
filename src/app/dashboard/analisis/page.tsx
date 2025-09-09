@@ -305,12 +305,11 @@ export default function AnalisisPage() {
                 <p className="font-bold">{`${label}`}</p>
                 {payload.map((pld: any, index: number) => {
                     const name = pld.name || '';
-                    const isPercentage = name.includes("Rendimiento") || name.includes("_Aprobados") || name.includes("_Desaprobados");
-                    const displayName = name.split('_')[1] || name.split('_')[0] || name;
+                    const isPercentage = name.toLowerCase().includes("rendimiento") || name.toLowerCase().includes("aprobados") || name.toLowerCase().includes("desaprobados");
                     
                     return (
                         <p key={index} style={{ color: pld.fill }}>
-                            {`${displayName}: ${pld.value.toFixed(1)}${isPercentage ? '%' : ''}`}
+                            {`${name}: ${pld.value.toFixed(1)}${isPercentage ? '%' : ''}`}
                         </p>
                     )
                 })}
@@ -707,6 +706,7 @@ export default function AnalisisPage() {
 
 
     
+
 
 
 
