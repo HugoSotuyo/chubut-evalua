@@ -118,9 +118,9 @@ export default function UsuariosPage() {
   }
 
   const handleExport = () => {
-    const headers = ["ID", "Nombre", "Rol", "Escuela", "Estado"];
+    const headers = ["ID", "Nombre", "Rol", "Escuela", "Estado", "Grado", "Curso"];
     const rows = filteredUsers.map(user => 
-        [user.id, user.name, user.role, user.school, user.status].join(';')
+        [user.id, user.name, user.role, user.school, user.status, user.grade || '', user.course || ''].join(';')
     );
     
     const bom = "\uFEFF";
@@ -206,6 +206,8 @@ export default function UsuariosPage() {
                             <TableHead>Usuario</TableHead>
                             <TableHead>Rol</TableHead>
                             <TableHead>Escuela</TableHead>
+                            <TableHead>Grado</TableHead>
+                            <TableHead>Curso</TableHead>
                             <TableHead>Estado</TableHead>
                             <TableHead>
                                 <span className="sr-only">Acciones</span>
@@ -225,6 +227,8 @@ export default function UsuariosPage() {
                             </TableCell>
                             <TableCell>{user.role}</TableCell>
                             <TableCell>{user.school}</TableCell>
+                            <TableCell>{user.grade || "-"}</TableCell>
+                            <TableCell>{user.course || "-"}</TableCell>
                              <TableCell>
                                 <Badge variant={user.status === "Pendiente" ? "secondary" : (user.status === "Activo" ? "default" : "destructive")}>{user.status}</Badge>
                             </TableCell>
