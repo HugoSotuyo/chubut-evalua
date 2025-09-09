@@ -3,6 +3,7 @@
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import type { User } from "./types";
+import { getAllSchools, getAllDistricts } from "./schoolsService"; // Import from the correct service
 
 // Firebase configuration - directly in the server file
 const firebaseConfig = {
@@ -127,6 +128,7 @@ export async function seedInitialUsers() {
             return { success: true, message: "Database already contains users." };
         }
 
+        // Now that schools/districts are also in firestore, we don't need to pass them.
         for (const user of initialUsers) {
              await addDoc(usersCollection, user);
         }
