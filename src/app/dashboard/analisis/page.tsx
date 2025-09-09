@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import React, { useMemo, useState, useEffect } from "react"
@@ -77,7 +78,7 @@ export default function AnalisisPage() {
 
 
     const availableDistricts = useMemo(() => {
-        return districts.sort((a, b) => a.name.localeCompare(b.name)).map(d => d.name);
+        return districts.map(d => d.name).sort((a,b) => a.localeCompare(b));
     }, [districts]);
 
     const availableSchools = useMemo(() => {
@@ -153,28 +154,54 @@ export default function AnalisisPage() {
           .sort((a,b) => a.name.localeCompare(b.name));
 
         // --- Data: Análisis por Examen ---
-        const examAnalysis: Record<string, Record<string, { totalScore: number; count: number, totalMaxScore: number }>> = {};
+        const examAnalysis: Record<string, { 
+            byGrade: Record<string, { totalScore: number; count: number, totalMaxScore: number }>;
+            totalResults: number;
+            aprobados: number;
+        }> = {};
+
         filteredResults.forEach(r => {
             if (!examAnalysis[r.examName]) {
-                examAnalysis[r.examName] = {};
+                examAnalysis[r.examName] = { byGrade: {}, totalResults: 0, aprobados: 0 };
             }
+            
+            // Increment total results and aprobados count
+            examAnalysis[r.examName].totalResults++;
+            if (r.status === 'Aprobado') {
+                examAnalysis[r.examName].aprobados++;
+            }
+
+            // Aggregate by grade
             const grade = r.grade || 'Sin Grado';
-            if (!examAnalysis[r.examName][grade]) {
-                examAnalysis[r.examName][grade] = { totalScore: 0, count: 0, totalMaxScore: 0 };
+            if (!examAnalysis[r.examName].byGrade[grade]) {
+                examAnalysis[r.examName].byGrade[grade] = { totalScore: 0, count: 0, totalMaxScore: 0 };
             }
-            examAnalysis[r.examName][grade].totalScore += r.totalScore;
-            examAnalysis[r.examName][grade].totalMaxScore += r.maxScore;
-            examAnalysis[r.examName][grade].count += 1;
+            examAnalysis[r.examName].byGrade[grade].totalScore += r.totalScore;
+            examAnalysis[r.examName].byGrade[grade].totalMaxScore += r.maxScore;
+            examAnalysis[r.examName].byGrade[grade].count += 1;
         });
         
-        const examAnalysisData = Object.entries(examAnalysis).map(([examName, gradeData]) => {
+        const examAnalysisData = Object.entries(examAnalysis).map(([examName, data]) => {
             const examRow: { name: string, [key: string]: any } = { name: examName };
-            Object.entries(gradeData).forEach(([grade, data]) => {
+            
+            // Rendimiento por grado
+            Object.entries(data.byGrade).forEach(([grade, gradeData]) => {
                 const rendimientoKey = `${grade}_rendimiento`;
-                examRow[rendimientoKey] = data.totalMaxScore > 0 ? (data.totalScore / data.totalMaxScore) * 100 : 0;
-                examRow[`${grade}_correctas`] = data.totalScore;
-                examRow[`${grade}_totalMaxScore`] = data.totalMaxScore;
+                examRow[rendimientoKey] = gradeData.totalMaxScore > 0 ? (gradeData.totalScore / gradeData.totalMaxScore) * 100 : 0;
+                examRow[`${grade}_correctas`] = gradeData.totalScore;
+                examRow[`${grade}_totalMaxScore`] = gradeData.totalMaxScore;
             });
+            
+            // % Aprobados y Desaprobados
+            const total = data.totalResults;
+            if (total > 0) {
+                examRow['Aprobados'] = (data.aprobados / total) * 100;
+                examRow['Desaprobados'] = ((total - data.aprobados) / total) * 100;
+            } else {
+                examRow['Aprobados'] = 0;
+                examRow['Desaprobados'] = 0;
+            }
+
             return examRow;
         });
 
@@ -263,7 +290,7 @@ export default function AnalisisPage() {
                 <p className="font-bold">{`${label}`}</p>
                 {payload.map((pld: any, index: number) => (
                 <p key={index} style={{ color: pld.fill }}>
-                    {pld.name.includes("Rendimiento") 
+                    {pld.name.includes("Rendimiento") || pld.dataKey === 'Aprobados' || pld.dataKey === 'Desaprobados'
                         ? `${pld.name}: ${pld.value.toFixed(1)}%`
                         : `${pld.name}: ${pld.value}`
                     }
@@ -510,7 +537,7 @@ export default function AnalisisPage() {
                 <CardHeader className="flex flex-row items-start justify-between">
                     <div>
                         <CardTitle>Análisis por Examen</CardTitle>
-                        <CardDescription>Rendimiento por examen, desglosado por grado.</CardDescription>
+                        <CardDescription>Rendimiento por grado y condición de alumnos para cada examen.</CardDescription>
                     </div>
                      <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('analisis-examen-card')}>
                         <Printer className="h-4 w-4" />
@@ -518,27 +545,37 @@ export default function AnalisisPage() {
                     </Button>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <ResponsiveContainer width="100%" height={300}>
+                    <ResponsiveContainer width="100%" height={400}>
                         <BarChart data={examAnalysisData} margin={{ top: 20 }}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="name" />
                             <YAxis domain={[0, 100]} unit="%" />
                             <Tooltip content={<CustomTooltip />} />
                             <Legend />
+
                             {gradeDataKeys.map((dataKey, index) => {
                                 const gradeName = dataKey.replace('_rendimiento', '');
-                                const colorKey = `chart-${(index % 5) + 1}` as const;
+                                const colorKey = `chart-${(index % 2) + 1}` as const;
                                 return (
                                     <Bar 
                                         key={dataKey}
                                         name={`${gradeName} - Rendimiento`} 
                                         dataKey={dataKey} 
                                         fill={`hsl(var(--${colorKey}))`} 
+                                        barSize={40}
                                     >
-                                        <LabelList dataKey={dataKey} position="top" formatter={(value: number) => `${value.toFixed(1)}%`} />
+                                        <LabelList dataKey={dataKey} position="top" formatter={(value: number) => `${value.toFixed(0)}%`} />
                                     </Bar>
                                 );
                             })}
+                            
+                            <Bar dataKey="Aprobados" stackId="a" fill="hsl(var(--chart-2))" barSize={20} name="% Aprobados">
+                                <LabelList dataKey="Aprobados" position="center" formatter={(v: number) => v > 10 ? `${v.toFixed(0)}%` : ''} className="fill-white font-bold" />
+                            </Bar>
+                            <Bar dataKey="Desaprobados" stackId="a" fill="hsl(var(--chart-3))" barSize={20} name="% Desaprobados">
+                                <LabelList dataKey="Desaprobados" position="center" formatter={(v: number) => v > 10 ? `${v.toFixed(0)}%` : ''} className="fill-white font-bold" />
+                            </Bar>
+
                         </BarChart>
                     </ResponsiveContainer>
                     <Separator />
