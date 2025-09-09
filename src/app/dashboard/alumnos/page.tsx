@@ -1,53 +1,78 @@
 
 "use client"
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileDown, User } from "lucide-react";
+import { FileDown, User, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/auth-context"; 
 import { useStudents } from "@/context/students-context";
 import { useResults } from "@/context/results-context";
 import { StudentActionsClient } from "./student-actions-client";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function AlumnosPage() {
   const { user } = useAuth(); 
   const { students: allStudents } = useStudents();
   const { results: allResults } = useResults();
 
+  const [gradeFilter, setGradeFilter] = useState("all");
+  const [courseFilter, setCourseFilter] = useState("all");
+
   if (!user) {
     return <div>Cargando...</div>
   }
   
-  // Pre-process students to include their results for badge counting
   const studentsWithResults = useMemo(() => allStudents.map(student => ({
       ...student,
       results: allResults.filter(r => r.studentId === student.id)
   })), [allStudents, allResults]);
 
-
-  let studentList = studentsWithResults;
-  
-  if (user.role === 'Docente') {
-    if (user.school && user.grade && user.course) {
-      studentList = studentsWithResults.filter(student => 
-          student.school === user.school && 
-          student.grade === user.grade && 
-          student.course === user.course
-      );
-    } else {
-      studentList = [];
+  const studentsInScope = useMemo(() => {
+    if (user.role === 'Docente') {
+      if (user.school && user.grade && user.course) {
+        return studentsWithResults.filter(student => 
+            student.school === user.school && 
+            student.grade === user.grade && 
+            student.course === user.course
+        );
+      }
+      return [];
+    } else if (user.role === 'Director') {
+      if (user.school) {
+        return studentsWithResults.filter(student => student.school === user.school);
+      }
+      return [];
     }
-  } else if (user.role === 'Director') {
-     if (user.school) {
-      studentList = studentsWithResults.filter(student => student.school === user.school);
-     } else {
-       studentList = [];
-     }
-  }
+    return studentsWithResults;
+  }, [studentsWithResults, user]);
   
+  const studentList = useMemo(() => {
+    let filtered = studentsInScope;
+    if (user.role === 'Director' || user.role === 'Evaluador' || user.role === 'Administrador' || user.role === 'Referente') {
+      if (gradeFilter !== "all") {
+        filtered = filtered.filter(student => student.grade === gradeFilter);
+      }
+      if (courseFilter !== "all") {
+        filtered = filtered.filter(student => student.course === courseFilter);
+      }
+    }
+    return filtered;
+  }, [studentsInScope, gradeFilter, courseFilter, user.role]);
+  
+  const availableGrades = useMemo(() => {
+      const grades = studentsInScope.map(s => s.grade);
+      return [...new Set(grades)].sort();
+  }, [studentsInScope]);
+
+  const availableCourses = useMemo(() => {
+      const courses = studentsInScope.map(s => s.course);
+      return [...new Set(courses)].sort();
+  }, [studentsInScope]);
+
   const getCardTexts = () => {
     switch (user.role) {
       case 'Docente':
@@ -69,6 +94,8 @@ export default function AlumnosPage() {
   };
 
   const { title: cardTitle, description: cardDescription } = getCardTexts();
+  
+  const showFilters = user.role === 'Director' || user.role === 'Evaluador' || user.role === 'Administrador' || user.role === 'Referente';
 
   return (
     <div className="flex flex-col gap-8">
@@ -82,6 +109,48 @@ export default function AlumnosPage() {
           <StudentActionsClient studentList={studentList} /> 
         </div>
       </div>
+      
+      {showFilters && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              <CardTitle>Filtros</CardTitle>
+            </div>
+            <CardDescription>Filtra la lista de alumnos por grado y curso.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid md:grid-cols-4 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="grade-filter">Grado</Label>
+              <Select onValueChange={setGradeFilter} value={gradeFilter}>
+                <SelectTrigger id="grade-filter">
+                  <SelectValue placeholder="Seleccionar grado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los Grados</SelectItem>
+                  {availableGrades.map((grade) => (
+                    <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="course-filter">Curso</Label>
+              <Select onValueChange={setCourseFilter} value={courseFilter}>
+                <SelectTrigger id="course-filter">
+                  <SelectValue placeholder="Seleccionar curso" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los Cursos</SelectItem>
+                  {availableCourses.map((course) => (
+                    <SelectItem key={course} value={course}>{course}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
