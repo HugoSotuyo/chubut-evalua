@@ -580,7 +580,7 @@ export default function AnalisisPage() {
                                     fill={getGradeColor(gradeName, 'approved')}
                                     barSize={40}
                                 >
-                                     <LabelList dataKey={`${gradeName}_Aprobados`} position="center" formatter={(v: number) => v > 10 ? `${v.toFixed(0)}%` : ''} className="fill-white font-bold" />
+                                     <LabelList dataKey={`${gradeName}_Aprobados`} position="center" formatter={(v: number) => v > 0 ? `${v.toFixed(0)}%` : ''} className="fill-white font-bold" />
                                 </Bar>,
                                 <Bar
                                     key={`${gradeName}_Desaprobados`}
@@ -590,7 +590,7 @@ export default function AnalisisPage() {
                                     fill={getGradeColor(gradeName, 'disapproved')}
                                     barSize={40}
                                 >
-                                    <LabelList dataKey={`${gradeName}_Desaprobados`} position="center" formatter={(v: number) => v > 10 ? `${v.toFixed(0)}%` : ''} className="fill-white font-bold" />
+                                    <LabelList dataKey={`${gradeName}_Desaprobados`} position="center" formatter={(v: number) => v > 0 ? `${v.toFixed(0)}%` : ''} className="fill-white font-bold" />
                                 </Bar>
                             ])}
                         </BarChart>
