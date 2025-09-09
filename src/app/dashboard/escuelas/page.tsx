@@ -32,7 +32,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast";
 import { useSearch } from "@/context/search-context";
-import { useSchools, type School } from "@/context/schools-context";
+import { useSchools } from "@/context/schools-context";
+import type { School } from "@/lib/types";
 
 
 export default function EscuelasPage() {
@@ -43,7 +44,8 @@ export default function EscuelasPage() {
     updateSchool, 
     deleteSchool, 
     toggleSchoolStatus, 
-    addDistrict 
+    addDistrict,
+    loading,
   } = useSchools();
 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -78,38 +80,51 @@ export default function EscuelasPage() {
     setIsEditDialogOpen(true);
   };
 
-  const handleDeleteSchool = () => {
+  const handleDeleteSchool = async () => {
     if (!selectedSchool) return;
-    deleteSchool(selectedSchool.id);
-    toast({
-        title: "Escuela Eliminada",
-        description: `La escuela ${selectedSchool.name} ha sido eliminada correctamente.`,
-    });
-    setIsAlertOpen(false);
-    setSelectedSchool(null);
+    try {
+      await deleteSchool(selectedSchool.id);
+      toast({
+          title: "Escuela Eliminada",
+          description: `La escuela ${selectedSchool.name} ha sido eliminada correctamente.`,
+      });
+    } catch (error) {
+       toast({ title: "Error", description: "No se pudo eliminar la escuela.", variant: "destructive"});
+    } finally {
+      setIsAlertOpen(false);
+      setSelectedSchool(null);
+    }
   };
 
-  const handleToggleStatus = (schoolId: string) => {
+  const handleToggleStatus = async (schoolId: string) => {
     const schoolToToggle = schools.find((school) => school.id === schoolId);
     if (!schoolToToggle) return;
     
-    toggleSchoolStatus(schoolId);
-
-    toast({
-        title: `Escuela ${schoolToToggle.status === "Activa" ? "Desactivada" : "Activada"}`,
-        description: `La escuela ${schoolToToggle.name} ahora está ${schoolToToggle.status === "Activa" ? "inactiva" : "activa"}.`,
-    });
+    try {
+        await toggleSchoolStatus(schoolId);
+        toast({
+            title: `Escuela ${schoolToToggle.status === "Activa" ? "Desactivada" : "Activada"}`,
+            description: `La escuela ${schoolToToggle.name} ahora está ${schoolToToggle.status === "Activa" ? "inactiva" : "activa"}.`,
+        });
+    } catch (error) {
+        toast({ title: "Error", description: "No se pudo cambiar el estado de la escuela.", variant: "destructive"});
+    }
   };
 
-  const handleUpdateSchool = () => {
+  const handleUpdateSchool = async () => {
     if (!editingSchool) return;
-    updateSchool(editingSchool);
-    toast({
-        title: "Escuela Actualizada",
-        description: `Los datos de la escuela ${editingSchool.name} han sido actualizados.`,
-    });
-    setIsEditDialogOpen(false);
-    setEditingSchool(null);
+    try {
+        await updateSchool(editingSchool);
+        toast({
+            title: "Escuela Actualizada",
+            description: `Los datos de la escuela ${editingSchool.name} han sido actualizados.`,
+        });
+    } catch (error) {
+         toast({ title: "Error", description: "No se pudo actualizar la escuela.", variant: "destructive"});
+    } finally {
+        setIsEditDialogOpen(false);
+        setEditingSchool(null);
+    }
   };
   
   const handleAddSchool = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -136,12 +151,13 @@ export default function EscuelasPage() {
         return;
     }
 
-    addSchool({
-        name,
-        district,
-    });
-    toast({ title: "Escuela Agregada", description: `La escuela ${name} ha sido agregada.` });
-    setIsAddSchoolDialogOpen(false);
+    try {
+        await addSchool({ name, district });
+        toast({ title: "Escuela Agregada", description: `La escuela ${name} ha sido agregada.` });
+        setIsAddSchoolDialogOpen(false);
+    } catch (error) {
+        toast({ title: "Error", description: "No se pudo agregar la escuela.", variant: "destructive"});
+    }
   };
 
   const handleAddDistrict = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -204,6 +220,10 @@ export default function EscuelasPage() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+  
+  if (loading) {
+      return <div className="flex h-screen w-full items-center justify-center">Cargando...</div>;
+  }
 
 
   return (
@@ -278,35 +298,43 @@ export default function EscuelasPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredSchools.map((school) => (
-                        <TableRow key={school.id}>
-                            <TableCell className="font-medium">{school.name}</TableCell>
-                            <TableCell>{school.district}</TableCell>
-                            <TableCell>
-                                <Badge variant={school.status === "Inactiva" ? "secondary" : "default"}>{school.status}</Badge>
-                            </TableCell>
-                            <TableCell>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                            <span className="sr-only">Toggle menu</span>
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                        <DropdownMenuItem onSelect={() => handleOpenEditDialog(school)}>Editar</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleToggleStatus(school.id)}>
-                                            {school.status === "Activa" ? "Desactivar" : "Activar"}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(school)}>
-                                            Eliminar
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </TableCell>
-                        </TableRow>
-                        ))}
+                        {filteredSchools.length > 0 ? (
+                            filteredSchools.map((school) => (
+                            <TableRow key={school.id}>
+                                <TableCell className="font-medium">{school.name}</TableCell>
+                                <TableCell>{school.district}</TableCell>
+                                <TableCell>
+                                    <Badge variant={school.status === "Inactiva" ? "secondary" : "default"}>{school.status}</Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                                <span className="sr-only">Toggle menu</span>
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                                            <DropdownMenuItem onSelect={() => handleOpenEditDialog(school)}>Editar</DropdownMenuItem>
+                                            <DropdownMenuItem onSelect={() => handleToggleStatus(school.id)}>
+                                                {school.status === "Activa" ? "Desactivar" : "Activar"}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(school)}>
+                                                Eliminar
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </TableCell>
+                            </TableRow>
+                            ))
+                        ) : (
+                             <TableRow>
+                                <TableCell colSpan={4} className="text-center">
+                                    No se encontraron escuelas para los filtros seleccionados.
+                                </TableCell>
+                            </TableRow>
+                        )}
                     </TableBody>
                 </Table>
             </CardContent>
