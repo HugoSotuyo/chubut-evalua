@@ -18,16 +18,16 @@ import { useResults } from "@/context/results-context"
 import { useSchools } from "@/context/schools-context"
 import { useStudents } from "@/context/students-context"
 
-const GRADE_COLORS: Record<string, { approved: string, disapproved: string }> = {
-    "1er Grado": { approved: "hsl(var(--chart-1))", disapproved: "hsl(var(--chart-1-light))" },
-    "2do Grado": { approved: "hsl(var(--chart-5))", disapproved: "hsl(var(--chart-5-light))" },
-    "3er Grado": { approved: "hsl(var(--chart-2))", disapproved: "hsl(var(--chart-2-light))" },
-    "4to Grado": { approved: "hsl(var(--chart-4))", disapproved: "hsl(var(--chart-4-light))" },
-    "5to Grado": { approved: "hsl(var(--primary))", disapproved: "hsl(var(--primary-light))" },
-    "6to Grado": { approved: "hsl(var(--chart-3))", disapproved: "hsl(var(--chart-3-light))" },
+const GRADE_COLORS: Record<string, { main: string, approved: string, disapproved: string }> = {
+    "1er Grado": { main: "hsl(var(--chart-1))", approved: "hsl(var(--chart-1))", disapproved: "hsl(var(--chart-1-light))" },
+    "2do Grado": { main: "hsl(var(--chart-5))", approved: "hsl(var(--chart-5))", disapproved: "hsl(var(--chart-5-light))" },
+    "3er Grado": { main: "hsl(var(--chart-2))", approved: "hsl(var(--chart-2))", disapproved: "hsl(var(--chart-2-light))" },
+    "4to Grado": { main: "hsl(var(--chart-4))", approved: "hsl(var(--chart-4))", disapproved: "hsl(var(--chart-4-light))" },
+    "5to Grado": { main: "hsl(var(--primary))", approved: "hsl(var(--primary))", disapproved: "hsl(var(--primary-light))" },
+    "6to Grado": { main: "hsl(var(--chart-3))", approved: "hsl(var(--chart-3))", disapproved: "hsl(var(--chart-3-light))" },
 };
 
-const getGradeColor = (grade: string | undefined, type: 'approved' | 'disapproved'): string => {
+const getGradeColor = (grade: string | undefined, type: 'main' | 'approved' | 'disapproved'): string => {
     if (!grade) return "hsl(var(--muted-foreground))";
     return GRADE_COLORS[grade]?.[type] || "hsl(var(--muted-foreground))";
 };
@@ -201,9 +201,11 @@ export default function AnalisisPage() {
                     const aprobadosPercent = (gradeData.aprobados / total) * 100;
                     examRow[`${grade}_Aprobados`] = aprobadosPercent;
                     examRow[`${grade}_Desaprobados`] = 100 - aprobadosPercent;
+                    examRow[`${grade}_Rendimiento`] = (gradeData.totalScore / gradeData.totalMaxScore) * 100;
                 } else {
                     examRow[`${grade}_Aprobados`] = 0;
                     examRow[`${grade}_Desaprobados`] = 0;
+                    examRow[`${grade}_Rendimiento`] = 0;
                 }
                 examRow[`${grade}_totalScore`] = gradeData.totalScore;
                 examRow[`${grade}_totalMaxScore`] = gradeData.totalMaxScore;
@@ -545,7 +547,7 @@ export default function AnalisisPage() {
                 <CardHeader className="flex flex-row items-start justify-between">
                     <div>
                         <CardTitle>Análisis por Examen</CardTitle>
-                        <CardDescription>Porcentaje de aprobados y desaprobados por grado para cada examen.</CardDescription>
+                        <CardDescription>Rendimiento y porcentaje de aprobados por grado para cada examen.</CardDescription>
                     </div>
                      <Button variant="outline" size="icon" className="no-print" onClick={() => handlePrint('analisis-examen-card')}>
                         <Printer className="h-4 w-4" />
@@ -561,6 +563,13 @@ export default function AnalisisPage() {
                             <Tooltip content={<CustomTooltip />} />
                             <Legend />
                             {gradeDataKeys.map((gradeName) => [
+                                <Bar
+                                    key={`${gradeName}_Rendimiento`}
+                                    name={`${gradeName} - Rendimiento`}
+                                    dataKey={`${gradeName}_Rendimiento`}
+                                    fill={getGradeColor(gradeName, 'main')}
+                                    barSize={20}
+                                />,
                                 <Bar 
                                     key={`${gradeName}_Aprobados`}
                                     name={`${gradeName} - Aprobados`} 
@@ -648,3 +657,5 @@ export default function AnalisisPage() {
         </div>
     )
 }
+
+    
