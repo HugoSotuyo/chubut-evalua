@@ -170,7 +170,9 @@ export default function EscuelasPage() {
         return;
     }
     
-    if (districts.some(d => d.toLowerCase() === name.trim().toLowerCase())) {
+    const districtExists = districts.some(d => d.toLowerCase() === name.trim().toLowerCase());
+    
+    if (districtExists) {
         toast({
             title: "Distrito Duplicado",
             description: `El distrito "${name.trim()}" ya existe en la lista.`,
