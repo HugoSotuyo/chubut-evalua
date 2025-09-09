@@ -32,6 +32,11 @@ const getGradeColor = (grade: string | undefined, type: 'main' | 'approved' | 'd
     return GRADE_COLORS[grade]?.[type] || "hsl(var(--muted-foreground))";
 };
 
+const getGradeOrder = (grade: string): number => {
+    const match = grade.match(/^(\d+)/);
+    return match ? parseInt(match[1], 10) : 99;
+}
+
 
 export default function AnalisisPage() {
     const { user, loading: authLoading } = useAuth();
@@ -195,9 +200,11 @@ export default function AnalisisPage() {
         
         const examAnalysisData = Object.entries(examAnalysis).map(([examName, data]) => {
             const examRow: { name: string, [key: string]: any } = { name: examName };
+            let examGrade = 'Sin Grado'; // Default grade
             
             Object.entries(data.byGrade).forEach(([grade, gradeData]) => {
                 const total = gradeData.count;
+                examGrade = grade; // Capture the grade for sorting
                 if (total > 0) {
                     examRow[`${grade}_Aprobados`] = (gradeData.aprobados / total) * 100;
                     examRow[`${grade}_Desaprobados`] = ((total - gradeData.aprobados) / total) * 100;
@@ -217,8 +224,9 @@ export default function AnalisisPage() {
                 examRow[`${grade}_totalMaxScore`] = gradeData.totalMaxScore;
             });
 
+            examRow.gradeForSort = examGrade;
             return examRow;
-        });
+        }).sort((a,b) => getGradeOrder(a.gradeForSort) - getGradeOrder(b.gradeForSort));
 
 
         // --- Data: Análisis por Pregunta ---
@@ -707,10 +715,3 @@ export default function AnalisisPage() {
 
 
     
-
-
-
-
-
-
-

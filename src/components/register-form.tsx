@@ -17,10 +17,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useUsers } from "@/context/users-context";
 import { useSchools } from "@/context/schools-context";
 import type { UserRole } from "@/lib/auth";
+import { Eye, EyeOff } from "lucide-react";
 
 export function RegisterForm() {
   const [role, setRole] = useState<UserRole | "">("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
   const { users, addUser } = useUsers();
@@ -49,6 +52,7 @@ export function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
     const firstName = formData.get("first-name") as string;
@@ -64,6 +68,7 @@ export function RegisterForm() {
             description: "Por favor, completa todos los campos requeridos.",
             variant: "destructive",
         });
+        setIsSubmitting(false);
         return;
     }
     
@@ -84,6 +89,7 @@ export function RegisterForm() {
                 description: "Debes seleccionar un distrito y una escuela.",
                 variant: "destructive",
             });
+            setIsSubmitting(false);
             return;
         }
         userData.school = school;
@@ -98,6 +104,7 @@ export function RegisterForm() {
                 description: "Debes seleccionar un grado y un curso.",
                 variant: "destructive",
             });
+            setIsSubmitting(false);
             return;
         }
         userData.grade = grade;
@@ -122,6 +129,8 @@ export function RegisterForm() {
             variant: "destructive"
         });
         console.error("Registration failed:", error);
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -130,16 +139,16 @@ export function RegisterForm() {
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
           <Label htmlFor="first-name">Nombre</Label>
-          <Input id="first-name" name="first-name" placeholder="Juan" required />
+          <Input id="first-name" name="first-name" placeholder="Juan" required disabled={isSubmitting}/>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="last-name">Apellido</Label>
-          <Input id="last-name" name="last-name" placeholder="Perez" required />
+          <Input id="last-name" name="last-name" placeholder="Perez" required disabled={isSubmitting}/>
         </div>
       </div>
       <div className="grid gap-2">
         <Label htmlFor="dni">DNI</Label>
-        <Input id="dni" name="dni" placeholder="12345678" required />
+        <Input id="dni" name="dni" placeholder="12345678" required disabled={isSubmitting}/>
       </div>
       <div className="grid gap-2">
         <Label htmlFor="email">Email / Usuario</Label>
@@ -149,11 +158,12 @@ export function RegisterForm() {
           name="email"
           placeholder="tu.dni@chubut.edu.ar"
           required
+          disabled={isSubmitting}
         />
       </div>
       <div className="grid gap-2">
         <Label htmlFor="role">Rol</Label>
-        <Select onValueChange={(value) => setRole(value as UserRole)} name="role" required>
+        <Select onValueChange={(value) => setRole(value as UserRole)} name="role" required disabled={isSubmitting}>
           <SelectTrigger>
             <SelectValue placeholder="Selecciona tu rol" />
           </SelectTrigger>
@@ -170,7 +180,7 @@ export function RegisterForm() {
         <>
           <div className="grid gap-2">
             <Label htmlFor="distrito">Distrito</Label>
-            <Select name="distrito" onValueChange={setSelectedDistrict} required>
+            <Select name="distrito" onValueChange={setSelectedDistrict} required disabled={isSubmitting}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona un distrito" />
               </SelectTrigger>
@@ -183,7 +193,7 @@ export function RegisterForm() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="escuela">Escuela</Label>
-            <Select name="escuela" required disabled={!selectedDistrict}>
+            <Select name="escuela" required disabled={!selectedDistrict || isSubmitting}>
               <SelectTrigger>
                 <SelectValue placeholder={!selectedDistrict ? "Selecciona un distrito primero" : "Selecciona una escuela"} />
               </SelectTrigger>
@@ -208,7 +218,7 @@ export function RegisterForm() {
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
                 <Label htmlFor="grado">Grado</Label>
-                <Select name="grado" required>
+                <Select name="grado" required disabled={isSubmitting}>
                 <SelectTrigger>
                     <SelectValue placeholder="Grado" />
                 </SelectTrigger>
@@ -224,7 +234,7 @@ export function RegisterForm() {
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="curso">Curso</Label>
-                <Input id="curso" name="curso" placeholder="A" required />
+                <Input id="curso" name="curso" placeholder="A" required disabled={isSubmitting}/>
             </div>
           </div>
         </>
@@ -232,10 +242,27 @@ export function RegisterForm() {
 
       <div className="grid gap-2">
         <Label htmlFor="password">Contraseña</Label>
-        <Input id="password" name="password" type="password" required />
+        <div className="relative">
+             <Input 
+                id="password" 
+                name="password" 
+                type={showPassword ? "text" : "password"} 
+                required 
+                className="pr-10"
+                disabled={isSubmitting}
+            />
+            <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground"
+                disabled={isSubmitting}
+            >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
+        </div>
       </div>
-      <Button type="submit" className="w-full">
-        Crear cuenta
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
       </Button>
     </form>
   );
