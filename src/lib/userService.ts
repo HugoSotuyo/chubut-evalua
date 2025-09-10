@@ -132,6 +132,21 @@ export async function updateUserStatusInDb(userId: string, newStatus: "Activo" |
     }
 }
 
+export async function updateUserInDb(user: User) {
+    const db = getDb();
+    try {
+        const userRef = doc(db, "users", user.id);
+        const userData = { ...user };
+        // Don't save the id within the document itself
+        delete userData.id; 
+        await updateDoc(userRef, userData);
+    } catch (error) {
+        console.error(`Error updating user ${user.id}:`, error);
+        throw new Error("Failed to update user in database.");
+    }
+}
+
+
 export async function deleteUserFromDb(userId: string) {
     const db = getDb();
     try {

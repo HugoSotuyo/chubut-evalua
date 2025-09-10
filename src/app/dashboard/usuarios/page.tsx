@@ -1,12 +1,12 @@
 
 "use client"
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Ellipsis, UserPlus, Filter, FileDown, Eye } from "lucide-react"
+import { Ellipsis, UserPlus, Filter, FileDown, Eye, Edit } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
   AlertDialog,
@@ -29,12 +29,15 @@ import { RoleIcon } from "@/components/role-icon";
 import { useAuth } from "@/context/auth-context";
 import { useSchools } from "@/context/schools-context";
 import { Input } from "@/components/ui/input";
+import type { UserRole } from "@/lib/auth";
+
 
 export default function UsuariosPage() {
-  const { users, deleteUser, enableUser } = useUsers();
+  const { users, deleteUser, enableUser, updateUser } = useUsers();
   const { schools } = useSchools();
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
   const [filters, setFilters] = useState({
@@ -118,6 +121,11 @@ export default function UsuariosPage() {
   const handleOpenProfileDialog = (user: User) => {
     setSelectedUser(user);
     setIsProfileDialogOpen(true);
+  }
+
+  const handleOpenEditDialog = (user: User) => {
+    setSelectedUser(user);
+    setIsEditDialogOpen(true);
   }
 
   const handleDeleteUser = async () => {
@@ -355,7 +363,12 @@ export default function UsuariosPage() {
                                                 {isSubmitting ? "Habilitando..." : `Habilitar ${user.role}`}
                                             </DropdownMenuItem>
                                         )}
-                                        {showAdvancedFilters && <DropdownMenuItem onClick={() => showToast('Editar Usuario')}>Editar</DropdownMenuItem>}
+                                        {showAdvancedFilters && (
+                                            <DropdownMenuItem onSelect={() => handleOpenEditDialog(user)}>
+                                                <Edit className="mr-2 h-4 w-4" />
+                                                Editar
+                                            </DropdownMenuItem>
+                                        )}
                                         {showAdvancedFilters && <DropdownMenuItem onClick={() => showToast('Cambiar Contraseña')}>Cambiar Contraseña</DropdownMenuItem>}
                                         {(currentUser.role === 'Evaluador' || currentUser.role === 'Director' || currentUser.role === 'Administrador') && (
                                           <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(user)}>Eliminar</DropdownMenuItem>
@@ -447,7 +460,142 @@ export default function UsuariosPage() {
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+
+        <EditUserDialog 
+            isOpen={isEditDialogOpen} 
+            onOpenChange={setIsEditDialogOpen}
+            user={selectedUser}
+            onSave={async (updatedUser) => {
+                setIsSubmitting(true);
+                try {
+                    await updateUser(updatedUser);
+                    toast({ title: "Usuario Actualizado", description: "Los datos del usuario han sido actualizados." });
+                    setIsEditDialogOpen(false);
+                    setSelectedUser(null);
+                } catch (error) {
+                    toast({ title: "Error", description: "No se pudo actualizar el usuario.", variant: "destructive" });
+                } finally {
+                    setIsSubmitting(false);
+                }
+            }}
+            allSchools={schools}
+            isSubmitting={isSubmitting}
+        />
     </div>
   )
+}
+
+interface EditUserDialogProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  user: User | null;
+  onSave: (user: User) => Promise<void>;
+  allSchools: { id: string; name: string }[];
+  isSubmitting: boolean;
+}
+
+function EditUserDialog({ isOpen, onOpenChange, user, onSave, allSchools, isSubmitting }: EditUserDialogProps) {
+    const [editedUser, setEditedUser] = useState<User | null>(user);
+
+    useEffect(() => {
+        setEditedUser(user);
+    }, [user]);
+
+    const handleFieldChange = (field: keyof User, value: any) => {
+        if (!editedUser) return;
+        
+        const updatedUser = { ...editedUser, [field]: value };
+
+        // Reset grade and course if role is not 'Docente'
+        if (field === 'role' && value !== 'Docente') {
+            delete updatedUser.grade;
+            delete updatedUser.course;
+        }
+
+        setEditedUser(updatedUser);
+    }
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (editedUser) {
+            onSave(editedUser);
+        }
+    }
+
+    if (!editedUser) return null;
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <form onSubmit={handleSubmit}>
+                    <DialogHeader>
+                        <DialogTitle>Editar Usuario</DialogTitle>
+                        <DialogDescription>Modifica los datos del usuario. El email y el DNI no se pueden cambiar.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-name">Nombre Completo</Label>
+                            <Input id="edit-name" value={editedUser.name} onChange={(e) => handleFieldChange('name', e.target.value)} disabled={isSubmitting} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-role">Rol</Label>
+                            <Select value={editedUser.role} onValueChange={(value) => handleFieldChange('role', value as UserRole)} disabled={isSubmitting}>
+                                <SelectTrigger id="edit-role">
+                                    <SelectValue placeholder="Seleccionar rol" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Administrador">Administrador</SelectItem>
+                                    <SelectItem value="Referente">Referente</SelectItem>
+                                    <SelectItem value="Director">Director</SelectItem>
+                                    <SelectItem value="Docente">Docente</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-school">Escuela</Label>
+                            <Select value={editedUser.school} onValueChange={(value) => handleFieldChange('school', value)} disabled={isSubmitting}>
+                                <SelectTrigger id="edit-school">
+                                    <SelectValue placeholder="Seleccionar escuela" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {allSchools.map(school => (
+                                        <SelectItem key={school.id} value={school.name}>{school.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {editedUser.role === 'Docente' && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit-grade">Grado</Label>
+                                    <Select value={editedUser.grade || ''} onValueChange={(value) => handleFieldChange('grade', value)} disabled={isSubmitting}>
+                                        <SelectTrigger id="edit-grade"><SelectValue placeholder="Grado" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="1er Grado">1er Grado</SelectItem>
+                                            <SelectItem value="2do Grado">2do Grado</SelectItem>
+                                            <SelectItem value="3er Grado">3er Grado</SelectItem>
+                                            <SelectItem value="4to Grado">4to Grado</SelectItem>
+                                            <SelectItem value="5to Grado">5to Grado</SelectItem>
+                                            <SelectItem value="6to Grado">6to Grado</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit-course">Curso</Label>
+                                    <Input id="edit-course" value={editedUser.course || ''} onChange={(e) => handleFieldChange('course', e.target.value)} disabled={isSubmitting} />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="secondary" onClick={() => onOpenChange(false)} disabled={isSubmitting}>Cancelar</Button>
+                        </DialogClose>
+                        <Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Guardando..." : "Guardar Cambios"}</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
 }
 
