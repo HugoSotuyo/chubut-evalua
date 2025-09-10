@@ -224,10 +224,6 @@ export default function UsuariosPage() {
             </div>
             {currentUser.role !== 'Director' && (
               <div className="flex items-center gap-2">
-                  <Button onClick={() => showToast('Invitar Usuario')}>
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      Invitar Usuario
-                  </Button>
                   <Button variant="outline" onClick={handleExport}>
                       <FileDown className="mr-2 h-4 w-4" />
                       Exportar Usuarios
@@ -699,5 +695,7 @@ function ChangePasswordDialog({ isOpen, onOpenChange, user, onSave, isSubmitting
         </Dialog>
     );
 }
+
+    
 
     
