@@ -186,7 +186,7 @@ export default function UsuariosPage() {
         [user.id, user.name, user.role, user.school, user.status, user.grade || '', user.course || ''].join(';')
     );
     
-    const bom = "\uFEFF";
+    const bom = "﻿";
     const csvContent = bom + [headers.join(';'), ...rows].join("\n");
     
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -599,3 +599,4 @@ function EditUserDialog({ isOpen, onOpenChange, user, onSave, allSchools, isSubm
     );
 }
 
+    
