@@ -146,6 +146,19 @@ export async function updateUserInDb(user: User) {
     }
 }
 
+export async function updateUserPasswordInDb(userId: string, newPassword: string) {
+    const db = getDb();
+    try {
+        const userRef = doc(db, "users", userId);
+        await updateDoc(userRef, {
+            password: newPassword
+        });
+    } catch (error) {
+        console.error(`Error updating password for user ${userId}:`, error);
+        throw new Error("Failed to update user password in database.");
+    }
+}
+
 
 export async function deleteUserFromDb(userId: string) {
     const db = getDb();
@@ -157,3 +170,5 @@ export async function deleteUserFromDb(userId: string) {
         throw new Error("Failed to delete user from database.");
     }
 }
+
+    

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Ellipsis, UserPlus, Filter, FileDown, Eye, Edit } from "lucide-react"
+import { Ellipsis, UserPlus, Filter, FileDown, Eye, Edit, KeyRound } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
   AlertDialog,
@@ -34,11 +34,12 @@ import type { School } from "@/lib/types";
 
 
 export default function UsuariosPage() {
-  const { users, deleteUser, enableUser, updateUser } = useUsers();
+  const { users, deleteUser, enableUser, updateUser, updateUserPassword } = useUsers();
   const { schools } = useSchools();
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
   const [filters, setFilters] = useState({
@@ -129,6 +130,11 @@ export default function UsuariosPage() {
     setIsEditDialogOpen(true);
   }
 
+  const handleOpenChangePasswordDialog = (user: User) => {
+    setSelectedUser(user);
+    setIsChangePasswordDialogOpen(true);
+  }
+
   const handleDeleteUser = async () => {
     if (!selectedUser || isSubmitting) return;
 
@@ -207,6 +213,7 @@ export default function UsuariosPage() {
   }
   
   const showAdvancedFilters = ['Evaluador', 'Administrador', 'Referente'].includes(currentUser.role);
+  const isEvaluator = currentUser.role === 'Evaluador';
 
   return (
     <div className="flex flex-col gap-8">
@@ -370,7 +377,12 @@ export default function UsuariosPage() {
                                                 Editar
                                             </DropdownMenuItem>
                                         )}
-                                        {showAdvancedFilters && <DropdownMenuItem onClick={() => showToast('Cambiar Contraseña')}>Cambiar Contraseña</DropdownMenuItem>}
+                                        {isEvaluator && (
+                                            <DropdownMenuItem onSelect={() => handleOpenChangePasswordDialog(user)}>
+                                                <KeyRound className="mr-2 h-4 w-4" />
+                                                Cambiar Contraseña
+                                            </DropdownMenuItem>
+                                        )}
                                         {(currentUser.role === 'Evaluador' || currentUser.role === 'Director' || currentUser.role === 'Administrador') && (
                                           <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(user)}>Eliminar</DropdownMenuItem>
                                         )}
@@ -480,6 +492,26 @@ export default function UsuariosPage() {
                 }
             }}
             allSchools={schools}
+            isSubmitting={isSubmitting}
+        />
+
+        <ChangePasswordDialog
+            isOpen={isChangePasswordDialogOpen}
+            onOpenChange={setIsChangePasswordDialogOpen}
+            user={selectedUser}
+            onSave={async (userId, newPassword) => {
+                setIsSubmitting(true);
+                try {
+                    await updateUserPassword(userId, newPassword);
+                    toast({ title: "Contraseña Actualizada", description: "La contraseña del usuario ha sido cambiada." });
+                    setIsChangePasswordDialogOpen(false);
+                    setSelectedUser(null);
+                } catch (error) {
+                    toast({ title: "Error", description: "No se pudo actualizar la contraseña.", variant: "destructive" });
+                } finally {
+                    setIsSubmitting(false);
+                }
+            }}
             isSubmitting={isSubmitting}
         />
     </div>
@@ -609,6 +641,63 @@ function EditUserDialog({ isOpen, onOpenChange, user, onSave, allSchools, isSubm
     );
 }
 
-    
+interface ChangePasswordDialogProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  user: User | null;
+  onSave: (userId: string, newPassword: string) => Promise<void>;
+  isSubmitting: boolean;
+}
+
+function ChangePasswordDialog({ isOpen, onOpenChange, user, onSave, isSubmitting }: ChangePasswordDialogProps) {
+    const [newPassword, setNewPassword] = useState("");
+
+    useEffect(() => {
+        if (!isOpen) {
+            setNewPassword("");
+        }
+    }, [isOpen]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (user && newPassword) {
+            onSave(user.id, newPassword);
+        }
+    }
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <form onSubmit={handleSubmit}>
+                    <DialogHeader>
+                        <DialogTitle>Cambiar Contraseña</DialogTitle>
+                        <DialogDescription>
+                            Estás a punto de cambiar la contraseña para <span className="font-bold">{user?.name}</span>. Esta acción no se puede deshacer.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="new-password">Nueva Contraseña</Label>
+                            <Input
+                                id="new-password"
+                                type="password"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                required
+                                disabled={isSubmitting}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="secondary" onClick={() => onOpenChange(false)} disabled={isSubmitting}>Cancelar</Button>
+                        </DialogClose>
+                        <Button type="submit" disabled={isSubmitting || !newPassword}>{isSubmitting ? "Guardando..." : "Guardar Contraseña"}</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
     

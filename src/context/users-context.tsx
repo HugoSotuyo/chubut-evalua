@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
-import { getAllUsers, updateUserStatusInDb, deleteUserFromDb, addUser as addUserToDb, updateUserInDb } from '@/lib/userService'; 
+import { getAllUsers, updateUserStatusInDb, deleteUserFromDb, addUser as addUserToDb, updateUserInDb, updateUserPasswordInDb } from '@/lib/userService'; 
 import type { User } from "@/lib/types";
 
 type NewUserPayload = Omit<User, 'id' | 'status'>;
@@ -11,6 +11,7 @@ interface UsersContextType {
   users: User[];
   addUser: (userData: NewUserPayload) => Promise<{ success: boolean; message: string; newUser?: User }>;
   updateUser: (userData: User) => Promise<void>;
+  updateUserPassword: (userId: string, newPassword: string) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
   enableUser: (userId: string) => Promise<void>;
   loading: boolean;
@@ -61,6 +62,17 @@ export function UsersProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateUserPassword = async (userId: string, newPassword: string) => {
+    try {
+        await updateUserPasswordInDb(userId, newPassword);
+        // No es necesario refrescar los usuarios ya que la contraseña no se muestra
+    } catch (error) {
+        console.error(`Failed to update password for user ${userId}:`, error);
+        throw error;
+    }
+  };
+
+
   const deleteUser = async (userId: string) => {
     try {
       await deleteUserFromDb(userId);
@@ -84,7 +96,7 @@ export function UsersProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <UsersContext.Provider value={{ users, addUser, updateUser, deleteUser, enableUser, loading }}>
+    <UsersContext.Provider value={{ users, addUser, updateUser, updateUserPassword, deleteUser, enableUser, loading }}>
       {children}
     </UsersContext.Provider>
   );
@@ -97,3 +109,5 @@ export function useUsers() {
   }
   return context;
 }
+
+    
