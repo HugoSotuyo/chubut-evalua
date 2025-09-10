@@ -30,6 +30,7 @@ import { useAuth } from "@/context/auth-context";
 import { useSchools } from "@/context/schools-context";
 import { Input } from "@/components/ui/input";
 import type { UserRole } from "@/lib/auth";
+import type { School } from "@/lib/types";
 
 
 export default function UsuariosPage() {
@@ -490,7 +491,7 @@ interface EditUserDialogProps {
   onOpenChange: (open: boolean) => void;
   user: User | null;
   onSave: (user: User) => Promise<void>;
-  allSchools: { id: string; name: string }[];
+  allSchools: School[];
   isSubmitting: boolean;
 }
 
@@ -506,13 +507,20 @@ function EditUserDialog({ isOpen, onOpenChange, user, onSave, allSchools, isSubm
         
         const updatedUser = { ...editedUser, [field]: value };
 
-        // Reset grade and course if role is not 'Docente'
         if (field === 'role' && value !== 'Docente') {
             delete updatedUser.grade;
             delete updatedUser.course;
         }
 
         setEditedUser(updatedUser);
+    }
+    
+    const handleSchoolChange = (schoolId: string) => {
+        if (!editedUser) return;
+        const selectedSchool = allSchools.find(s => s.id === schoolId);
+        if (selectedSchool) {
+            setEditedUser({ ...editedUser, school: selectedSchool.name });
+        }
     }
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -523,6 +531,8 @@ function EditUserDialog({ isOpen, onOpenChange, user, onSave, allSchools, isSubm
     }
 
     if (!editedUser) return null;
+    
+    const selectedSchoolId = allSchools.find(s => s.name === editedUser.school)?.id || "";
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -553,13 +563,13 @@ function EditUserDialog({ isOpen, onOpenChange, user, onSave, allSchools, isSubm
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="edit-school">Escuela</Label>
-                            <Select value={editedUser.school} onValueChange={(value) => handleFieldChange('school', value)} disabled={isSubmitting}>
+                            <Select value={selectedSchoolId} onValueChange={handleSchoolChange} disabled={isSubmitting}>
                                 <SelectTrigger id="edit-school">
                                     <SelectValue placeholder="Seleccionar escuela" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {allSchools.map(school => (
-                                        <SelectItem key={school.id} value={school.name}>{school.name}</SelectItem>
+                                        <SelectItem key={school.id} value={school.id}>{school.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -598,5 +608,7 @@ function EditUserDialog({ isOpen, onOpenChange, user, onSave, allSchools, isSubm
         </Dialog>
     );
 }
+
+    
 
     
