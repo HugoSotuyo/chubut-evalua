@@ -10,16 +10,16 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Save, Settings, SlidersHorizontal, Shield, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
-const auditLogs = [
-    { id: 1, user: "evaluador@chubut.edu.ar", action: "CREAR_EXAMEN", details: "Examen 'Matemática Diagnóstico 2024'", timestamp: "2024-07-29 10:15:23" },
-    { id: 2, user: "director.esc101@chubut.edu.ar", action: "ALTA_USUARIO", details: "Usuario 'docente.nuevo@chubut.edu.ar'", timestamp: "2024-07-29 09:45:10" },
-    { id: 3, user: "evaluador@chubut.edu.ar", action: "MOD_PARAMETRO", details: "Nota de aprobación cambiada a 65%", timestamp: "2024-07-28 18:30:00" },
-    { id: 4, user: "referente.dist1@chubut.edu.ar", action: "CIERRE_EXAMEN", details: "Examen 'Lengua y Literatura 2023'", timestamp: "2024-07-28 15:00:05" },
-    { id: 5, user: "admin@chubut.edu.ar", action: "ACTIVAR_ESCUELA", details: "Escuela N° 23", timestamp: "2024-07-27 11:20:45" },
-];
+import { useAuditLogs } from "@/context/audit-log-context";
+import { format } from "date-fns";
 
 export default function AdminPage() {
+  const { auditLogs, loading } = useAuditLogs();
+
+  if (loading) {
+    return <div className="flex h-screen w-full items-center justify-center">Cargando registros...</div>;
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -121,7 +121,7 @@ export default function AdminPage() {
                                 <Badge variant="secondary">{log.action}</Badge>
                             </TableCell>
                             <TableCell>{log.details}</TableCell>
-                            <TableCell>{log.timestamp}</TableCell>
+                            <TableCell>{format(new Date(log.timestamp), "dd/MM/yyyy HH:mm:ss")}</TableCell>
                         </TableRow>
                         ))}
                     </TableBody>

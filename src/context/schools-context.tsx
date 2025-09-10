@@ -14,6 +14,7 @@ import {
     deleteDistrict as deleteDistrictDb
 } from '@/lib/schoolsService';
 import type { School, District } from '@/lib/types';
+import { useAuditLogs } from './audit-log-context';
 
 type NewSchool = Omit<School, 'id' | 'status' | 'districtId'>;
 
@@ -35,6 +36,7 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
   const [schools, setSchools] = useState<School[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(true);
+  const { addAuditLog } = useAuditLogs();
 
   const refreshData = useCallback(async () => {
     setLoading(true);
@@ -58,35 +60,49 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
 
   const addSchool = async (schoolData: NewSchool, districtId: string) => {
     await addSchoolDb(schoolData, districtId);
+    await addAuditLog({ action: "CREAR_ESCUELA", details: `Se creó la escuela "${schoolData.name}"` });
     await refreshData();
   };
   
   const updateSchool = async (updatedSchool: School) => {
     await updateSchoolDb(updatedSchool);
+    await addAuditLog({ action: "EDITAR_ESCUELA", details: `Se editó la escuela "${updatedSchool.name}"` });
     await refreshData();
   };
   
   const deleteSchool = async (schoolId: string) => {
+    const schoolToDelete = schools.find(s => s.id === schoolId);
     await deleteSchoolDb(schoolId);
+    if(schoolToDelete) {
+        await addAuditLog({ action: "ELIMINAR_ESCUELA", details: `Se eliminó la escuela "${schoolToDelete.name}"` });
+    }
     await refreshData();
   };
 
   const toggleSchoolStatus = async (schoolId: string) => {
+    const school = schools.find(s => s.id === schoolId);
     await toggleSchoolStatusDb(schoolId);
+    if(school) {
+        const newStatus = school.status === "Activa" ? "Inactiva" : "Activa";
+        await addAuditLog({ action: "CAMBIAR_ESTADO_ESCUELA", details: `Se cambió el estado de la escuela "${school.name}" a ${newStatus}` });
+    }
     await refreshData();
   };
   
   const addDistrict = async (districtName: string): Promise<{ success: boolean; message: string }> => {
     const result = await addDistrictDb(districtName);
     if (result.success) {
+      await addAuditLog({ action: "CREAR_DISTRITO", details: `Se creó el distrito "${districtName}"` });
       await refreshData();
     }
     return result;
   };
 
   const deleteDistrict = async (districtId: string): Promise<{ success: boolean; message: string }> => {
+    const districtToDelete = districts.find(d => d.id === districtId);
     const result = await deleteDistrictDb(districtId);
-    if (result.success) {
+    if (result.success && districtToDelete) {
+      await addAuditLog({ action: "ELIMINAR_DISTRITO", details: `Se eliminó el distrito "${districtToDelete.name}"` });
       await refreshData();
     }
     return result;

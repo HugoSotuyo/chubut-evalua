@@ -71,3 +71,28 @@ export type District = {
     id: string;
     name: string;
 };
+
+export type AuditAction = 
+  | "CREAR_EXAMEN"
+  | "EDITAR_EXAMEN"
+  | "ELIMINAR_EXAMEN"
+  | "CAMBIAR_ESTADO_EXAMEN"
+  | "ALTA_USUARIO_PENDIENTE"
+  | "HABILITAR_USUARIO"
+  | "EDITAR_USUARIO"
+  | "ELIMINAR_USUARIO"
+  | "CAMBIAR_CONTRASENA"
+  | "CREAR_ESCUELA"
+  | "EDITAR_ESCUELA"
+  | "ELIMINAR_ESCUELA"
+  | "CAMBIAR_ESTADO_ESCUELA"
+  | "CREAR_DISTRITO"
+  | "ELIMINAR_DISTRITO";
+
+export type AuditLog = {
+    id: string;
+    user: string;
+    action: AuditAction;
+    details: string;
+    timestamp: string; // ISO 8601 string
+};

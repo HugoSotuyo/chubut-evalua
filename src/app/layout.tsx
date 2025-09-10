@@ -10,6 +10,7 @@ import { SearchProvider } from '@/context/search-context';
 import { ExamsProvider } from '@/context/exams-context';
 import { StudentsProvider } from '@/context/students-context';
 import { ResultsProvider } from '@/context/results-context';
+import { AuditLogProvider } from '@/context/audit-log-context';
 
 export const metadata: Metadata = {
   title: 'Chubut evalúa',
@@ -30,6 +31,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
+          <AuditLogProvider>
             <UsersProvider>
                 <SchoolsProvider>
                     <SearchProvider>
@@ -44,6 +46,7 @@ export default function RootLayout({
                     </SearchProvider>
                 </SchoolsProvider>
             </UsersProvider>
+          </AuditLogProvider>
         </AuthProvider>
       </body>
     </html>

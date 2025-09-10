@@ -4,6 +4,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { getAllUsers, updateUserStatusInDb, deleteUserFromDb, addUser as addUserToDb, updateUserInDb, updateUserPasswordInDb } from '@/lib/userService'; 
 import type { User } from "@/lib/types";
+import { useAuditLogs } from './audit-log-context';
 
 type NewUserPayload = Omit<User, 'id' | 'status'>;
 
@@ -22,6 +23,7 @@ const UsersContext = createContext<UsersContextType | undefined>(undefined);
 export function UsersProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const { addAuditLog } = useAuditLogs();
   
   const refreshUsers = useCallback(async () => {
     setLoading(true);
@@ -43,6 +45,7 @@ export function UsersProvider({ children }: { children: ReactNode }) {
     try {
       const result = await addUserToDb(userData);
       if (result.success && result.newUser) {
+        await addAuditLog({ action: "ALTA_USUARIO_PENDIENTE", details: `Se registró el usuario "${result.newUser.email}" (${result.newUser.role}), pendiente de habilitación.` });
         setUsers(prevUsers => [...prevUsers, result.newUser!]);
       }
       return { success: result.success, message: result.message };
@@ -55,6 +58,7 @@ export function UsersProvider({ children }: { children: ReactNode }) {
   const updateUser = async (userData: User) => {
     try {
         await updateUserInDb(userData);
+        await addAuditLog({ action: "EDITAR_USUARIO", details: `Se editaron los datos del usuario "${userData.email}".` });
         await refreshUsers();
     } catch (error) {
         console.error(`Failed to update user ${userData.id}:`, error);
@@ -64,8 +68,11 @@ export function UsersProvider({ children }: { children: ReactNode }) {
 
   const updateUserPassword = async (userId: string, newPassword: string) => {
     try {
+        const userToUpdate = users.find(u => u.id === userId);
         await updateUserPasswordInDb(userId, newPassword);
-        // No es necesario refrescar los usuarios ya que la contraseña no se muestra
+        if (userToUpdate) {
+            await addAuditLog({ action: "CAMBIAR_CONTRASENA", details: `Se cambió la contraseña para el usuario "${userToUpdate.email}".` });
+        }
     } catch (error) {
         console.error(`Failed to update password for user ${userId}:`, error);
         throw error;
@@ -75,7 +82,11 @@ export function UsersProvider({ children }: { children: ReactNode }) {
 
   const deleteUser = async (userId: string) => {
     try {
+      const userToDelete = users.find(u => u.id === userId);
       await deleteUserFromDb(userId);
+      if (userToDelete) {
+        await addAuditLog({ action: "ELIMINAR_USUARIO", details: `Se eliminó el usuario "${userToDelete.email}".` });
+      }
       setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
     } catch (error) {
       console.error(`Failed to delete user ${userId}:`, error);
@@ -85,7 +96,11 @@ export function UsersProvider({ children }: { children: ReactNode }) {
   
   const enableUser = async (userId: string) => {
     try {
+      const userToEnable = users.find((user) => user.id === userId);
       await updateUserStatusInDb(userId, "Activo");
+      if (userToEnable) {
+        await addAuditLog({ action: "HABILITAR_USUARIO", details: `Se habilitó el usuario "${userToEnable.email}".` });
+      }
        setUsers(prevUsers => prevUsers.map(user => 
           user.id === userId ? { ...user, status: "Activo" as const } : user
       ));
@@ -109,5 +124,3 @@ export function useUsers() {
   }
   return context;
 }
-
-    
