@@ -20,18 +20,22 @@ import { useExams } from "@/context/exams-context"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
+import { useStudents } from "@/context/students-context"
 
 type Filters = {
     exam: string;
     school: string;
     studentName: string;
     status: string;
+    grade: string;
+    course: string;
 }
 
 export default function ResultadosPage() {
     const { user, loading: authLoading } = useAuth();
     const { results: allResults, deleteResult, loading: resultsLoading } = useResults();
     const { exams, loading: examsLoading } = useExams();
+    const { students } = useStudents();
     const { searchTerm } = useSearch();
     const { toast } = useToast();
     
@@ -40,6 +44,8 @@ export default function ResultadosPage() {
         school: "all",
         studentName: "",
         status: "all",
+        grade: "all",
+        course: "all",
     });
 
     const [appliedFilters, setAppliedFilters] = useState<Filters>(filters);
@@ -57,6 +63,8 @@ export default function ResultadosPage() {
                 school: initialSchool,
                 studentName: "",
                 status: "all",
+                grade: "all",
+                course: "all",
             };
             setFilters(initialFilters);
             setAppliedFilters(initialFilters);
@@ -70,6 +78,14 @@ export default function ResultadosPage() {
         }
         return exams;
     }, [exams, user]);
+
+    const availableGrades = useMemo(() => {
+        return [...new Set(students.map(s => s.grade).filter(Boolean))].sort();
+    }, [students]);
+
+    const availableCourses = useMemo(() => {
+        return [...new Set(students.map(s => s.course).filter(Boolean))].sort();
+    }, [students]);
 
     const filteredResults = useMemo(() => {
         if (!user) return [];
@@ -93,6 +109,12 @@ export default function ResultadosPage() {
         }
         if (appliedFilters.school !== "all") {
             results = results.filter(r => r.school === appliedFilters.school);
+        }
+        if (appliedFilters.grade !== "all") {
+            results = results.filter(r => r.grade === appliedFilters.grade);
+        }
+        if (appliedFilters.course !== "all") {
+            results = results.filter(r => r.course === appliedFilters.course);
         }
         if (appliedFilters.studentName) {
             results = results.filter(r => r.studentName.toLowerCase().includes(appliedFilters.studentName.toLowerCase()));
@@ -183,6 +205,8 @@ export default function ResultadosPage() {
         return <div className="flex h-screen w-full items-center justify-center">Cargando...</div>;
     }
 
+    const showGradeCourseFilters = user && user.role !== 'Docente';
+
     return (
         <div className="flex flex-col gap-8">
             <div className="flex items-center justify-between">
@@ -206,7 +230,7 @@ export default function ResultadosPage() {
                     </div>
                     <CardDescription>Utiliza los filtros para encontrar resultados específicos y luego presiona "Aplicar Filtros".</CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 xl:grid-cols-7 gap-6 items-end">
                     <div className="grid gap-2">
                         <Label htmlFor="filtro-examen">Examen</Label>
                         <Select onValueChange={(value) => handleFilterChange("exam", value)} value={filters.exam}>
@@ -232,6 +256,30 @@ export default function ResultadosPage() {
                                 </SelectContent>
                             </Select>
                         </div>
+                    )}
+                    {showGradeCourseFilters && (
+                        <>
+                            <div className="grid gap-2">
+                                <Label htmlFor="filtro-grado">Grado</Label>
+                                <Select onValueChange={(v) => handleFilterChange('grade', v)} value={filters.grade}>
+                                    <SelectTrigger id="filtro-grado"><SelectValue placeholder="Grado" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todos</SelectItem>
+                                        {availableGrades.map((g, i) => <SelectItem key={`${g}-${i}`} value={g as string}>{g}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="filtro-curso">Curso</Label>
+                                <Select onValueChange={(v) => handleFilterChange('course', v)} value={filters.course}>
+                                    <SelectTrigger id="filtro-curso"><SelectValue placeholder="Curso" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todos</SelectItem>
+                                        {availableCourses.map((c, i) => <SelectItem key={`${c}-${i}`} value={c as string}>"{c}"</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </>
                     )}
                     <div className="grid gap-2">
                         <Label htmlFor="filtro-alumno">Alumno</Label>
@@ -380,3 +428,5 @@ export default function ResultadosPage() {
         </div>
     )
 }
+
+    
