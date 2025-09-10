@@ -140,8 +140,10 @@ export default function ResultadosPage() {
     }
     
     const handleExport = () => {
-        const headers = ["ID", "Alumno", "Examen", "Escuela", "Nota", "Estado"];
-        const rows = filteredResults.map(res => [res.id, res.studentName, res.examName, res.school, res.score, res.status].join(';'));
+        const headers = ["ID", "Alumno", "Examen", "Escuela", "Grado", "Curso", "Nota", "Estado"];
+        const rows = filteredResults.map(res => 
+            [res.id, res.studentName, res.examName, res.school, res.grade, res.course, res.score, res.status].join(';')
+        );
         
         const bom = "﻿";
         const csvContent = bom + [headers.join(';'), ...rows].join("\n");
@@ -320,6 +322,8 @@ export default function ResultadosPage() {
                                 <TableHead>Alumno</TableHead>
                                 <TableHead>Examen</TableHead>
                                 <TableHead>Escuela</TableHead>
+                                <TableHead>Grado</TableHead>
+                                <TableHead>Curso</TableHead>
                                 <TableHead>Nota</TableHead>
                                 <TableHead>Estado</TableHead>
                                 <TableHead>
@@ -333,6 +337,8 @@ export default function ResultadosPage() {
                                 <TableCell className="font-medium">{result.studentName}</TableCell>
                                 <TableCell>{result.examName}</TableCell>
                                 <TableCell>{result.school}</TableCell>
+                                <TableCell>{result.grade}</TableCell>
+                                <TableCell>{result.course}</TableCell>
                                 <TableCell>{result.score.toFixed(0)}/100</TableCell>
                                 <TableCell>
                                     <Badge variant={result.status === "Desaprobado" ? "destructive" : "default"}>{result.status}</Badge>
@@ -428,5 +434,3 @@ export default function ResultadosPage() {
         </div>
     )
 }
-
-    
