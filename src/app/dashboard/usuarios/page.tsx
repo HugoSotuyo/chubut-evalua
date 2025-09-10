@@ -27,14 +27,24 @@ import { useUsers } from "@/context/users-context";
 import type { User } from "@/context/users-context";
 import { RoleIcon } from "@/components/role-icon";
 import { useAuth } from "@/context/auth-context";
+import { useSchools } from "@/context/schools-context";
 import { Input } from "@/components/ui/input";
 
 export default function UsuariosPage() {
   const { users, deleteUser, enableUser } = useUsers();
+  const { schools } = useSchools();
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [roleFilter, setRoleFilter] = useState("all");
+  
+  const [filters, setFilters] = useState({
+    role: "all",
+    school: "all",
+    grade: "all",
+    course: "all",
+  });
+  const [appliedFilters, setAppliedFilters] = useState(filters);
+
   const { toast } = useToast();
   const { searchTerm } = useSearch();
   const { user: currentUser } = useAuth();
@@ -42,7 +52,22 @@ export default function UsuariosPage() {
 
   const uniqueRoles = useMemo(() => {
     const roles = users.map(user => user.role);
-    return [...new Set(roles)];
+    return [...new Set(roles)].filter(role => role !== 'Evaluador');
+  }, [users]);
+  
+  const uniqueSchools = useMemo(() => {
+    const schoolNames = users.map(user => user.school).filter(Boolean);
+    return [...new Set(schoolNames)].sort();
+  }, [users]);
+
+  const uniqueGrades = useMemo(() => {
+    const grades = users.map(user => user.grade).filter(Boolean);
+    return [...new Set(grades)].sort();
+  }, [users]);
+
+  const uniqueCourses = useMemo(() => {
+    const courses = users.map(user => user.course).filter(Boolean);
+    return [...new Set(courses)].sort();
   }, [users]);
 
   const filteredUsers = useMemo(() => {
@@ -52,16 +77,38 @@ export default function UsuariosPage() {
 
     if (currentUser.role === "Director") {
         results = users.filter(u => u.school === currentUser.school && u.role === "Docente");
-    } else if (roleFilter !== "all") {
-        results = results.filter(u => u.role === roleFilter);
+    } else {
+       if (appliedFilters.role !== "all") {
+            results = results.filter(u => u.role === appliedFilters.role);
+        }
+        if (appliedFilters.school !== "all") {
+            results = results.filter(u => u.school === appliedFilters.school);
+        }
+        if (appliedFilters.grade !== "all") {
+            results = results.filter(u => u.grade === appliedFilters.grade);
+        }
+        if (appliedFilters.course !== "all") {
+            results = results.filter(u => u.course === appliedFilters.course);
+        }
     }
     
     if (searchTerm) {
-      results = results.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      results = results.filter(u => 
+        u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        u.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
     
-    return results;
-  }, [users, roleFilter, searchTerm, currentUser]);
+    return results.filter(u => u.role !== 'Evaluador');
+  }, [users, appliedFilters, searchTerm, currentUser]);
+  
+  const handleFilterChange = (filterName: keyof typeof filters, value: string) => {
+    setFilters(prev => ({ ...prev, [filterName]: value }));
+  };
+
+  const handleApplyFilters = () => {
+    setAppliedFilters(filters);
+  };
 
   const handleOpenDeleteDialog = (user: User) => {
     setSelectedUser(user);
@@ -150,7 +197,7 @@ export default function UsuariosPage() {
     return <div>Cargando...</div>;
   }
   
-  const showRoleFilter = currentUser.role !== "Director";
+  const showAdvancedFilters = ['Evaluador', 'Administrador', 'Referente'].includes(currentUser.role);
 
   return (
     <div className="flex flex-col gap-8">
@@ -173,19 +220,26 @@ export default function UsuariosPage() {
             )}
         </div>
         
-        {showRoleFilter && (
+        {showAdvancedFilters && (
             <Card>
                 <CardHeader>
-                    <div className="flex items-center gap-2">
-                        <Filter className="h-5 w-5" />
-                        <CardTitle>Filtrar por Rol</CardTitle>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Filter className="h-5 w-5" />
+                            <CardTitle>Filtros</CardTitle>
+                        </div>
+                        <Button onClick={handleApplyFilters}>
+                            <Filter className="mr-2 h-4 w-4" />
+                            Aplicar Filtros
+                        </Button>
                     </div>
+                    <CardDescription>Filtra la lista de usuarios por diferentes criterios.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="grid gap-2">
                             <Label htmlFor="role-filter">Rol</Label>
-                            <Select onValueChange={setRoleFilter} value={roleFilter}>
+                            <Select onValueChange={(v) => handleFilterChange("role", v)} value={filters.role}>
                                 <SelectTrigger id="role-filter">
                                     <SelectValue placeholder="Seleccionar rol" />
                                 </SelectTrigger>
@@ -193,6 +247,48 @@ export default function UsuariosPage() {
                                     <SelectItem value="all">Todos los Roles</SelectItem>
                                     {uniqueRoles.map(role => (
                                         <SelectItem key={role} value={role}>{role}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="school-filter">Escuela</Label>
+                            <Select onValueChange={(v) => handleFilterChange("school", v)} value={filters.school}>
+                                <SelectTrigger id="school-filter">
+                                    <SelectValue placeholder="Seleccionar escuela" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todas las Escuelas</SelectItem>
+                                    {uniqueSchools.map(school => (
+                                        <SelectItem key={school} value={school}>{school}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="grade-filter">Grado</Label>
+                            <Select onValueChange={(v) => handleFilterChange("grade", v)} value={filters.grade}>
+                                <SelectTrigger id="grade-filter">
+                                    <SelectValue placeholder="Seleccionar grado" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todos los Grados</SelectItem>
+                                    {uniqueGrades.map(grade => (
+                                        <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="course-filter">Curso</Label>
+                            <Select onValueChange={(v) => handleFilterChange("course", v)} value={filters.course}>
+                                <SelectTrigger id="course-filter">
+                                    <SelectValue placeholder="Seleccionar curso" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todos los Cursos</SelectItem>
+                                    {uniqueCourses.map(course => (
+                                        <SelectItem key={course} value={course}>{course}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -250,20 +346,18 @@ export default function UsuariosPage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                        {currentUser.role === 'Director' && (
-                                            <DropdownMenuItem onSelect={() => handleOpenProfileDialog(user)}>
-                                                <Eye className="mr-2 h-4 w-4" />
-                                                Ver Perfil
-                                            </DropdownMenuItem>
-                                        )}
-                                        {user.status === "Pendiente" && (currentUser.role === 'Evaluador' || currentUser.role === 'Director') && (
+                                        <DropdownMenuItem onSelect={() => handleOpenProfileDialog(user)}>
+                                            <Eye className="mr-2 h-4 w-4" />
+                                            Ver Perfil
+                                        </DropdownMenuItem>
+                                        {user.status === "Pendiente" && (currentUser.role === 'Evaluador' || currentUser.role === 'Director' || currentUser.role === 'Administrador') && (
                                             <DropdownMenuItem onSelect={() => handleEnableUser(user.id)} disabled={isSubmitting}>
                                                 {isSubmitting ? "Habilitando..." : `Habilitar ${user.role}`}
                                             </DropdownMenuItem>
                                         )}
-                                        {currentUser.role !== 'Director' && <DropdownMenuItem onClick={() => showToast('Editar Usuario')}>Editar</DropdownMenuItem>}
-                                        {currentUser.role !== 'Director' && <DropdownMenuItem onClick={() => showToast('Cambiar Contraseña')}>Cambiar Contraseña</DropdownMenuItem>}
-                                        {(currentUser.role === 'Evaluador' || currentUser.role === 'Director') && (
+                                        {showAdvancedFilters && <DropdownMenuItem onClick={() => showToast('Editar Usuario')}>Editar</DropdownMenuItem>}
+                                        {showAdvancedFilters && <DropdownMenuItem onClick={() => showToast('Cambiar Contraseña')}>Cambiar Contraseña</DropdownMenuItem>}
+                                        {(currentUser.role === 'Evaluador' || currentUser.role === 'Director' || currentUser.role === 'Administrador') && (
                                           <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(user)}>Eliminar</DropdownMenuItem>
                                         )}
                                     </DropdownMenuContent>
@@ -356,3 +450,4 @@ export default function UsuariosPage() {
     </div>
   )
 }
+
