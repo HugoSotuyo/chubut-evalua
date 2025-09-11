@@ -87,7 +87,8 @@ export type AuditAction =
   | "ELIMINAR_ESCUELA"
   | "CAMBIAR_ESTADO_ESCUELA"
   | "CREAR_DISTRITO"
-  | "ELIMINAR_DISTRITO";
+  | "ELIMINAR_DISTRITO"
+  | "ACTUALIZAR_PARAMETROS";
 
 export type AuditLog = {
     id: string;
@@ -95,4 +96,13 @@ export type AuditLog = {
     action: AuditAction;
     details: string;
     timestamp: string; // ISO 8601 string
+};
+
+export type SystemSettings = {
+    approvalThreshold: number;
+    correctScore: number;
+    partialScore: number;
+    incorrectScore: number;
+    defaultScore: number;
+    scoreStep: number;
 };

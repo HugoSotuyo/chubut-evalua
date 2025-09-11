@@ -58,5 +58,3 @@ export async function updateSystemSettings(newSettings: Partial<SystemSettings>)
   // without overwriting fields that aren't in newSettings.
   await setDoc(settingsRef, newSettings, { merge: true });
 }
-
-    
