@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation"
 import { useExams } from "@/context/exams-context"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState } from "react"
+import { useSettings } from "@/context/settings-context"
 
 const questionSchema = z.object({
   consigna: z.string().min(1, "La consigna es requerida."),
@@ -55,6 +56,7 @@ export default function CrearExamenPage() {
   const { toast } = useToast()
   const router = useRouter()
   const { addExam } = useExams()
+  const { settings } = useSettings();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<ExamFormValues>({
@@ -64,7 +66,7 @@ export default function CrearExamenPage() {
       titulo: "",
       grade: "",
       fechaCarga: new Date(),
-      questions: [{ consigna: "", respuesta: "", puntaje: 10 }],
+      questions: [{ consigna: "", respuesta: "", puntaje: settings.defaultScore }],
     },
   })
 
@@ -102,6 +104,7 @@ export default function CrearExamenPage() {
         router.push("/dashboard/examenes")
     } catch (error) {
         toast({ title: "Error", description: "No se pudo guardar el examen.", variant: "destructive"});
+        console.error("Error al guardar examen:", error);
     } finally {
         setIsSubmitting(false);
     }
@@ -287,7 +290,13 @@ export default function CrearExamenPage() {
                                     <FormItem className="md:col-span-2">
                                     <FormLabel>Puntaje</FormLabel>
                                     <FormControl>
-                                        <Input type="number" {...field} disabled={isSubmitting}/>
+                                        <Input
+                                          type="number"
+                                          step={settings.scoreStep}
+                                          {...field}
+                                          onChange={event => field.onChange(Number(event.target.value))}
+                                          disabled={isSubmitting}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                     </FormItem>
@@ -312,7 +321,7 @@ export default function CrearExamenPage() {
                  <Button
                     type="button"
                     variant="outline"
-                    onClick={() => append({ consigna: "", respuesta: "", puntaje: 10 })}
+                    onClick={() => append({ consigna: "", respuesta: "", puntaje: settings.defaultScore })}
                     disabled={isSubmitting}
                     >
                     <PlusCircle className="mr-2 h-4 w-4" />
@@ -324,3 +333,5 @@ export default function CrearExamenPage() {
     </Form>
   )
 }
+
+    

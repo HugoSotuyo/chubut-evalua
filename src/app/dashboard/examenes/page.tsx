@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import type { Exam } from "@/lib/types"
+import { useSettings } from '@/context/settings-context';
 
 
 const questionSchema = z.object({
@@ -69,7 +70,8 @@ const parseDate = (dateString: string | undefined): Date => {
 export default function ExamenesPage() {
   const { user } = useAuth();
   const { exams: allExams, updateExam } = useExams();
-  const { toast } = useToast()
+  const { toast } = useToast();
+  const { settings } = useSettings();
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingExam, setEditingExam] = useState<Exam | null>(null);
@@ -105,7 +107,7 @@ export default function ExamenesPage() {
       tema: "",
       grade: "",
       fechaCarga: new Date(),
-      questions: [{ consigna: "", respuesta: "", puntaje: 10 }],
+      questions: [{ consigna: "", respuesta: "", puntaje: settings.defaultScore }],
     },
   })
 
@@ -118,10 +120,10 @@ export default function ExamenesPage() {
         fechaCarga: parseDate(editingExam.created),
         questions: (editingExam.questions && editingExam.questions.length > 0)
           ? editingExam.questions
-          : [{ consigna: "", respuesta: "", puntaje: 10 }],
+          : [{ consigna: "", respuesta: "", puntaje: settings.defaultScore }],
       })
     }
-  }, [editingExam, form])
+  }, [editingExam, form, settings.defaultScore])
 
 
   const { fields, append, remove } = useFieldArray({
@@ -402,7 +404,13 @@ export default function ExamenesPage() {
                                             <FormItem className="md:col-span-2">
                                             <FormLabel>Puntaje</FormLabel>
                                             <FormControl>
-                                                <Input type="number" {...field} disabled={isSubmitting}/>
+                                                <Input
+                                                  type="number"
+                                                  step={settings.scoreStep}
+                                                  {...field}
+                                                  onChange={event => field.onChange(Number(event.target.value))}
+                                                  disabled={isSubmitting}
+                                                />
                                             </FormControl>
                                             <FormMessage />
                                             </FormItem>
@@ -427,7 +435,7 @@ export default function ExamenesPage() {
                          <Button
                             type="button"
                             variant="outline"
-                            onClick={() => append({ consigna: "", respuesta: "", puntaje: 10 })}
+                            onClick={() => append({ consigna: "", respuesta: "", puntaje: settings.defaultScore })}
                             disabled={isSubmitting}
                             >
                             <PlusCircle className="mr-2 h-4 w-4" />
@@ -455,3 +463,5 @@ export default function ExamenesPage() {
     </>
   );
 }
+
+    
