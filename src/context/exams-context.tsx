@@ -39,13 +39,29 @@ export function ExamsProvider({ children }: { children: ReactNode }) {
   }, [refreshExams]);
 
   const addExam = async (examData: Omit<Exam, 'id' | 'status'>) => {
-    await addExamDb(examData);
+    const examToSave: any = { ...examData };
+    if (examToSave.fileDataUrl === undefined) {
+      delete examToSave.fileDataUrl;
+    }
+    if (examToSave.fileName === undefined) {
+      delete examToSave.fileName;
+    }
+
+    await addExamDb(examToSave);
     await addAuditLog({ action: "CREAR_EXAMEN", details: `Se creó el examen "${examData.name}"` });
     await refreshExams();
   };
 
   const updateExam = async (updatedExamData: Omit<Exam, 'status'>) => {
-    await updateExamDb(updatedExamData);
+    const examToUpdate: any = { ...updatedExamData };
+    if (examToUpdate.fileDataUrl === undefined) {
+      delete examToUpdate.fileDataUrl;
+    }
+    if (examToUpdate.fileName === undefined) {
+      delete examToUpdate.fileName;
+    }
+
+    await updateExamDb(examToUpdate);
     await addAuditLog({ action: "EDITAR_EXAMEN", details: `Se editó el examen "${updatedExamData.name}"` });
     await refreshExams();
   };
