@@ -1,6 +1,7 @@
 
 "use client"
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,13 +12,50 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Save, Settings, SlidersHorizontal, Shield, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuditLogs } from "@/context/audit-log-context";
+import { useSettings } from "@/context/settings-context";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
 export default function AdminPage() {
-  const { auditLogs, loading } = useAuditLogs();
+  const { auditLogs, addAuditLog, loading: auditLoading } from useAuditLogs();
+  const { settings, updateSettings, loading: settingsLoading } = useSettings();
+  const { toast } = useToast();
 
-  if (loading) {
-    return <div className="flex h-screen w-full items-center justify-center">Cargando registros...</div>;
+  const [approvalThreshold, setApprovalThreshold] = useState(settings.approvalThreshold);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setApprovalThreshold(settings.approvalThreshold);
+  }, [settings.approvalThreshold]);
+
+  const handleSave = async () => {
+    setIsSubmitting(true);
+    try {
+      const newSettings = { approvalThreshold: Number(approvalThreshold) };
+      await updateSettings(newSettings);
+      await addAuditLog({
+        action: "ACTUALIZAR_PARAMETROS",
+        details: `Se cambió la nota mínima de aprobación a ${approvalThreshold}%.`
+      });
+      toast({
+        title: "Parámetros Actualizados",
+        description: "Los cambios se han guardado correctamente.",
+      });
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudieron guardar los cambios.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+
+  if (auditLoading || settingsLoading) {
+    return <div className="flex h-screen w-full items-center justify-center">Cargando...</div>;
   }
 
   return (
@@ -39,22 +77,14 @@ export default function AdminPage() {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="nota-aprobacion">Nota Mínima de Aprobación (%)</Label>
-              <Input id="nota-aprobacion" type="number" placeholder="Ej: 60" defaultValue="60" />
+              <Input 
+                id="nota-aprobacion" 
+                type="number" 
+                placeholder="Ej: 60" 
+                value={approvalThreshold}
+                onChange={(e) => setApprovalThreshold(Number(e.target.value))}
+              />
               <p className="text-xs text-muted-foreground">Puntaje mínimo para que un alumno sea considerado "Aprobado".</p>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="puntaje-correcta">P. Correcta</Label>
-                    <Input id="puntaje-correcta" type="number" step="0.5" defaultValue="1" />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="puntaje-parcial">P. Parcial</Label>
-                    <Input id="puntaje-parcial" type="number" step="0.5" defaultValue="0.5" />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="puntaje-incorrecta">P. Incorrecta</Label>
-                    <Input id="puntaje-incorrecta" type="number" step="0.5" defaultValue="0" />
-                </div>
             </div>
           </CardContent>
         </Card>
@@ -130,9 +160,9 @@ export default function AdminPage() {
         </Card>
 
        <div className="flex justify-end">
-          <Button>
+          <Button onClick={handleSave} disabled={isSubmitting}>
               <Save className="mr-2 h-4 w-4" />
-              Guardar Cambios
+              {isSubmitting ? "Guardando..." : "Guardar Cambios"}
           </Button>
       </div>
     </div>
