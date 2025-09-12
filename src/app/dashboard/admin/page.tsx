@@ -26,9 +26,12 @@ export default function AdminPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    setApprovalThreshold(settings.approvalThreshold);
-    setSchoolYear(settings.currentSchoolYear);
-  }, [settings.approvalThreshold, settings.currentSchoolYear]);
+    if (!settingsLoading) {
+        setApprovalThreshold(settings.approvalThreshold);
+        setSchoolYear(settings.currentSchoolYear);
+    }
+  }, [settings, settingsLoading]);
+
 
   const handleSave = async () => {
     setIsSubmitting(true);
@@ -71,9 +74,17 @@ export default function AdminPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight font-headline">Administración General</h1>
-        <p className="text-muted-foreground">Panel de control para tareas administrativas avanzadas.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight font-headline">Administración General</h1>
+          <p className="text-muted-foreground">Panel de control para tareas administrativas avanzadas.</p>
+        </div>
+        <div className="flex justify-end">
+            <Button onClick={handleSave} disabled={isSubmitting}>
+                <Save className="mr-2 h-4 w-4" />
+                {isSubmitting ? "Guardando..." : "Guardar Cambios"}
+            </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -170,12 +181,6 @@ export default function AdminPage() {
             </CardContent>
         </Card>
 
-       <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={isSubmitting}>
-              <Save className="mr-2 h-4 w-4" />
-              {isSubmitting ? "Guardando..." : "Guardar Cambios"}
-          </Button>
-      </div>
     </div>
   );
 }
