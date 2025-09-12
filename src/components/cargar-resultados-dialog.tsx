@@ -81,13 +81,17 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
     }, [selectedExam]);
 
     const handleScoreChange = (questionIndex: number, value: string) => {
-        const score = Number(value);
+        const sanitizedValue = value.replace(',', '.');
+        const score = Number(sanitizedValue);
         const maxPuntaje = selectedExam?.questions[questionIndex]?.puntaje ?? 0;
+
+        if (value === "" || sanitizedValue === "") {
+             setScores(prev => ({ ...prev, [questionIndex]: 0 }));
+             return;
+        }
 
         if (!isNaN(score) && score >= 0 && score <= maxPuntaje) {
             setScores(prev => ({ ...prev, [questionIndex]: score }));
-        } else if (value === "") {
-            setScores(prev => ({ ...prev, [questionIndex]: 0 }));
         } else {
             toast({
                 variant: "destructive",
@@ -179,7 +183,8 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
                                                 <TableCell className="text-center">{q.puntaje}</TableCell>
                                                 <TableCell>
                                                     <Input
-                                                        type="number"
+                                                        type="text"
+                                                        inputMode="decimal"
                                                         placeholder="-"
                                                         value={scores[index] ?? ""}
                                                         onChange={(e) => handleScoreChange(index, e.target.value)}
