@@ -31,6 +31,7 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
 
     const [selectedExamId, setSelectedExamId] = useState<string>("");
     const [scores, setScores] = useState<Record<number, number>>({});
+    const [displayScores, setDisplayScores] = useState<Record<number, string>>({});
     const [availableExams, setAvailableExams] = useState<Exam[]>([]);
     const [isLoadingExams, setIsLoadingExams] = useState(true);
 
@@ -66,11 +67,12 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
     
     useEffect(() => {
         setScores({});
+        setDisplayScores({});
     }, [selectedExamId])
 
     const totalScore = useMemo(() => {
         if (!selectedExam) return 0;
-        return selectedExam.questions.reduce((sum, _, index) => sum + (scores[index] || 0), 0);
+        return Object.values(scores).reduce((sum, score) => sum + (score || 0), 0);
     }, [scores, selectedExam]);
 
     const maxScore = useMemo(() => {
@@ -79,30 +81,39 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
     }, [selectedExam]);
 
     const handleScoreChange = (questionIndex: number, value: string) => {
+        setDisplayScores(prev => ({ ...prev, [questionIndex]: value }));
+    
         const sanitizedValue = value.replace(',', '.');
         const maxPuntaje = selectedExam?.questions[questionIndex]?.puntaje ?? 0;
     
-        // Permite un campo vacío o solo un punto decimal para la entrada en curso
         if (sanitizedValue === '' || sanitizedValue === '.') {
             setScores(prev => ({ ...prev, [questionIndex]: 0 }));
             return;
         }
     
-        const score = parseFloat(sanitizedValue);
+        const parsedScore = parseFloat(sanitizedValue);
     
-        if (!isNaN(score) && score >= 0) {
-            if (score > maxPuntaje) {
+        if (!isNaN(parsedScore) && parsedScore >= 0) {
+            if (parsedScore > maxPuntaje) {
                 setScores(prev => ({ ...prev, [questionIndex]: maxPuntaje }));
-                toast({
-                    variant: "destructive",
-                    title: "Puntaje Inválido",
-                    description: `El puntaje no puede ser mayor a ${maxPuntaje}. Se ha establecido el máximo.`,
-                });
             } else {
-                setScores(prev => ({ ...prev, [questionIndex]: score }));
+                setScores(prev => ({ ...prev, [questionIndex]: parsedScore }));
             }
         }
     };
+    
+    const handleScoreBlur = (questionIndex: number) => {
+        const score = scores[questionIndex] || 0;
+        const maxPuntaje = selectedExam?.questions[questionIndex]?.puntaje ?? 0;
+        if (score > maxPuntaje) {
+            setDisplayScores(prev => ({ ...prev, [questionIndex]: maxPuntaje.toString() }));
+            toast({
+                variant: "destructive",
+                title: "Puntaje Inválido",
+                description: `El puntaje no puede ser mayor a ${maxPuntaje}. Se ha establecido el máximo.`,
+            });
+        }
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -189,8 +200,9 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
                                                         type="text"
                                                         inputMode="decimal"
                                                         placeholder="-"
-                                                        value={scores[index] ?? ""}
+                                                        value={displayScores[index] ?? ""}
                                                         onChange={(e) => handleScoreChange(index, e.target.value)}
+                                                        onBlur={() => handleScoreBlur(index)}
                                                         className="text-center"
                                                         step={settings.scoreStep}
                                                         required
