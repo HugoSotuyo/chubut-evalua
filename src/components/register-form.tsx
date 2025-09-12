@@ -30,6 +30,7 @@ export function RegisterForm() {
   const { addUser } = useUsers();
   const { schools, districts } = useSchools();
   const { settings } = useSettings();
+  const { users } = useUsers();
 
   const schoolsWithDirectors = useMemo(() => {
     return users
@@ -50,8 +51,6 @@ export function RegisterForm() {
     // For teachers and other roles, show all schools in the district.
     return schoolsInDistrict;
   }, [selectedDistrict, schools, schoolsWithDirectors, role]);
-
-  const { users } = useUsers();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
