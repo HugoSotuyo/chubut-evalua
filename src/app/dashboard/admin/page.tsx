@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
 export default function AdminPage() {
-  const { auditLogs, addAuditLog, loading: auditLoading } from useAuditLogs();
+  const { auditLogs, addAuditLog, loading: auditLoading } = useAuditLogs();
   const { settings, updateSettings, loading: settingsLoading } = useSettings();
   const { toast } = useToast();
 
