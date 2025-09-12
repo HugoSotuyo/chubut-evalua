@@ -4,8 +4,9 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { getAllResults, addResult as addResultDb, deleteResult as deleteResultDb, resultExists as resultExistsDb } from '@/lib/resultsService';
 import type { Result } from '@/lib/types';
+import { useSettings } from './settings-context';
 
-type NewResult = Omit<Result, 'id'>;
+type NewResult = Omit<Result, 'id' | 'schoolYear'>;
 
 interface ResultsContextType {
   results: Result[];
@@ -20,18 +21,21 @@ const ResultsContext = createContext<ResultsContextType | undefined>(undefined);
 export function ResultsProvider({ children }: { children: ReactNode }) {
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(true);
+  const { settings, loading: settingsLoading } = useSettings();
 
   const refreshResults = useCallback(async () => {
+    if (settingsLoading) return;
     setLoading(true);
     try {
-        const data = await getAllResults();
-        setResults(data);
+        const allResults = await getAllResults();
+        const filteredResults = allResults.filter(r => r.schoolYear === settings.currentSchoolYear);
+        setResults(filteredResults);
     } catch (error) {
         console.error("Failed to fetch results:", error);
     } finally {
         setLoading(false);
     }
-  }, []);
+  }, [settings.currentSchoolYear, settingsLoading]);
 
   useEffect(() => {
     refreshResults();
@@ -39,7 +43,8 @@ export function ResultsProvider({ children }: { children: ReactNode }) {
 
 
   const addResult = async (resultData: NewResult) => {
-    await addResultDb(resultData);
+    const resultWithYear = { ...resultData, schoolYear: settings.currentSchoolYear };
+    await addResultDb(resultWithYear);
     await refreshResults();
   };
   

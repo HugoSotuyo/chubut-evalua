@@ -11,6 +11,7 @@ import { ExamsProvider } from '@/context/exams-context';
 import { StudentsProvider } from '@/context/students-context';
 import { ResultsProvider } from '@/context/results-context';
 import { AuditLogProvider } from '@/context/audit-log-context';
+import { SettingsProvider } from '@/context/settings-context';
 
 export const metadata: Metadata = {
   title: 'Chubut evalúa',
@@ -35,6 +36,7 @@ export default function RootLayout({
             <UsersProvider>
                 <SchoolsProvider>
                     <SearchProvider>
+                      <SettingsProvider>
                         <ExamsProvider>
                             <StudentsProvider>
                                 <ResultsProvider>
@@ -43,6 +45,7 @@ export default function RootLayout({
                                 </ResultsProvider>
                             </StudentsProvider>
                         </ExamsProvider>
+                      </SettingsProvider>
                     </SearchProvider>
                 </SchoolsProvider>
             </UsersProvider>

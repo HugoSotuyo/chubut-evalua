@@ -28,9 +28,10 @@ function getDb() {
 }
 
 const initialStudents: Omit<Student, 'id' | 'results'>[] = [
-    { name: 'Juan Perez', dni: '40123456', grade: '3er Grado', course: 'A', school: 'Escuela N° 123' },
-    { name: 'Maria Lopez', dni: '41987654', grade: '3er Grado', course: 'A', school: 'Escuela N° 123' },
-    { name: 'Pedro Gonzalez', dni: '42345678', grade: '5to Grado', course: 'B', school: 'Escuela N° 456' },
+    { name: 'Juan Perez', dni: '40123456', grade: '3er Grado', course: 'A', school: 'Escuela N° 123', schoolYear: '2024' },
+    { name: 'Maria Lopez', dni: '41987654', grade: '3er Grado', course: 'A', school: 'Escuela N° 123', schoolYear: '2024' },
+    { name: 'Pedro Gonzalez', dni: '42345678', grade: '5to Grado', course: 'B', school: 'Escuela N° 456', schoolYear: '2024' },
+    { name: 'Ana Gomez', dni: '43123456', grade: '3er Grado', course: 'A', school: 'Escuela N° 123', schoolYear: '2025' },
 ];
 
 async function seedInitialStudents() {

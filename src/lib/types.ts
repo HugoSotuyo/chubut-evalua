@@ -40,6 +40,7 @@ export type Student = {
   grade: string;
   course: string;
   school: string;
+  schoolYear: string;
   results?: Result[];
 };
 
@@ -52,6 +53,7 @@ export type Result = {
   school: string;
   grade: string;
   course: string;
+  schoolYear: string;
   status: "Aprobado" | "Desaprobado";
   score: number; // Percentage score
   scores: Record<number, number>; // Score per question
