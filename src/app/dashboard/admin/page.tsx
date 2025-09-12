@@ -22,20 +22,31 @@ export default function AdminPage() {
   const { toast } = useToast();
 
   const [approvalThreshold, setApprovalThreshold] = useState(settings.approvalThreshold);
+  const [schoolYear, setSchoolYear] = useState(settings.currentSchoolYear);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setApprovalThreshold(settings.approvalThreshold);
-  }, [settings.approvalThreshold]);
+    setSchoolYear(settings.currentSchoolYear);
+  }, [settings.approvalThreshold, settings.currentSchoolYear]);
 
   const handleSave = async () => {
     setIsSubmitting(true);
     try {
-      const newSettings = { approvalThreshold: Number(approvalThreshold) };
+      const newSettings = { 
+        approvalThreshold: Number(approvalThreshold),
+        currentSchoolYear: schoolYear,
+      };
       await updateSettings(newSettings);
+      
+      const details = [
+        `Nota mínima de aprobación a ${approvalThreshold}%`,
+        `Ciclo lectivo a ${schoolYear}`
+      ].join('. ');
+
       await addAuditLog({
         action: "ACTUALIZAR_PARAMETROS",
-        details: `Se cambió la nota mínima de aprobación a ${approvalThreshold}%.`
+        details: `Se actualizaron los parámetros: ${details}.`
       });
       toast({
         title: "Parámetros Actualizados",
@@ -100,7 +111,7 @@ export default function AdminPage() {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="ciclo-lectivo">Ciclo Lectivo Actual</Label>
-              <Select defaultValue="2024">
+              <Select onValueChange={setSchoolYear} value={schoolYear}>
                   <SelectTrigger id="ciclo-lectivo">
                       <SelectValue placeholder="Seleccionar año" />
                   </SelectTrigger>

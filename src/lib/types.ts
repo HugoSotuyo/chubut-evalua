@@ -100,6 +100,7 @@ export type AuditLog = {
 
 export type SystemSettings = {
     approvalThreshold: number;
+    currentSchoolYear: string;
     correctScore: number;
     partialScore: number;
     incorrectScore: number;

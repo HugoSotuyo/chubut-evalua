@@ -13,6 +13,7 @@ interface SettingsContextType {
 
 const defaultSettings: SystemSettings = {
     approvalThreshold: 60,
+    currentSchoolYear: "2024",
     correctScore: 1,
     partialScore: 0.5,
     incorrectScore: 0,
