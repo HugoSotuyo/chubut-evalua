@@ -46,7 +46,6 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
                 filtered = exams.filter(e => e.status === 'Abierto');
             }
 
-            // Asynchronously filter out exams the student has already taken
             const studentHasTakenPromises = filtered.map(exam => resultExists(student.id, exam.id));
             const hasTakenResults = await Promise.all(studentHasTakenPromises);
             
@@ -65,7 +64,6 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
         return exams.find(e => e.id === selectedExamId);
     }, [selectedExamId, exams]);
     
-    // Reset scores when exam changes
     useEffect(() => {
         setScores({});
     }, [selectedExamId])
@@ -82,21 +80,23 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
 
     const handleScoreChange = (questionIndex: number, value: string) => {
         const sanitizedValue = value.replace(',', '.');
-        const score = Number(sanitizedValue);
         const maxPuntaje = selectedExam?.questions[questionIndex]?.puntaje ?? 0;
 
-        if (value === "" || sanitizedValue === "") {
+        if (sanitizedValue === "" || sanitizedValue === null) {
              setScores(prev => ({ ...prev, [questionIndex]: 0 }));
              return;
         }
+        
+        const score = Number(sanitizedValue);
 
         if (!isNaN(score) && score >= 0 && score <= maxPuntaje) {
             setScores(prev => ({ ...prev, [questionIndex]: score }));
-        } else {
-            toast({
+        } else if (score > maxPuntaje) {
+             setScores(prev => ({ ...prev, [questionIndex]: maxPuntaje }));
+             toast({
                 variant: "destructive",
                 title: "Puntaje Inválido",
-                description: `El puntaje debe ser un número entre 0 y ${maxPuntaje}.`
+                description: `El puntaje no puede ser mayor a ${maxPuntaje}.`
             });
         }
     };
@@ -190,8 +190,6 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
                                                         onChange={(e) => handleScoreChange(index, e.target.value)}
                                                         className="text-center"
                                                         step={settings.scoreStep}
-                                                        max={q.puntaje}
-                                                        min={0}
                                                         required
                                                     />
                                                 </TableCell>
@@ -206,7 +204,7 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
                     <DialogFooter className="mt-4 flex-col sm:flex-row sm:justify-between items-center">
                         {selectedExam && (
                              <div className="text-2xl font-bold">
-                                Puntaje Total: {totalScore} / {maxScore}
+                                Puntaje Total: {totalScore.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })} / {maxScore.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                             </div>
                         )}
                         <div className="flex gap-2">
