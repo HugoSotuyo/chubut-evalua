@@ -5,6 +5,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useExams } from "@/context/exams-context";
 import { useResults } from "@/context/results-context";
+import { useSettings } from "@/context/settings-context";
 import { useToast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
     const { user } = useAuth();
     const { exams } = useExams();
     const { addResult, resultExists } = useResults();
+    const { settings } = useSettings();
     const { toast } = useToast();
 
     const [selectedExamId, setSelectedExamId] = useState<string>("");
@@ -103,8 +105,7 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
         }
 
         const percentageScore = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
-        const approvalThreshold = 60; // As defined in admin page
-
+        
         await addResult({
             studentId: student.id,
             studentName: student.name,
@@ -113,7 +114,7 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
             school: student.school,
             grade: student.grade,
             course: student.course,
-            status: percentageScore >= approvalThreshold ? "Aprobado" : "Desaprobado",
+            status: percentageScore >= settings.approvalThreshold ? "Aprobado" : "Desaprobado",
             score: percentageScore,
             scores: scores,
             totalScore: totalScore,
@@ -183,6 +184,7 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
                                                         value={scores[index] ?? ""}
                                                         onChange={(e) => handleScoreChange(index, e.target.value)}
                                                         className="text-center"
+                                                        step={settings.scoreStep}
                                                         max={q.puntaje}
                                                         min={0}
                                                         required
