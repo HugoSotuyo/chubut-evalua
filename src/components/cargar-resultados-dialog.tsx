@@ -81,23 +81,26 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
     const handleScoreChange = (questionIndex: number, value: string) => {
         const sanitizedValue = value.replace(',', '.');
         const maxPuntaje = selectedExam?.questions[questionIndex]?.puntaje ?? 0;
-
-        if (sanitizedValue === "" || sanitizedValue === null) {
-             setScores(prev => ({ ...prev, [questionIndex]: 0 }));
-             return;
+    
+        // Permite un campo vacío o solo un punto decimal para la entrada en curso
+        if (sanitizedValue === '' || sanitizedValue === '.') {
+            setScores(prev => ({ ...prev, [questionIndex]: 0 }));
+            return;
         }
-        
-        const score = Number(sanitizedValue);
-
-        if (!isNaN(score) && score >= 0 && score <= maxPuntaje) {
-            setScores(prev => ({ ...prev, [questionIndex]: score }));
-        } else if (score > maxPuntaje) {
-             setScores(prev => ({ ...prev, [questionIndex]: maxPuntaje }));
-             toast({
-                variant: "destructive",
-                title: "Puntaje Inválido",
-                description: `El puntaje no puede ser mayor a ${maxPuntaje}.`
-            });
+    
+        const score = parseFloat(sanitizedValue);
+    
+        if (!isNaN(score) && score >= 0) {
+            if (score > maxPuntaje) {
+                setScores(prev => ({ ...prev, [questionIndex]: maxPuntaje }));
+                toast({
+                    variant: "destructive",
+                    title: "Puntaje Inválido",
+                    description: `El puntaje no puede ser mayor a ${maxPuntaje}. Se ha establecido el máximo.`,
+                });
+            } else {
+                setScores(prev => ({ ...prev, [questionIndex]: score }));
+            }
         }
     };
 
