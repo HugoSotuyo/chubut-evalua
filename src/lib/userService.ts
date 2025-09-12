@@ -27,20 +27,20 @@ function getDb() {
 
 
 const initialUsers: Omit<User, 'id'>[] = [
-    { name: 'Laura Martinez', email: 'laura.martinez@chubut.edu.ar', dni: '30123456', role: 'Docente', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Activo', password: '123' },
-    { name: 'Carlos Gomez', email: 'carlos.gomez@chubut.edu.ar', dni: '25123456', role: 'Director', school: 'Escuela N° 456', status: 'Activo', password: '123' },
+    { name: 'Laura Martinez', email: 'laura.martinez@chubut.edu.ar', dni: '30123456', role: 'Docente', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Activo', password: '123', schoolYear: '2024' },
+    { name: 'Carlos Gomez', email: 'carlos.gomez@chubut.edu.ar', dni: '25123456', role: 'Director', school: 'Escuela N° 456', status: 'Activo', password: '123', schoolYear: '2024' },
     { name: 'Ana Fernandez', email: 'ana.fernandez@chubut.edu.ar', dni: '28123456', role: 'Referente', school: 'Distrito I', status: 'Activo', password: '123' },
     { name: 'Admin General', email: 'admin@chubut.edu.ar', dni: '20123456', role: 'Administrador', school: 'Ministerio', status: 'Activo', password: '123' },
-    { name: 'Usuario Pendiente', email: 'pendiente@chubut.edu.ar', dni: '35123456', role: 'Docente', school: 'Escuela N° 789', status: 'Pendiente', password: '123' },
+    { name: 'Usuario Pendiente', email: 'pendiente@chubut.edu.ar', dni: '35123456', role: 'Docente', school: 'Escuela N° 789', status: 'Pendiente', password: '123', schoolYear: '2024' },
     { name: 'Evaluador General', email: 'evaluador@chubut.edu.ar', dni: '1', role: 'Evaluador', school: 'Sistema', status: 'Activo', password: 'hdsp6032' },
 ];
 
 type NewUserPayload = Omit<User, 'id' | 'status'>;
 
-export async function findUserByEmail(email: string): Promise<User | null> {
+export async function findUserByEmailAndYear(email: string, schoolYear: string): Promise<User | null> {
     const db = getDb();
     const usersRef = collection(db, "users");
-    const q = query(usersRef, where("email", "==", email));
+    const q = query(usersRef, where("email", "==", email), where("schoolYear", "==", schoolYear));
     
     try {
         const querySnapshot = await getDocs(q);
@@ -49,6 +49,30 @@ export async function findUserByEmail(email: string): Promise<User | null> {
         }
         const userDoc = querySnapshot.docs[0];
         return { id: userDoc.id, ...userDoc.data() } as User;
+    } catch (error) {
+        console.error("Error finding user by email and year:", error);
+        throw error;
+    }
+}
+
+
+export async function findUserByEmail(email: string): Promise<User | null> {
+    const db = getDb();
+    const usersRef = collection(db, "users");
+    // This query now might return multiple users if they are in different school years.
+    // For login, we might need a more sophisticated approach, but for now, we'll find the first active one.
+    const q = query(usersRef, where("email", "==", email));
+    
+    try {
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            return null;
+        }
+        
+        // Prefer returning an active user if multiple exist
+        const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+        return users.find(u => u.status === "Activo") || users[0];
+
     } catch (error) {
         console.error("Error finding user by email:", error);
         throw error;
@@ -60,9 +84,17 @@ export async function addUser(userData: NewUserPayload): Promise<{ success: bool
     if (!db) return { success: false, message: "La base de datos no está inicializada." };
 
     try {
-        const existingUser = await findUserByEmail(userData.email);
-        if (existingUser) {
-            return { success: false, message: "Ya existe un usuario con este email." };
+        if (userData.schoolYear) {
+            const existingUserInYear = await findUserByEmailAndYear(userData.email, userData.schoolYear);
+            if (existingUserInYear) {
+                return { success: false, message: "Ya existe un usuario con este email para el ciclo lectivo actual." };
+            }
+        } else {
+             // For roles without a school year, check if email exists at all.
+            const existingUser = await findUserByEmail(userData.email);
+            if (existingUser) {
+                return { success: false, message: "Ya existe un usuario con este email." };
+            }
         }
         
         const userToAdd: Omit<User, 'id'> = {
@@ -73,6 +105,7 @@ export async function addUser(userData: NewUserPayload): Promise<{ success: bool
           school: userData.school,
           status: "Pendiente",
           password: userData.password,
+          schoolYear: userData.schoolYear
         };
 
         if (userData.grade) {
@@ -170,5 +203,3 @@ export async function deleteUserFromDb(userId: string) {
         throw new Error("Failed to delete user from database.");
     }
 }
-
-    

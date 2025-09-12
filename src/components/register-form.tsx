@@ -16,6 +16,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useUsers } from "@/context/users-context";
 import { useSchools } from "@/context/schools-context";
+import { useSettings } from "@/context/settings-context";
 import type { UserRole } from "@/lib/auth";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -26,14 +27,15 @@ export function RegisterForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const { users, addUser } = useUsers();
+  const { addUser } = useUsers();
   const { schools, districts } = useSchools();
+  const { settings } = useSettings();
 
   const schoolsWithDirectors = useMemo(() => {
     return users
-      .filter(user => user.role === 'Director')
+      .filter(user => user.role === 'Director' && user.schoolYear === settings.currentSchoolYear)
       .map(user => user.school);
-  }, [users]);
+  }, [users, settings.currentSchoolYear]);
 
   const filteredSchools = useMemo(() => {
     if (!selectedDistrict) {
@@ -49,6 +51,7 @@ export function RegisterForm() {
     return schoolsInDistrict;
   }, [selectedDistrict, schools, schoolsWithDirectors, role]);
 
+  const { users } = useUsers();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -79,6 +82,7 @@ export function RegisterForm() {
         password: password,
         role: selectedRole,
         school: "N/A",
+        schoolYear: settings.currentSchoolYear, // Automatically assign current school year
     };
 
     if (selectedRole === "Director" || selectedRole === "Docente") {

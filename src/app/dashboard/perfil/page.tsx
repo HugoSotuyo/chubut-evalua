@@ -101,6 +101,12 @@ export default function PerfilPage() {
                         <Input id="curso" value={user.course} readOnly />
                     </div>
                 )}
+                {user.schoolYear && (user.role === 'Director' || user.role === 'Docente') && (
+                    <div className="space-y-2">
+                        <Label htmlFor="schoolYear">Ciclo Lectivo</Label>
+                        <Input id="schoolYear" value={user.schoolYear} readOnly />
+                    </div>
+                )}
             </div>
 
              <div className="flex justify-end">

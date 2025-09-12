@@ -188,9 +188,9 @@ export default function UsuariosPage() {
   }
 
   const handleExport = () => {
-    const headers = ["ID", "Nombre", "Rol", "Escuela", "Estado", "Grado", "Curso"];
+    const headers = ["ID", "Nombre", "Rol", "Escuela", "Estado", "Grado", "Curso", "Ciclo Lectivo"];
     const rows = filteredUsers.map(user => 
-        [user.id, user.name, user.role, user.school, user.status, user.grade || '', user.course || ''].join(';')
+        [user.id, user.name, user.role, user.school, user.status, user.grade || '', user.course || '', user.schoolYear || ''].join(';')
     );
     
     const bom = "﻿";
@@ -324,6 +324,7 @@ export default function UsuariosPage() {
                             <TableHead>Escuela</TableHead>
                             <TableHead>Grado</TableHead>
                             <TableHead>Curso</TableHead>
+                            <TableHead>Ciclo Lectivo</TableHead>
                             <TableHead>Estado</TableHead>
                             <TableHead>
                                 <span className="sr-only">Acciones</span>
@@ -345,6 +346,7 @@ export default function UsuariosPage() {
                             <TableCell>{user.school}</TableCell>
                             <TableCell>{user.grade || "-"}</TableCell>
                             <TableCell>{user.course || "-"}</TableCell>
+                            <TableCell>{user.schoolYear || "-"}</TableCell>
                              <TableCell>
                                 <Badge variant={user.status === "Pendiente" ? "secondary" : (user.status === "Activo" ? "default" : "destructive")}>{user.status}</Badge>
                             </TableCell>
@@ -450,6 +452,12 @@ export default function UsuariosPage() {
                             <div className="space-y-2">
                                 <Label htmlFor="curso">Curso</Label>
                                 <Input id="curso" value={selectedUser.course} readOnly />
+                            </div>
+                        )}
+                        {selectedUser.schoolYear && (
+                            <div className="space-y-2">
+                                <Label htmlFor="schoolYear">Ciclo Lectivo</Label>
+                                <Input id="schoolYear" value={selectedUser.schoolYear} readOnly />
                             </div>
                         )}
                         <div className="space-y-2">
@@ -624,6 +632,10 @@ function EditUserDialog({ isOpen, onOpenChange, user, onSave, allSchools, isSubm
                                 </div>
                             </div>
                         )}
+                         <div className="space-y-2">
+                            <Label htmlFor="edit-schoolYear">Ciclo Lectivo</Label>
+                            <Input id="edit-schoolYear" value={editedUser.schoolYear || ''} onChange={(e) => handleFieldChange('schoolYear', e.target.value)} disabled={isSubmitting} />
+                        </div>
                     </div>
                     <DialogFooter>
                         <DialogClose asChild>
@@ -695,7 +707,3 @@ function ChangePasswordDialog({ isOpen, onOpenChange, user, onSave, isSubmitting
         </Dialog>
     );
 }
-
-    
-
-    
