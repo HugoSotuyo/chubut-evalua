@@ -22,13 +22,13 @@ import { Eye, EyeOff } from "lucide-react";
 
 export function RegisterForm() {
   const [role, setRole] = useState<UserRole | "">("");
-  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedRegion, setSelectedRegion] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
   const { addUser } = useUsers();
-  const { schools, districts } = useSchools();
+  const { schools, regions } = useSchools();
   const { settings } = useSettings();
   const { users } = useUsers();
 
@@ -39,18 +39,18 @@ export function RegisterForm() {
   }, [users, settings.currentSchoolYear]);
 
   const filteredSchools = useMemo(() => {
-    if (!selectedDistrict) {
+    if (!selectedRegion) {
       return [];
     }
-    const schoolsInDistrict = schools.filter(school => school.district === selectedDistrict);
+    const schoolsInRegion = schools.filter(school => school.region === selectedRegion);
 
     if (role === 'Director') {
-      return schoolsInDistrict.filter(school => !schoolsWithDirectors.includes(school.name));
+      return schoolsInRegion.filter(school => !schoolsWithDirectors.includes(school.name));
     }
     
-    // For teachers and other roles, show all schools in the district.
-    return schoolsInDistrict;
-  }, [selectedDistrict, schools, schoolsWithDirectors, role]);
+    // For teachers and other roles, show all schools in the region.
+    return schoolsInRegion;
+  }, [selectedRegion, schools, schoolsWithDirectors, role]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -86,10 +86,10 @@ export function RegisterForm() {
 
     if (selectedRole === "Director" || selectedRole === "Docente") {
         const school = formData.get("escuela") as string;
-        if (!selectedDistrict || !school) {
+        if (!selectedRegion || !school) {
             toast({
                 title: "Error de validación",
-                description: "Debes seleccionar un distrito y una escuela.",
+                description: "Debes seleccionar una región y una escuela.",
                 variant: "destructive",
             });
             setIsSubmitting(false);
@@ -182,23 +182,23 @@ export function RegisterForm() {
       {(role === "Director" || role === "Docente") && (
         <>
           <div className="grid gap-2">
-            <Label htmlFor="distrito">Distrito</Label>
-            <Select name="distrito" onValueChange={setSelectedDistrict} required disabled={isSubmitting}>
+            <Label htmlFor="region">Región</Label>
+            <Select name="region" onValueChange={setSelectedRegion} required disabled={isSubmitting}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona un distrito" />
+                <SelectValue placeholder="Selecciona una región" />
               </SelectTrigger>
               <SelectContent>
-                {districts.map(district => (
-                    <SelectItem key={district.id} value={district.name}>{district.name}</SelectItem>
+                {regions.map(region => (
+                    <SelectItem key={region.id} value={region.name}>{region.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="escuela">Escuela</Label>
-            <Select name="escuela" required disabled={!selectedDistrict || isSubmitting}>
+            <Select name="escuela" required disabled={!selectedRegion || isSubmitting}>
               <SelectTrigger>
-                <SelectValue placeholder={!selectedDistrict ? "Selecciona un distrito primero" : "Selecciona una escuela"} />
+                <SelectValue placeholder={!selectedRegion ? "Selecciona una región primero" : "Selecciona una escuela"} />
               </SelectTrigger>
               <SelectContent>
                 {filteredSchools.length > 0 ? (
@@ -207,7 +207,7 @@ export function RegisterForm() {
                   ))
                 ) : (
                   <SelectItem value="no-schools" disabled>
-                    {selectedDistrict ? 'No hay escuelas disponibles en este distrito' : 'Selecciona un distrito primero'}
+                    {selectedRegion ? 'No hay escuelas disponibles en esta región' : 'Selecciona una región primero'}
                   </SelectItem>
                 )}
               </SelectContent>

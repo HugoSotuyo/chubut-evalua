@@ -42,12 +42,12 @@ export default function AnalisisPage() {
     const { user, loading: authLoading } = useAuth();
     const { exams, loading: examsLoading } = useExams();
     const { results, loading: resultsLoading } = useResults();
-    const { schools, districts, loading: schoolsLoading } = useSchools();
+    const { schools, regions, loading: schoolsLoading } = useSchools();
     const { students, loading: studentsLoading } = useStudents();
     const searchParams = useSearchParams();
 
     const [filters, setFilters] = useState({
-        district: "all",
+        region: "all",
         school: "all",
         grade: "all",
         course: "all",
@@ -60,7 +60,7 @@ export default function AnalisisPage() {
     useEffect(() => {
         if (user) {
             let initialFilters = {
-                district: "all",
+                region: "all",
                 school: "all",
                 grade: "all",
                 course: "all",
@@ -97,9 +97,9 @@ export default function AnalisisPage() {
     }, [searchParams, exams]);
 
 
-    const availableDistricts = useMemo(() => {
-        return districts.map(d => d.name).sort((a,b) => a.localeCompare(b));
-    }, [districts]);
+    const availableRegions = useMemo(() => {
+        return regions.map(d => d.name).sort((a,b) => a.localeCompare(b));
+    }, [regions]);
 
     const availableSchools = useMemo(() => {
         return schools.map(s => s.name).sort();
@@ -404,12 +404,12 @@ export default function AnalisisPage() {
                     {showGlobalFilters && (
                         <>
                             <div className="grid gap-2">
-                                <Label htmlFor="filtro-distrito">Distrito</Label>
-                                <Select onValueChange={(v) => handleFilterChange('district', v)} value={filters.district}>
-                                    <SelectTrigger id="filtro-distrito"><SelectValue placeholder="Distrito" /></SelectTrigger>
+                                <Label htmlFor="filtro-region">Región</Label>
+                                <Select onValueChange={(v) => handleFilterChange('region', v)} value={filters.region}>
+                                    <SelectTrigger id="filtro-region"><SelectValue placeholder="Región" /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">Todos</SelectItem>
-                                        {availableDistricts.map((d, i) => <SelectItem key={`${d}-${i}`} value={d}>{d}</SelectItem>)}
+                                        <SelectItem value="all">Todas</SelectItem>
+                                        {availableRegions.map((d, i) => <SelectItem key={`${d}-${i}`} value={d}>{d}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>

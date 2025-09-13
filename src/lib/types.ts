@@ -65,12 +65,12 @@ export type Result = {
 export type School = {
   id: string;
   name: string;
-  district: string;
-  districtId: string;
+  region: string;
+  regionId: string;
   status: "Activa" | "Inactiva";
 };
 
-export type District = {
+export type Region = {
     id: string;
     name: string;
 };
@@ -89,8 +89,8 @@ export type AuditAction =
   | "EDITAR_ESCUELA"
   | "ELIMINAR_ESCUELA"
   | "CAMBIAR_ESTADO_ESCUELA"
-  | "CREAR_DISTRITO"
-  | "ELIMINAR_DISTRITO"
+  | "CREAR_REGION"
+  | "ELIMINAR_REGION"
   | "ACTUALIZAR_PARAMETROS";
 
 export type AuditLog = {

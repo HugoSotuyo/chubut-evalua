@@ -2,9 +2,9 @@
 
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getFirestore, collection, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc, query, where, limit } from "firebase/firestore";
-import type { School, District } from "./types";
+import type { School, Region } from "./types";
 
-type NewSchool = Omit<School, 'id' | 'status' | 'districtId'>;
+type NewSchool = Omit<School, 'id' | 'status' | 'regionId'>;
 
 const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -28,38 +28,38 @@ function getDb() {
     return db;
 }
 
-const initialSchools: Omit<School, 'id' | 'districtId'>[] = [
-    { name: "Escuela N° 123", district: "Distrito I", status: "Activa" },
-    { name: "Escuela N° 456", district: "Distrito II", status: "Activa" },
-    { name: "Escuela N° 789", district: "Distrito I", status: "Inactiva" },
+const initialSchools: Omit<School, 'id' | 'regionId'>[] = [
+    { name: "Escuela N° 123", region: "Región I", status: "Activa" },
+    { name: "Escuela N° 456", region: "Región II", status: "Activa" },
+    { name: "Escuela N° 789", region: "Región I", status: "Inactiva" },
 ];
 
-const initialDistricts: string[] = ["Distrito I", "Distrito II", "Distrito III", "Distrito IV", "Distrito V"];
+const initialRegions: string[] = ["Región I", "Región II", "Región III", "Región IV", "Región V"];
 
 async function seedInitialData() {
     const db = getDb();
-    const districtsCollection = collection(db, "districts");
-    const districtsSnapshot = await getCountFromServer(districtsCollection);
+    const regionsCollection = collection(db, "regions");
+    const regionsSnapshot = await getCountFromServer(regionsCollection);
     
-    if (districtsSnapshot.data().count === 0) {
-        console.log("Seeding initial districts...");
-        const districtPromises = initialDistricts.map(name => addDoc(districtsCollection, { name }));
-        const districtDocs = await Promise.all(districtPromises);
+    if (regionsSnapshot.data().count === 0) {
+        console.log("Seeding initial regions...");
+        const regionPromises = initialRegions.map(name => addDoc(regionsCollection, { name }));
+        await Promise.all(regionPromises);
         
         // Now seed schools
         const schoolsCollection = collection(db, "schools");
         const schoolsSnapshot = await getCountFromServer(schoolsCollection);
         if (schoolsSnapshot.data().count === 0) {
             console.log("Seeding initial schools...");
-            // We need the full district objects to get their IDs
-            const allDistricts = await getDocs(districtsCollection).then(snap => snap.docs.map(d => ({id: d.id, ...d.data()} as District)));
+            // We need the full region objects to get their IDs
+            const allRegions = await getDocs(regionsCollection).then(snap => snap.docs.map(d => ({id: d.id, ...d.data()} as Region)));
             const schoolPromises = initialSchools.map(school => {
-                const district = allDistricts.find(d => d.name === school.district);
+                const region = allRegions.find(d => d.name === school.region);
                 const schoolData = {
                     name: school.name,
-                    district: school.district,
+                    region: school.region,
                     status: school.status,
-                    districtId: district ? district.id : null
+                    regionId: region ? region.id : null
                 };
                 return addDoc(schoolsCollection, schoolData);
             });
@@ -77,20 +77,20 @@ export async function getAllSchools(): Promise<School[]> {
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
 }
 
-export async function getAllDistricts(): Promise<District[]> {
+export async function getAllRegions(): Promise<Region[]> {
     const db = getDb();
     await seedInitialData();
-    const districtsCollection = collection(db, "districts");
-    const querySnapshot = await getDocs(districtsCollection);
-    const districts = querySnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name } as District));
-    return districts.sort((a, b) => a.name.localeCompare(b.name));
+    const regionsCollection = collection(db, "regions");
+    const querySnapshot = await getDocs(regionsCollection);
+    const regions = querySnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name } as Region));
+    return regions.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export async function addSchool(schoolData: Omit<NewSchool, 'districtId'>, districtId: string) {
+export async function addSchool(schoolData: Omit<NewSchool, 'regionId'>, regionId: string) {
     const db = getDb();
     const newSchool = {
         ...schoolData,
-        districtId: districtId,
+        regionId: regionId,
         status: "Activa" as const,
     };
     await addDoc(collection(db, "schools"), newSchool);
@@ -121,40 +121,40 @@ export async function toggleSchoolStatus(schoolId: string) {
     }
 }
 
-export async function addDistrict(districtName: string): Promise<{ success: boolean; message: string }> {
+export async function addRegion(regionName: string): Promise<{ success: boolean; message: string }> {
     const db = getDb();
-    const districtsCollection = collection(db, "districts");
-    const q = query(districtsCollection, where("name", "==", districtName));
+    const regionsCollection = collection(db, "regions");
+    const q = query(regionsCollection, where("name", "==", regionName));
     const snapshot = await getCountFromServer(q);
 
     if (snapshot.data().count > 0) {
-        return { success: false, message: `El distrito "${districtName}" ya existe.` };
+        return { success: false, message: `La región "${regionName}" ya existe.` };
     }
 
-    await addDoc(districtsCollection, { name: districtName });
-    return { success: true, message: `El distrito "${districtName}" ha sido agregado.` };
+    await addDoc(regionsCollection, { name: regionName });
+    return { success: true, message: `La región "${regionName}" ha sido agregada.` };
 }
 
-export async function deleteDistrict(districtId: string): Promise<{ success: boolean; message: string }> {
+export async function deleteRegion(regionId: string): Promise<{ success: boolean; message: string }> {
     const db = getDb();
-    const districtDocRef = doc(db, "districts", districtId);
+    const regionDocRef = doc(db, "regions", regionId);
     
-    const allDistricts = await getAllDistricts();
-    const districtToDelete = allDistricts.find(d => d.id === districtId);
-    if (!districtToDelete) {
-        return { success: false, message: "No se encontró el distrito para eliminar." };
+    const allRegions = await getAllRegions();
+    const regionToDelete = allRegions.find(d => d.id === regionId);
+    if (!regionToDelete) {
+        return { success: false, message: "No se encontró la región para eliminar." };
     }
 
-    // Check if any school is using this district ID
+    // Check if any school is using this region ID
     const schoolsCollection = collection(db, "schools");
-    const q = query(schoolsCollection, where("districtId", "==", districtId), limit(1));
+    const q = query(schoolsCollection, where("regionId", "==", regionId), limit(1));
     const schoolSnapshot = await getDocs(q);
 
     if (!schoolSnapshot.empty) {
         const schoolName = schoolSnapshot.docs[0].data().name;
-        return { success: false, message: `No se puede eliminar. El distrito está en uso por la escuela: ${schoolName} (y posiblemente otras).` };
+        return { success: false, message: `No se puede eliminar. La región está en uso por la escuela: ${schoolName} (y posiblemente otras).` };
     }
 
-    await deleteDoc(districtDocRef);
-    return { success: true, message: `El distrito "${districtToDelete.name}" ha sido eliminado.` };
+    await deleteDoc(regionDocRef);
+    return { success: true, message: `La región "${regionToDelete.name}" ha sido eliminada.` };
 }

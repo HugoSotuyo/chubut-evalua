@@ -9,24 +9,24 @@ import {
     updateSchool as updateSchoolDb, 
     deleteSchool as deleteSchoolDb, 
     toggleSchoolStatus as toggleSchoolStatusDb, 
-    getAllDistricts, 
-    addDistrict as addDistrictDb,
-    deleteDistrict as deleteDistrictDb
+    getAllRegions, 
+    addRegion as addRegionDb,
+    deleteRegion as deleteRegionDb
 } from '@/lib/schoolsService';
-import type { School, District } from '@/lib/types';
+import type { School, Region } from '@/lib/types';
 import { useAuditLogs } from './audit-log-context';
 
-type NewSchool = Omit<School, 'id' | 'status' | 'districtId'>;
+type NewSchool = Omit<School, 'id' | 'status' | 'regionId'>;
 
 interface SchoolsContextType {
   schools: School[];
-  districts: District[];
-  addSchool: (school: NewSchool, districtId: string) => Promise<void>;
+  regions: Region[];
+  addSchool: (school: NewSchool, regionId: string) => Promise<void>;
   updateSchool: (school: School) => Promise<void>;
   deleteSchool: (schoolId: string) => Promise<void>;
   toggleSchoolStatus: (schoolId: string) => Promise<void>;
-  addDistrict: (districtName: string) => Promise<{ success: boolean; message: string }>;
-  deleteDistrict: (districtId: string) => Promise<{ success: boolean; message: string }>;
+  addRegion: (regionName: string) => Promise<{ success: boolean; message: string }>;
+  deleteRegion: (regionId: string) => Promise<{ success: boolean; message: string }>;
   loading: boolean;
 }
 
@@ -34,21 +34,21 @@ const SchoolsContext = createContext<SchoolsContextType | undefined>(undefined);
 
 export function SchoolsProvider({ children }: { children: ReactNode }) {
   const [schools, setSchools] = useState<School[]>([]);
-  const [districts, setDistricts] = useState<District[]>([]);
+  const [regions, setRegions] = useState<Region[]>([]);
   const [loading, setLoading] = useState(true);
   const { addAuditLog } = useAuditLogs();
 
   const refreshData = useCallback(async () => {
     setLoading(true);
     try {
-        const [schoolsData, districtsData] = await Promise.all([
+        const [schoolsData, regionsData] = await Promise.all([
             getAllSchools(),
-            getAllDistricts()
+            getAllRegions()
         ]);
         setSchools(schoolsData);
-        setDistricts(districtsData);
+        setRegions(regionsData);
     } catch (error) {
-        console.error("Failed to fetch schools/districts:", error);
+        console.error("Failed to fetch schools/regions:", error);
     } finally {
         setLoading(false);
     }
@@ -58,8 +58,8 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
     refreshData();
   }, [refreshData]);
 
-  const addSchool = async (schoolData: NewSchool, districtId: string) => {
-    await addSchoolDb(schoolData, districtId);
+  const addSchool = async (schoolData: NewSchool, regionId: string) => {
+    await addSchoolDb(schoolData, regionId);
     await addAuditLog({ action: "CREAR_ESCUELA", details: `Se creó la escuela "${schoolData.name}"` });
     await refreshData();
   };
@@ -89,20 +89,20 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
     await refreshData();
   };
   
-  const addDistrict = async (districtName: string): Promise<{ success: boolean; message: string }> => {
-    const result = await addDistrictDb(districtName);
+  const addRegion = async (regionName: string): Promise<{ success: boolean; message: string }> => {
+    const result = await addRegionDb(regionName);
     if (result.success) {
-      await addAuditLog({ action: "CREAR_DISTRITO", details: `Se creó el distrito "${districtName}"` });
+      await addAuditLog({ action: "CREAR_REGION", details: `Se creó la región "${regionName}"` });
       await refreshData();
     }
     return result;
   };
 
-  const deleteDistrict = async (districtId: string): Promise<{ success: boolean; message: string }> => {
-    const districtToDelete = districts.find(d => d.id === districtId);
-    const result = await deleteDistrictDb(districtId);
-    if (result.success && districtToDelete) {
-      await addAuditLog({ action: "ELIMINAR_DISTRITO", details: `Se eliminó el distrito "${districtToDelete.name}"` });
+  const deleteRegion = async (regionId: string): Promise<{ success: boolean; message: string }> => {
+    const regionToDelete = regions.find(d => d.id === regionId);
+    const result = await deleteRegionDb(regionId);
+    if (result.success && regionToDelete) {
+      await addAuditLog({ action: "ELIMINAR_REGION", details: `Se eliminó la región "${regionToDelete.name}"` });
       await refreshData();
     }
     return result;
@@ -110,13 +110,13 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
 
   const value = { 
     schools, 
-    districts,
+    regions,
     addSchool, 
     updateSchool, 
     deleteSchool, 
     toggleSchoolStatus,
-    addDistrict,
-    deleteDistrict,
+    addRegion,
+    deleteRegion,
     loading 
   };
 

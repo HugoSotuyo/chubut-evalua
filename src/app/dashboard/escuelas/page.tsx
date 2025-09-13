@@ -35,48 +35,48 @@ import { useToast } from "@/hooks/use-toast";
 import { useSearch } from "@/context/search-context";
 import { useSchools } from "@/context/schools-context";
 import { useAuth } from "@/context/auth-context";
-import type { School, District } from "@/lib/types";
+import type { School, Region } from "@/lib/types";
 
 
 export default function EscuelasPage() {
   const { user } = useAuth();
   const { 
     schools, 
-    districts, 
+    regions, 
     addSchool, 
     updateSchool, 
     deleteSchool, 
     toggleSchoolStatus, 
-    addDistrict,
-    deleteDistrict,
+    addRegion,
+    deleteRegion,
     loading,
   } = useSchools();
 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
-  const [isDeleteDistrictAlertOpen, setIsDeleteDistrictAlertOpen] = useState(false);
+  const [isDeleteRegionAlertOpen, setIsDeleteRegionAlertOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddSchoolDialogOpen, setIsAddSchoolDialogOpen] = useState(false);
-  const [isAddDistrictDialogOpen, setIsAddDistrictDialogOpen] = useState(false);
-  const [isDeleteDistrictDialogOpen, setIsDeleteDistrictDialogOpen] = useState(false);
+  const [isAddRegionDialogOpen, setIsAddRegionDialogOpen] = useState(false);
+  const [isDeleteRegionDialogOpen, setIsDeleteRegionDialogOpen] = useState(false);
 
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
-  const [selectedDistrict, setSelectedDistrict] = useState<District | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
   
-  const [districtFilter, setDistrictFilter] = useState("all");
+  const [regionFilter, setRegionFilter] = useState("all");
   const { toast } = useToast();
   const { searchTerm } = useSearch();
 
   const filteredSchools = useMemo(() => {
     let results = schools;
-    if (districtFilter !== "all") {
-      results = results.filter(school => school.district === districtFilter);
+    if (regionFilter !== "all") {
+      results = results.filter(school => school.region === regionFilter);
     }
     if (searchTerm) {
       results = results.filter(school => school.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }
     return results;
-  }, [schools, districtFilter, searchTerm]);
+  }, [schools, regionFilter, searchTerm]);
 
 
   const handleOpenDeleteDialog = (school: School) => {
@@ -84,8 +84,8 @@ export default function EscuelasPage() {
     setIsAlertOpen(true);
   };
   
-  const handleOpenDeleteDistrictDialog = () => {
-    setIsDeleteDistrictDialogOpen(true);
+  const handleOpenDeleteRegionDialog = () => {
+    setIsDeleteRegionDialogOpen(true);
   };
 
   const handleOpenEditDialog = (school: School) => {
@@ -109,21 +109,21 @@ export default function EscuelasPage() {
     }
   };
   
-  const handleDeleteDistrict = async () => {
-    if (!selectedDistrict) return;
+  const handleDeleteRegion = async () => {
+    if (!selectedRegion) return;
     try {
-      const result = await deleteDistrict(selectedDistrict.id);
+      const result = await deleteRegion(selectedRegion.id);
       toast({
-        title: result.success ? "Distrito Eliminado" : "Error al Eliminar",
+        title: result.success ? "Región Eliminada" : "Error al Eliminar",
         description: result.message,
         variant: result.success ? "default" : "destructive",
       });
     } catch (error) {
-      toast({ title: "Error", description: "No se pudo eliminar el distrito.", variant: "destructive"});
+      toast({ title: "Error", description: "No se pudo eliminar la región.", variant: "destructive"});
     } finally {
-      setIsDeleteDistrictAlertOpen(false);
-      setSelectedDistrict(null);
-      setIsDeleteDistrictDialogOpen(false); // Close the selection dialog
+      setIsDeleteRegionAlertOpen(false);
+      setSelectedRegion(null);
+      setIsDeleteRegionDialogOpen(false); // Close the selection dialog
     }
   };
 
@@ -162,30 +162,30 @@ export default function EscuelasPage() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const name = formData.get("school-name") as string;
-    const districtId = formData.get("school-district") as string;
+    const regionId = formData.get("school-region") as string;
 
-    const selectedDistrict = districts.find(d => d.id === districtId);
+    const selectedRegion = regions.find(d => d.id === regionId);
 
-    if (!name || !selectedDistrict) {
-        toast({ title: "Error", description: "El nombre y el distrito son requeridos.", variant: "destructive"});
+    if (!name || !selectedRegion) {
+        toast({ title: "Error", description: "El nombre y la región son requeridos.", variant: "destructive"});
         return;
     }
 
     const schoolExists = schools.some(
-      school => school.name.toLowerCase() === name.toLowerCase() && school.district === selectedDistrict.name
+      school => school.name.toLowerCase() === name.toLowerCase() && school.region === selectedRegion.name
     );
 
     if (schoolExists) {
         toast({
             title: "Escuela Duplicada",
-            description: `La escuela "${name}" ya existe en el distrito "${selectedDistrict.name}".`,
+            description: `La escuela "${name}" ya existe en la región "${selectedRegion.name}".`,
             variant: "destructive"
         });
         return;
     }
 
     try {
-        await addSchool({ name, district: selectedDistrict.name }, selectedDistrict.id);
+        await addSchool({ name, region: selectedRegion.name }, selectedRegion.id);
         toast({ title: "Escuela Agregada", description: `La escuela ${name} ha sido agregada.` });
         setIsAddSchoolDialogOpen(false);
     } catch (error) {
@@ -193,52 +193,52 @@ export default function EscuelasPage() {
     }
   };
 
-  const handleAddDistrict = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleAddRegion = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const name = formData.get("district-name") as string;
+    const name = formData.get("region-name") as string;
     
     if (!name || !name.trim()) {
-        toast({ title: "Error", description: "El nombre del distrito es requerido.", variant: "destructive"});
+        toast({ title: "Error", description: "El nombre de la región es requerido.", variant: "destructive"});
         return;
     }
     
-    const districtExists = districts.some(d => d.name.toLowerCase() === name.trim().toLowerCase());
+    const regionExists = regions.some(d => d.name.toLowerCase() === name.trim().toLowerCase());
     
-    if (districtExists) {
+    if (regionExists) {
         toast({
-            title: "Distrito Duplicado",
-            description: `El distrito "${name.trim()}" ya existe en la lista.`,
+            title: "Región Duplicada",
+            description: `La región "${name.trim()}" ya existe en la lista.`,
             variant: "destructive",
         });
         return;
     }
     
     try {
-        const result = await addDistrict(name.trim());
+        const result = await addRegion(name.trim());
         toast({
-            title: result.success ? "Distrito Agregado" : "Error",
+            title: result.success ? "Región Agregada" : "Error",
             description: result.message,
             variant: result.success ? "default" : "destructive",
         });
 
         if (result.success) {
-            setIsAddDistrictDialogOpen(false);
+            setIsAddRegionDialogOpen(false);
         }
     } catch (error) {
         toast({
             title: "Error Inesperado",
-            description: "Ocurrió un error al intentar guardar el distrito.",
+            description: "Ocurrió un error al intentar guardar la región.",
             variant: "destructive",
         });
-        console.error("Error submitting district:", error);
+        console.error("Error submitting region:", error);
     }
   }
 
   const handleExport = () => {
-    const headers = ["ID", "Nombre", "Distrito", "Estado"];
+    const headers = ["ID", "Nombre", "Región", "Estado"];
     const rows = filteredSchools.map(school => 
-        [school.id, school.name, school.district, school.status].join(';')
+        [school.id, school.name, school.region, school.status].join(';')
     );
     
     const bom = "\uFEFF";
@@ -267,18 +267,18 @@ export default function EscuelasPage() {
         <div className="flex items-center justify-between">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight font-headline">Gestión de Escuelas</h1>
-                <p className="text-muted-foreground">Administra las escuelas y distritos del sistema.</p>
+                <p className="text-muted-foreground">Administra las escuelas y regiones del sistema.</p>
             </div>
             <div className="flex items-center gap-2">
                 {isEvaluador && (
-                    <Button onClick={handleOpenDeleteDistrictDialog} variant="destructive">
+                    <Button onClick={handleOpenDeleteRegionDialog} variant="destructive">
                         <Trash2 className="mr-2 h-4 w-4" />
-                        Eliminar Distrito
+                        Eliminar Región
                     </Button>
                 )}
-                <Button onClick={() => setIsAddDistrictDialogOpen(true)} variant="outline">
+                <Button onClick={() => setIsAddRegionDialogOpen(true)} variant="outline">
                     <Map className="mr-2 h-4 w-4" />
-                    Agregar Distrito
+                    Agregar Región
                 </Button>
                 <Button onClick={() => setIsAddSchoolDialogOpen(true)}>
                     <PlusCircle className="mr-2 h-4 w-4" />
@@ -295,21 +295,21 @@ export default function EscuelasPage() {
             <CardHeader>
                 <div className="flex items-center gap-2">
                     <Filter className="h-5 w-5" />
-                    <CardTitle>Filtrar por Distrito</CardTitle>
+                    <CardTitle>Filtrar por Región</CardTitle>
                 </div>
             </CardHeader>
             <CardContent>
                 <div className="grid md:grid-cols-4 gap-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="district-filter">Distrito</Label>
-                        <Select onValueChange={setDistrictFilter} value={districtFilter}>
-                            <SelectTrigger id="district-filter">
-                                <SelectValue placeholder="Seleccionar distrito" />
+                        <Label htmlFor="region-filter">Región</Label>
+                        <Select onValueChange={setRegionFilter} value={regionFilter}>
+                            <SelectTrigger id="region-filter">
+                                <SelectValue placeholder="Seleccionar región" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">Todos los Distritos</SelectItem>
-                                {districts.map((district, index) => (
-                                    <SelectItem key={`${district.id}-${index}`} value={district.name}>{district.name}</SelectItem>
+                                <SelectItem value="all">Todas las Regiones</SelectItem>
+                                {regions.map((region, index) => (
+                                    <SelectItem key={`${region.id}-${index}`} value={region.name}>{region.name}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -332,7 +332,7 @@ export default function EscuelasPage() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Nombre de la Escuela</TableHead>
-                            <TableHead>Distrito</TableHead>
+                            <TableHead>Región</TableHead>
                             <TableHead>Estado</TableHead>
                             <TableHead>
                                 <span className="sr-only">Acciones</span>
@@ -344,7 +344,7 @@ export default function EscuelasPage() {
                             filteredSchools.map((school) => (
                             <TableRow key={school.id}>
                                 <TableCell className="font-medium">{school.name}</TableCell>
-                                <TableCell>{school.district}</TableCell>
+                                <TableCell>{school.region}</TableCell>
                                 <TableCell>
                                     <Badge variant={school.status === "Inactiva" ? "secondary" : "default"}>{school.status}</Badge>
                                 </TableCell>
@@ -398,18 +398,18 @@ export default function EscuelasPage() {
             </AlertDialogContent>
         </AlertDialog>
 
-        <AlertDialog open={isDeleteDistrictAlertOpen} onOpenChange={setIsDeleteDistrictAlertOpen}>
+        <AlertDialog open={isDeleteRegionAlertOpen} onOpenChange={setIsDeleteRegionAlertOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>¿Estás seguro de que quieres eliminar el distrito?</AlertDialogTitle>
+                    <AlertDialogTitle>¿Estás seguro de que quieres eliminar la región?</AlertDialogTitle>
                     <AlertDialogDescription>
-                       Esta acción eliminará permanentemente el distrito <span className="font-bold">{selectedDistrict?.name}</span>. 
-                       Solo podrás eliminar un distrito si no tiene escuelas asociadas.
+                       Esta acción eliminará permanentemente la región <span className="font-bold">{selectedRegion?.name}</span>. 
+                       Solo podrás eliminar una región si no tiene escuelas asociadas.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setSelectedDistrict(null)}>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteDistrict}>Confirmar</AlertDialogAction>
+                    <AlertDialogCancel onClick={() => setSelectedRegion(null)}>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteRegion}>Confirmar</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
@@ -436,23 +436,23 @@ export default function EscuelasPage() {
                             />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="district" className="text-right">
-                                Distrito
+                            <Label htmlFor="region" className="text-right">
+                                Región
                             </Label>
                             <Select
-                                value={editingSchool.district}
+                                value={editingSchool.region}
                                 onValueChange={(value) => {
-                                    const selected = districts.find(d => d.name === value);
+                                    const selected = regions.find(d => d.name === value);
                                     if(selected) {
-                                        setEditingSchool({ ...editingSchool, district: selected.name, districtId: selected.id })
+                                        setEditingSchool({ ...editingSchool, region: selected.name, regionId: selected.id })
                                     }
                                 }}
                             >
                                 <SelectTrigger className="col-span-3">
-                                    <SelectValue placeholder="Selecciona un distrito" />
+                                    <SelectValue placeholder="Selecciona una región" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {districts.map((d, index) => <SelectItem key={`${d.id}-${index}`} value={d.name}>{d.name}</SelectItem>)}
+                                    {regions.map((d, index) => <SelectItem key={`${d.id}-${index}`} value={d.name}>{d.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -488,15 +488,15 @@ export default function EscuelasPage() {
                             <Input id="school-name" name="school-name" placeholder="Ej: Escuela N° 505" className="col-span-3" required />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="school-district" className="text-right">
-                                Distrito
+                            <Label htmlFor="school-region" className="text-right">
+                                Región
                             </Label>
-                            <Select name="school-district" required>
+                            <Select name="school-region" required>
                                 <SelectTrigger className="col-span-3">
-                                    <SelectValue placeholder="Selecciona un distrito" />
+                                    <SelectValue placeholder="Selecciona una región" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {districts.map((d, index) => <SelectItem key={`${d.id}-${index}`} value={d.id}>{d.name}</SelectItem>)}
+                                    {regions.map((d, index) => <SelectItem key={`${d.id}-${index}`} value={d.id}>{d.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -511,49 +511,49 @@ export default function EscuelasPage() {
             </DialogContent>
         </Dialog>
 
-        <Dialog open={isAddDistrictDialogOpen} onOpenChange={setIsAddDistrictDialogOpen}>
+        <Dialog open={isAddRegionDialogOpen} onOpenChange={setIsAddRegionDialogOpen}>
             <DialogContent className="sm:max-w-[425px]">
-                <form onSubmit={handleAddDistrict}>
+                <form onSubmit={handleAddRegion}>
                     <DialogHeader>
-                        <DialogTitle>Agregar Nuevo Distrito</DialogTitle>
+                        <DialogTitle>Agregar Nueva Región</DialogTitle>
                         <DialogDescription>
-                            Escribe el nombre del nuevo distrito para agregarlo al sistema.
+                            Escribe el nombre de la nueva región para agregarla al sistema.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="district-name" className="text-right">
+                            <Label htmlFor="region-name" className="text-right">
                                 Nombre
                             </Label>
-                            <Input id="district-name" name="district-name" placeholder="Ej: Distrito IV" className="col-span-3" required />
+                            <Input id="region-name" name="region-name" placeholder="Ej: Región IV" className="col-span-3" required />
                         </div>
                     </div>
                     <DialogFooter>
                         <DialogClose asChild>
                            <Button type="button" variant="secondary">Cancelar</Button>
                         </DialogClose>
-                        <Button type="submit">Guardar Distrito</Button>
+                        <Button type="submit">Guardar Región</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
         </Dialog>
         
-        <Dialog open={isDeleteDistrictDialogOpen} onOpenChange={setIsDeleteDistrictDialogOpen}>
+        <Dialog open={isDeleteRegionDialogOpen} onOpenChange={setIsDeleteRegionDialogOpen}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Eliminar un Distrito</DialogTitle>
+                    <DialogTitle>Eliminar una Región</DialogTitle>
                     <DialogDescription>
-                        Selecciona el distrito que deseas eliminar. Esta acción es irreversible.
+                        Selecciona la región que deseas eliminar. Esta acción es irreversible.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                    <Label htmlFor="district-to-delete">Distrito</Label>
-                    <Select onValueChange={(value) => setSelectedDistrict(districts.find(d => d.id === value) || null)}>
-                        <SelectTrigger id="district-to-delete">
-                            <SelectValue placeholder="Selecciona un distrito para eliminar" />
+                    <Label htmlFor="region-to-delete">Región</Label>
+                    <Select onValueChange={(value) => setSelectedRegion(regions.find(d => d.id === value) || null)}>
+                        <SelectTrigger id="region-to-delete">
+                            <SelectValue placeholder="Selecciona una región para eliminar" />
                         </SelectTrigger>
                         <SelectContent>
-                            {districts.map((d) => (
+                            {regions.map((d) => (
                                 <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                             ))}
                         </SelectContent>
@@ -567,15 +567,15 @@ export default function EscuelasPage() {
                         type="button" 
                         variant="destructive"
                         onClick={() => {
-                            if (selectedDistrict) {
-                                setIsDeleteDistrictAlertOpen(true);
+                            if (selectedRegion) {
+                                setIsDeleteRegionAlertOpen(true);
                             } else {
-                                toast({ title: "Error", description: "Debes seleccionar un distrito.", variant: "destructive" });
+                                toast({ title: "Error", description: "Debes seleccionar una región.", variant: "destructive" });
                             }
                         }}
-                        disabled={!selectedDistrict}
+                        disabled={!selectedRegion}
                     >
-                        Eliminar Distrito
+                        Eliminar Región
                     </Button>
                 </DialogFooter>
             </DialogContent>
