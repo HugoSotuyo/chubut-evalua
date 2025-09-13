@@ -9,15 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Save, Settings, SlidersHorizontal, Shield, History, DatabaseZap } from "lucide-react";
+import { Save, Settings, SlidersHorizontal, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuditLogs } from "@/context/audit-log-context";
 import { useSettings } from "@/context/settings-context";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useAuth } from "@/context/auth-context";
-import { migrateData } from "@/lib/migrationService";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 
 export default function AdminPage() {
@@ -29,8 +27,6 @@ export default function AdminPage() {
   const [approvalThreshold, setApprovalThreshold] = useState(settings.approvalThreshold);
   const [schoolYear, setSchoolYear] = useState(settings.currentSchoolYear);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isMigrating, setIsMigrating] = useState(false);
-  const [isMigrationAlertOpen, setIsMigrationAlertOpen] = useState(false);
 
   useEffect(() => {
     if (!settingsLoading) {
@@ -74,27 +70,6 @@ export default function AdminPage() {
     }
   };
 
-  const handleMigration = async () => {
-    setIsMigrating(true);
-    try {
-        const result = await migrateData();
-        toast({
-            title: "Migración Completada",
-            description: result.message,
-        });
-    } catch (error: any) {
-        toast({
-            variant: "destructive",
-            title: "Error en la Migración",
-            description: error.message || "Ocurrió un error inesperado.",
-        });
-    } finally {
-        setIsMigrating(false);
-        setIsMigrationAlertOpen(false);
-    }
-  };
-
-
   if (auditLoading || settingsLoading || !user) {
     return <div className="flex h-screen w-full items-center justify-center">Cargando...</div>;
   }
@@ -107,7 +82,7 @@ export default function AdminPage() {
           <p className="text-muted-foreground">Panel de control para tareas administrativas avanzadas.</p>
         </div>
         <div className="flex justify-end">
-            <Button onClick={handleSave} disabled={isSubmitting || isMigrating}>
+            <Button onClick={handleSave} disabled={isSubmitting}>
                 <Save className="mr-2 h-4 w-4" />
                 {isSubmitting ? "Guardando..." : "Guardar Cambios"}
             </Button>
@@ -132,7 +107,7 @@ export default function AdminPage() {
                 placeholder="Ej: 60" 
                 value={approvalThreshold}
                 onChange={(e) => setApprovalThreshold(Number(e.target.value))}
-                disabled={isSubmitting || isMigrating}
+                disabled={isSubmitting}
               />
               <p className="text-xs text-muted-foreground">Puntaje mínimo para que un alumno sea considerado "Aprobado".</p>
             </div>
@@ -150,7 +125,7 @@ export default function AdminPage() {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="ciclo-lectivo">Ciclo Lectivo Actual</Label>
-              <Select onValueChange={setSchoolYear} value={schoolYear} disabled={isSubmitting || isMigrating}>
+              <Select onValueChange={setSchoolYear} value={schoolYear} disabled={isSubmitting}>
                   <SelectTrigger id="ciclo-lectivo">
                       <SelectValue placeholder="Seleccionar año" />
                   </SelectTrigger>
@@ -169,30 +144,11 @@ export default function AdminPage() {
                         Desactiva el acceso a la plataforma para roles no administrativos.
                     </p>
                 </div>
-                <Switch id="modo-mantenimiento" disabled={isSubmitting || isMigrating} />
+                <Switch id="modo-mantenimiento" disabled={isSubmitting} />
             </div>
           </CardContent>
         </Card>
       </div>
-
-       {user.role === 'Evaluador' && (
-        <Card className="border-destructive">
-            <CardHeader>
-                <div className="flex items-center gap-2 text-destructive">
-                    <DatabaseZap className="h-5 w-5" />
-                    <CardTitle>Migración de Datos</CardTitle>
-                </div>
-                <CardDescription>
-                    Esta acción es para uso exclusivo del desarrollador. Ejecútala solo una vez para actualizar los datos de "Distrito" a "Región".
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Button variant="destructive" onClick={() => setIsMigrationAlertOpen(true)} disabled={isMigrating}>
-                    {isMigrating ? "Migrando datos..." : "Migrar Datos a Regiones"}
-                </Button>
-            </CardContent>
-        </Card>
-       )}
 
        <Card>
             <CardHeader>
@@ -227,22 +183,6 @@ export default function AdminPage() {
                 </Table>
             </CardContent>
         </Card>
-        
-        <AlertDialog open={isMigrationAlertOpen} onOpenChange={setIsMigrationAlertOpen}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>¿Confirmar la migración de datos?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Esta acción renombrará la colección 'districts' a 'regions' y actualizará los campos en 'schools' y 'users'. 
-                        <span className="font-bold"> Realiza esta acción solo una vez.</span>
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleMigration} disabled={isMigrating}>Confirmar Migración</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
 
     </div>
   );
