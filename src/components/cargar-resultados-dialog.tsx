@@ -14,13 +14,54 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import type { Student, Exam } from "@/lib/types";
+import type { Student, Exam, Question } from "@/lib/types";
 
 interface CargarResultadosDialogProps {
     student: Student;
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
 }
+
+const ScoreInput = ({ question, index, scores, handleScoreChange, handleScoreBlur, displayScores }: { question: Question, index: number, scores: Record<number, number>, handleScoreChange: (index: number, value: string) => void, handleScoreBlur: (index: number) => void, displayScores: Record<number, string> }) => {
+    const { settings } = useSettings();
+    const hasAllowedScores = question.allowedScores && question.allowedScores.length > 0;
+
+    if (hasAllowedScores) {
+        return (
+            <Select 
+                onValueChange={(value) => handleScoreChange(index, value)}
+                value={scores[index]?.toString() ?? ""}
+                required
+            >
+                <SelectTrigger>
+                    <SelectValue placeholder="-" />
+                </SelectTrigger>
+                <SelectContent>
+                    {question.allowedScores!.map((score, i) => (
+                        <SelectItem key={i} value={score.toString()}>
+                            {score.toLocaleString()}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+        );
+    }
+
+    return (
+        <Input
+            type="text"
+            inputMode="decimal"
+            placeholder="-"
+            value={displayScores[index] ?? ""}
+            onChange={(e) => handleScoreChange(index, e.target.value)}
+            onBlur={() => handleScoreBlur(index)}
+            className="text-center"
+            step={settings.scoreStep}
+            required
+        />
+    );
+};
+
 
 export function CargarResultadosDialog({ student, isOpen, onOpenChange }: CargarResultadosDialogProps) {
     const { user } = useAuth();
@@ -81,23 +122,30 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
     }, [selectedExam]);
 
     const handleScoreChange = (questionIndex: number, value: string) => {
-        setDisplayScores(prev => ({ ...prev, [questionIndex]: value }));
-    
-        const sanitizedValue = value.replace(',', '.');
-        const maxPuntaje = selectedExam?.questions[questionIndex]?.puntaje ?? 0;
-    
-        if (sanitizedValue === '' || sanitizedValue === '.') {
-            setScores(prev => ({ ...prev, [questionIndex]: 0 }));
-            return;
-        }
-    
-        const parsedScore = parseFloat(sanitizedValue);
-    
-        if (!isNaN(parsedScore) && parsedScore >= 0) {
-            if (parsedScore > maxPuntaje) {
-                setScores(prev => ({ ...prev, [questionIndex]: maxPuntaje }));
-            } else {
-                setScores(prev => ({ ...prev, [questionIndex]: parsedScore }));
+        const question = selectedExam?.questions[questionIndex];
+        const hasAllowedScores = question?.allowedScores && question.allowedScores.length > 0;
+
+        if (hasAllowedScores) {
+            const score = parseFloat(value);
+            setScores(prev => ({ ...prev, [questionIndex]: isNaN(score) ? 0 : score }));
+        } else {
+            setDisplayScores(prev => ({ ...prev, [questionIndex]: value }));
+            const sanitizedValue = value.replace(',', '.');
+            const maxPuntaje = question?.puntaje ?? 0;
+        
+            if (sanitizedValue === '' || sanitizedValue === '.') {
+                setScores(prev => ({ ...prev, [questionIndex]: 0 }));
+                return;
+            }
+        
+            const parsedScore = parseFloat(sanitizedValue);
+        
+            if (!isNaN(parsedScore) && parsedScore >= 0) {
+                if (parsedScore > maxPuntaje) {
+                    setScores(prev => ({ ...prev, [questionIndex]: maxPuntaje }));
+                } else {
+                    setScores(prev => ({ ...prev, [questionIndex]: parsedScore }));
+                }
             }
         }
     };
@@ -196,16 +244,13 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
                                                 <TableCell>{q.respuesta}</TableCell>
                                                 <TableCell className="text-center">{q.puntaje}</TableCell>
                                                 <TableCell>
-                                                    <Input
-                                                        type="text"
-                                                        inputMode="decimal"
-                                                        placeholder="-"
-                                                        value={displayScores[index] ?? ""}
-                                                        onChange={(e) => handleScoreChange(index, e.target.value)}
-                                                        onBlur={() => handleScoreBlur(index)}
-                                                        className="text-center"
-                                                        step={settings.scoreStep}
-                                                        required
+                                                    <ScoreInput 
+                                                        question={q}
+                                                        index={index}
+                                                        scores={scores}
+                                                        displayScores={displayScores}
+                                                        handleScoreChange={handleScoreChange}
+                                                        handleScoreBlur={handleScoreBlur}
                                                     />
                                                 </TableCell>
                                             </TableRow>

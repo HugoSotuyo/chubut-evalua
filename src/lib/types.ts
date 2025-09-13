@@ -20,6 +20,7 @@ export type Question = {
   consigna: string;
   respuesta: string;
   puntaje: number;
+  allowedScores?: number[];
 };
 
 export type Exam = {

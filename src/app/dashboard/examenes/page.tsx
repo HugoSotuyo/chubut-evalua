@@ -36,6 +36,7 @@ const questionSchema = z.object({
   consigna: z.string().min(1, "La consigna es requerida."),
   respuesta: z.string().min(1, "La respuesta es requerida."),
   puntaje: z.coerce.number().min(0, "El puntaje no puede ser negativo.").default(0),
+  allowedScores: z.string().optional(),
 })
 
 const examSchema = z.object({
@@ -107,7 +108,7 @@ export default function ExamenesPage() {
       tema: "",
       grade: "",
       fechaCarga: new Date(),
-      questions: [{ consigna: "", respuesta: "", puntaje: settings.defaultScore }],
+      questions: [{ consigna: "", respuesta: "", puntaje: settings.defaultScore, allowedScores: "" }],
     },
   })
 
@@ -119,8 +120,11 @@ export default function ExamenesPage() {
         grade: editingExam.grade,
         fechaCarga: parseDate(editingExam.created),
         questions: (editingExam.questions && editingExam.questions.length > 0)
-          ? editingExam.questions
-          : [{ consigna: "", respuesta: "", puntaje: settings.defaultScore }],
+          ? editingExam.questions.map(q => ({
+              ...q,
+              allowedScores: q.allowedScores?.join(', ') || ''
+            }))
+          : [{ consigna: "", respuesta: "", puntaje: settings.defaultScore, allowedScores: "" }],
       })
     }
   }, [editingExam, form, settings.defaultScore])
@@ -145,13 +149,24 @@ export default function ExamenesPage() {
           fileName = file.name;
       }
 
+      const questionsWithParsedScores = data.questions.map(q => {
+          const { allowedScores, ...rest } = q;
+          const scores = allowedScores
+              ? allowedScores.split(',').map(s => parseFloat(s.trim())).filter(s => !isNaN(s))
+              : [];
+          return {
+              ...rest,
+              ...(scores.length > 0 && { allowedScores: scores }),
+          };
+      });
+
       await updateExam({
           id: editingExam.id,
           name: data.titulo,
           tema: data.tema,
           grade: data.grade,
           created: format(data.fechaCarga, "yyyy-MM-dd"),
-          questions: data.questions,
+          questions: questionsWithParsedScores,
           fileDataUrl,
           fileName,
       });
@@ -375,7 +390,7 @@ export default function ExamenesPage() {
                                         control={form.control}
                                         name={`questions.${index}.consigna`}
                                         render={({ field }) => (
-                                            <FormItem className="md:col-span-8">
+                                            <FormItem className="md:col-span-12">
                                             <FormLabel>Consigna</FormLabel>
                                             <FormControl>
                                                 <Textarea placeholder="Escribe el enunciado de la pregunta..." {...field} disabled={isSubmitting}/>
@@ -388,7 +403,7 @@ export default function ExamenesPage() {
                                         control={form.control}
                                         name={`questions.${index}.respuesta`}
                                         render={({ field }) => (
-                                            <FormItem className="md:col-span-2">
+                                            <FormItem className="md:col-span-5">
                                             <FormLabel>Respuesta Correcta</FormLabel>
                                             <FormControl>
                                                 <Input placeholder="Ej: 42" {...field} disabled={isSubmitting}/>
@@ -402,7 +417,7 @@ export default function ExamenesPage() {
                                         name={`questions.${index}.puntaje`}
                                         render={({ field }) => (
                                             <FormItem className="md:col-span-2">
-                                            <FormLabel>Puntaje</FormLabel>
+                                            <FormLabel>Puntaje Máx.</FormLabel>
                                             <FormControl>
                                                 <Input
                                                   type="number"
@@ -413,6 +428,19 @@ export default function ExamenesPage() {
                                                 />
                                             </FormControl>
                                             <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name={`questions.${index}.allowedScores`}
+                                        render={({ field }) => (
+                                            <FormItem className="md:col-span-5">
+                                                <FormLabel>Calificaciones Posibles</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="Ej: 0, 0.5, 1" {...field} disabled={isSubmitting}/>
+                                                </FormControl>
+                                                <FormMessage />
                                             </FormItem>
                                         )}
                                     />
@@ -435,7 +463,7 @@ export default function ExamenesPage() {
                          <Button
                             type="button"
                             variant="outline"
-                            onClick={() => append({ consigna: "", respuesta: "", puntaje: settings.defaultScore })}
+                            onClick={() => append({ consigna: "", respuesta: "", puntaje: settings.defaultScore, allowedScores: "" })}
                             disabled={isSubmitting}
                             >
                             <PlusCircle className="mr-2 h-4 w-4" />
@@ -463,5 +491,3 @@ export default function ExamenesPage() {
     </>
   );
 }
-
-    
