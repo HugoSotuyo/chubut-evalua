@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import React, { useState, useMemo, useEffect } from "react"
@@ -21,6 +22,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { useStudents } from "@/context/students-context"
+import { useSchools } from "@/context/schools-context"
 
 type Filters = {
     exam: string;
@@ -36,6 +38,7 @@ export default function ResultadosPage() {
     const { results: allResults, deleteResult, loading: resultsLoading } = useResults();
     const { exams, loading: examsLoading } = useExams();
     const { students } = useStudents();
+    const { schools } = useSchools();
     const { searchTerm } = useSearch();
     const { toast } = useToast();
     
@@ -63,8 +66,8 @@ export default function ResultadosPage() {
                 school: initialSchool,
                 studentName: "",
                 status: "all",
-                grade: "all",
-                course: "all",
+                grade: user.role === 'Docente' ? user.grade ?? 'all' : 'all',
+                course: user.role === 'Docente' ? user.course ?? 'all' : 'all',
             };
             setFilters(initialFilters);
             setAppliedFilters(initialFilters);
@@ -86,13 +89,18 @@ export default function ResultadosPage() {
     const availableCourses = useMemo(() => {
         return [...new Set(students.map(s => s.course).filter(Boolean))].sort();
     }, [students]);
+    
+    const availableSchools = useMemo(() => {
+        return schools.map(s => s.name).sort();
+    }, [schools]);
+
 
     const filteredResults = useMemo(() => {
         if (!user) return [];
 
         let results = allResults;
 
-        // Role-based filtering first
+        // Role-based pre-filtering. Evaluador, Administrador, and Referente see everything by default.
         if (user.role === "Director") {
             results = results.filter(r => r.school === user.school);
         } else if (user.role === "Docente") {
@@ -193,11 +201,6 @@ export default function ResultadosPage() {
         setIsDetailsDialogOpen(true);
     };
     
-    const getUniqueValues = (key: 'school') => {
-        const values = allResults.map(item => item[key]);
-        return [...new Set(values)].sort();
-    }
-    
     const examForDetails = useMemo(() => {
         if (!selectedResult) return null;
         return exams.find(e => e.id === selectedResult.examId) ?? null;
@@ -207,6 +210,7 @@ export default function ResultadosPage() {
         return <div className="flex h-screen w-full items-center justify-center">Cargando...</div>;
     }
 
+    const showGlobalFilters = user && ['Evaluador', 'Administrador', 'Referente'].includes(user.role);
     const showGradeCourseFilters = user && user.role !== 'Docente';
 
     return (
@@ -245,15 +249,15 @@ export default function ResultadosPage() {
                             </SelectContent>
                         </Select>
                     </div>
-                    {user && user.role !== 'Director' && user.role !== 'Docente' && (
+                    {showGlobalFilters && (
                         <div className="grid gap-2">
                             <Label htmlFor="filtro-escuela">Escuela</Label>
                             <Select onValueChange={(value) => handleFilterChange("school", value)} value={filters.school}>
                                 <SelectTrigger id="filtro-escuela"><SelectValue placeholder="Escuela" /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">Todas</SelectItem>
-                                    {getUniqueValues("school").map(school => (
-                                        <SelectItem key={school as string} value={school as string}>{school as string}</SelectItem>
+                                    {availableSchools.map(school => (
+                                        <SelectItem key={school} value={school}>{school}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -263,7 +267,7 @@ export default function ResultadosPage() {
                         <>
                             <div className="grid gap-2">
                                 <Label htmlFor="filtro-grado">Grado</Label>
-                                <Select onValueChange={(v) => handleFilterChange('grade', v)} value={filters.grade}>
+                                <Select onValueChange={(v) => handleFilterChange('grade', v)} value={filters.grade} disabled={filters.school === 'all' && !showGlobalFilters}>
                                     <SelectTrigger id="filtro-grado"><SelectValue placeholder="Grado" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos</SelectItem>
@@ -273,7 +277,7 @@ export default function ResultadosPage() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="filtro-curso">Curso</Label>
-                                <Select onValueChange={(v) => handleFilterChange('course', v)} value={filters.course}>
+                                <Select onValueChange={(v) => handleFilterChange('course', v)} value={filters.course} disabled={filters.school === 'all' && !showGlobalFilters}>
                                     <SelectTrigger id="filtro-curso"><SelectValue placeholder="Curso" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos</SelectItem>
@@ -434,3 +438,5 @@ export default function ResultadosPage() {
         </div>
     )
 }
+
+    

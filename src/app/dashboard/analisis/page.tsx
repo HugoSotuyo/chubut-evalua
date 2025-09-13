@@ -133,9 +133,9 @@ export default function AnalisisPage() {
         let filteredResults = results.filter(r => existingExamIds.has(r.examId));
 
         // 1. Role-based pre-filtering
-        if (user?.role === 'Director' && user.school) {
+        if (user?.role === 'Director') {
             filteredResults = filteredResults.filter(r => r.school === user.school);
-        } else if (user?.role === 'Docente' && user.school && user.grade && user.course) {
+        } else if (user?.role === 'Docente') {
             filteredResults = filteredResults.filter(r => 
                 r.school === user.school &&
                 r.grade === user.grade &&
@@ -376,7 +376,7 @@ export default function AnalisisPage() {
         return <div className="flex h-screen w-full items-center justify-center">Cargando...</div>;
     }
 
-    const showGeneralFilters = user.role !== 'Director' && user.role !== 'Docente';
+    const showGlobalFilters = ['Evaluador', 'Administrador', 'Referente'].includes(user.role);
     const showGradeCourseFilters = user.role !== 'Docente';
 
     return (
@@ -401,7 +401,7 @@ export default function AnalisisPage() {
                     <CardDescription>Selecciona los criterios para acotar tu búsqueda. Los gráficos se actualizarán automáticamente.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                    {showGeneralFilters && (
+                    {showGlobalFilters && (
                         <>
                             <div className="grid gap-2">
                                 <Label htmlFor="filtro-distrito">Distrito</Label>
@@ -712,6 +712,9 @@ export default function AnalisisPage() {
 
 
 
+
+
+    
 
 
     
