@@ -27,10 +27,9 @@ export function RegisterForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const { addUser } = useUsers();
+  const { addUser, users } = useUsers();
   const { schools, regions } = useSchools();
   const { settings } = useSettings();
-  const { users } = useUsers();
 
   const schoolsWithDirectors = useMemo(() => {
     return users
