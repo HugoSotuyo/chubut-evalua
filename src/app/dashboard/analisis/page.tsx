@@ -144,6 +144,11 @@ export default function AnalisisPage() {
         }
 
         // 2. Apply user-selected filters
+        if (appliedFilters.region !== "all") {
+            const schoolsInRegion = schools.filter(s => s.region === appliedFilters.region).map(s => s.name);
+            const schoolsInRegionSet = new Set(schoolsInRegion);
+            filteredResults = filteredResults.filter(r => schoolsInRegionSet.has(r.school));
+        }
         if (appliedFilters.exam !== 'all') {
             filteredResults = filteredResults.filter(r => r.examName === appliedFilters.exam);
         }
@@ -259,7 +264,7 @@ export default function AnalisisPage() {
         }));
 
         return { dataAprobados, examAnalysisData, questionAnalysisData };
-    }, [appliedFilters, user, results, exams]);
+    }, [appliedFilters, user, results, exams, schools]);
     
     const handleExport = () => {
         let csvContent = "";
@@ -716,5 +721,7 @@ export default function AnalisisPage() {
 
     
 
+
+    
 
     
