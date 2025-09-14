@@ -37,6 +37,8 @@ export function DashboardNav({ userRole }: DashboardNavProps) {
   const handleLinkClick = () => {
     if (isMobile) {
       setOpenMobile(false);
+    } else {
+      setOpen(false);
     }
   }
 
@@ -44,9 +46,10 @@ export function DashboardNav({ userRole }: DashboardNavProps) {
     <SidebarMenu>
       {filteredNavItems.map((item) => (
         <SidebarMenuItem key={item.href}>
-          <Link href={item.href} onClick={handleLinkClick}>
+          <Link href={item.href}>
             <SidebarMenuButton
               isActive={isActive(item.href)}
+              onClick={handleLinkClick}
               tooltip={{
                 children: item.label,
                 className: "bg-primary text-primary-foreground"
