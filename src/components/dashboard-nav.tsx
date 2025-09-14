@@ -8,6 +8,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { navItems } from "@/data/menus";
 import { LogOut } from "lucide-react";
@@ -20,6 +21,7 @@ interface DashboardNavProps {
 
 export function DashboardNav({ userRole }: DashboardNavProps) {
   const pathname = usePathname();
+  const { setOpen, setOpenMobile, isMobile } = useSidebar();
 
   const filteredNavItems = navItems.filter(item => 
     item.roles.includes(userRole) && item.showInMenu
@@ -32,11 +34,17 @@ export function DashboardNav({ userRole }: DashboardNavProps) {
     return pathname.startsWith(href);
   };
 
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }
+
   return (
     <SidebarMenu>
       {filteredNavItems.map((item) => (
         <SidebarMenuItem key={item.href}>
-          <Link href={item.href}>
+          <Link href={item.href} onClick={handleLinkClick}>
             <SidebarMenuButton
               isActive={isActive(item.href)}
               tooltip={{
