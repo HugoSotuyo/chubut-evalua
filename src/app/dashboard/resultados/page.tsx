@@ -128,7 +128,7 @@ export default function ResultadosPage() {
             results = results.filter(r => r.studentName.toLowerCase().includes(appliedFilters.studentName.toLowerCase()));
         }
         if (appliedFilters.status !== "all") {
-            results = results.filter(r => r.status.toLowerCase() === appliedFilters.status);
+            results = results.filter(r => r.status === appliedFilters.status);
         }
 
         // Global search term
