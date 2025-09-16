@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   Bell,
   CircleUser,
+  HelpCircle,
   Home,
   LineChart,
   Menu,
@@ -29,6 +30,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -44,6 +53,10 @@ import { usePathname } from "next/navigation";
 import { RoleIcon } from "./role-icon";
 import { mockLogout } from "@/context/auth-context";
 import type { User } from "@/context/users-context";
+import { useUsers } from "@/context/users-context";
+import { useMemo } from "react";
+import { useState } from "react";
+
 
 interface DashboardHeaderProps {
   user: User;
@@ -53,10 +66,18 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
   const userInitials = user.name.split(' ').map(n => n[0]).join('');
   const { searchTerm, setSearchTerm } = useSearch();
   const pathname = usePathname();
+  const { users } = useUsers();
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
+
+  const evaluatorEmail = useMemo(() => {
+    const evaluator = users.find(u => u.role === 'Evaluador');
+    return evaluator ? evaluator.email : 'soporte@chubut.edu.ar';
+  }, [users]);
+
 
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-       <SidebarTrigger />
+       <SidebarTrigger className="md:flex" />
       <div className="w-full flex-1">
         {pathname !== '/dashboard/analisis' && (
           <form>
@@ -88,13 +109,34 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
           <DropdownMenuItem asChild>
             <Link href="/dashboard/perfil">Mi Perfil</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>Configuración</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setIsSupportOpen(true)}>
+            Soporte
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={mockLogout}>
             Cerrar Sesión
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+       <Dialog open={isSupportOpen} onOpenChange={setIsSupportOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-4">
+              <HelpCircle className="h-8 w-8 text-primary" />
+              <DialogTitle className="text-2xl">Contacto de Soporte</DialogTitle>
+            </div>
+          </DialogHeader>
+          <DialogDescription className="py-4 text-base text-center">
+            Para cualquier consulta o problema con la plataforma, por favor contacta a:
+          </DialogDescription>
+          <div className="rounded-md bg-muted p-3 text-center">
+            <a href={`mailto:${evaluatorEmail}`} className="text-lg font-semibold text-primary underline">
+              {evaluatorEmail}
+            </a>
+          </div>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }
