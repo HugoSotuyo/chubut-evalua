@@ -4,11 +4,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import type { User } from '@/lib/types';
 import { updateUserPasswordInDb, updateUserInDb } from '@/lib/userService';
+import { useUsers } from './users-context';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  updateUser: (updatedUser: User) => Promise<void>;
+  updateUser: (updatedUser: Partial<User>) => Promise<void>;
   updateUserPassword: (newPassword: string) => Promise<void>;
 }
 
@@ -35,10 +36,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
   
-  const updateUser = async (updatedUser: User) => {
-    if (!user || user.id !== updatedUser.id) {
-      throw new Error("Unauthorized update attempt.");
+  const updateUser = async (updatedUserData: Partial<User>) => {
+    if (!user) {
+      throw new Error("No user is currently logged in.");
     }
+    const updatedUser = { ...user, ...updatedUserData };
     await updateUserInDb(updatedUser);
     setUser(updatedUser);
     sessionStorage.setItem(MOCK_USER_SESSION_KEY, JSON.stringify(updatedUser));
@@ -77,5 +79,3 @@ export const mockLogout = () => {
     sessionStorage.removeItem(MOCK_USER_SESSION_KEY);
     window.location.href = '/';
 };
-
-    

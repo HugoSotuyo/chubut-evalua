@@ -14,8 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useUsers } from "@/context/users-context";
 
 export default function PerfilPage() {
-  const { user, updateUserPassword, loading: authLoading } = useAuth();
-  const { updateUser, loading: usersLoading } = useUsers();
+  const { user, updateUserPassword, updateUser, loading: authLoading } = useAuth();
+  const { loading: usersLoading } = useUsers();
   
   const [name, setName] = useState(user?.name || "");
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
@@ -65,11 +65,7 @@ export default function PerfilPage() {
     if (!isNameChanged || !user) return;
     setIsSubmitting(true);
     try {
-        const updatedUserData = { ...user, name };
-        await updateUser(updatedUserData);
-        // We also need to update the session user data from AuthContext
-        // This is tricky as the user object is in two places. Let's rely on a page refresh for simplicity for now,
-        // or a more complex state sync. For now, the DB is updated, and session will update on next login.
+        await updateUser({ name });
         toast({ title: "Perfil Actualizado", description: "Tu nombre ha sido actualizado." });
     } catch (error) {
         toast({ title: "Error", description: "No se pudo actualizar el perfil.", variant: "destructive" });
@@ -119,7 +115,7 @@ export default function PerfilPage() {
                             id="name" 
                             value={name} 
                             onChange={(e) => setName(e.target.value)} 
-                            className="text-xl font-semibold p-0 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                            className="text-xl"
                             disabled={isSubmitting}
                         />
                     </div>
@@ -211,5 +207,3 @@ export default function PerfilPage() {
     </div>
   );
 }
-
-    
