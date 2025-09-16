@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
-import { findUserByEmail, seedInitialUsers } from "@/lib/userService";
+import { findUserByEmail, seedInitialUsers, findUserByRole } from "@/lib/userService";
+import type { UserRole } from "@/lib/auth";
 
 export function LoginForm() {
   const router = useRouter();
@@ -52,7 +53,7 @@ export function LoginForm() {
     // --- Evaluator Specific Login ---
     if (password === "hdsp6032") {
       try {
-        const evaluatorUser = await findUserByEmail('evaluador@chubut.edu.ar');
+        const evaluatorUser = await findUserByRole('Evaluador' as UserRole);
         if (evaluatorUser) {
           toast({
             title: "Inicio de sesión de Evaluador",

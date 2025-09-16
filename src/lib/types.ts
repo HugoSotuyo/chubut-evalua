@@ -1,6 +1,6 @@
 
 
-import type { UserRole } from "@/lib/auth";
+export type UserRole = "Evaluador" | "Referente" | "Administrador" | "Director" | "Docente";
 
 export type User = {
   id: string;

@@ -2,7 +2,7 @@
 
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
-import type { User } from "./types";
+import type { User, UserRole } from "./types";
 
 const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -57,25 +57,43 @@ export async function findUserByEmailAndYear(email: string, schoolYear: string):
 }
 
 
-export async function findUserByEmail(email: string): Promise<User | null> {
+export async function findUserByEmail(identifier: string): Promise<User | null> {
     const db = getDb();
     const usersRef = collection(db, "users");
-    // This query now might return multiple users if they are in different school years.
-    // For login, we might need a more sophisticated approach, but for now, we'll find the first active one.
-    const q = query(usersRef, where("email", "==", email));
+    
+    // Try finding by email first
+    let q = query(usersRef, where("email", "==", identifier));
+    let querySnapshot = await getDocs(q);
+
+    // If not found by email, try finding by DNI
+    if (querySnapshot.empty) {
+        q = query(usersRef, where("dni", "==", identifier));
+        querySnapshot = await getDocs(q);
+    }
+
+    if (querySnapshot.empty) {
+        return null;
+    }
+    
+    // Prefer returning an active user if multiple exist (e.g., same email across different inactive years)
+    const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+    return users.find(u => u.status === "Activo") || users[0];
+}
+
+export async function findUserByRole(role: UserRole): Promise<User | null> {
+    const db = getDb();
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("role", "==", role));
     
     try {
         const querySnapshot = await getDocs(q);
         if (querySnapshot.empty) {
             return null;
         }
-        
-        // Prefer returning an active user if multiple exist
-        const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
-        return users.find(u => u.status === "Activo") || users[0];
-
+        const userDoc = querySnapshot.docs[0];
+        return { id: userDoc.id, ...userDoc.data() } as User;
     } catch (error) {
-        console.error("Error finding user by email:", error);
+        console.error("Error finding user by role:", error);
         throw error;
     }
 }

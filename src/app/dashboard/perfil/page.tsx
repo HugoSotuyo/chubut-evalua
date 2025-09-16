@@ -18,6 +18,7 @@ export default function PerfilPage() {
   const { loading: usersLoading } = useUsers();
   
   const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,6 +28,7 @@ export default function PerfilPage() {
   useEffect(() => {
     if (user) {
       setName(user.name);
+      setEmail(user.email);
     }
   }, [user]);
 
@@ -34,7 +36,7 @@ export default function PerfilPage() {
     return <div>Cargando perfil...</div>;
   }
   
-  const isNameChanged = user.name !== name;
+  const isProfileChanged = user.name !== name || user.email !== email;
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,11 +64,11 @@ export default function PerfilPage() {
   };
   
   const handleProfileUpdate = async () => {
-    if (!isNameChanged || !user) return;
+    if (!isProfileChanged || !user) return;
     setIsSubmitting(true);
     try {
-        await updateUser({ name });
-        toast({ title: "Perfil Actualizado", description: "Tu nombre ha sido actualizado." });
+        await updateUser({ name, email });
+        toast({ title: "Perfil Actualizado", description: "Tus datos han sido actualizados." });
     } catch (error) {
         toast({ title: "Error", description: "No se pudo actualizar el perfil.", variant: "destructive" });
     } finally {
@@ -88,7 +90,7 @@ export default function PerfilPage() {
                 <KeyRound className="mr-2 h-4 w-4" />
                 Cambiar Contraseña
             </Button>
-            <Button onClick={handleProfileUpdate} disabled={!isNameChanged || isSubmitting}>
+            <Button onClick={handleProfileUpdate} disabled={!isProfileChanged || isSubmitting}>
                 <Save className="mr-2 h-4 w-4" />
                 {isSubmitting && !isPasswordDialogOpen ? "Guardando..." : "Guardar Cambios"}
             </Button>
@@ -129,7 +131,13 @@ export default function PerfilPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  <div className="space-y-2">
                     <Label htmlFor="email">Email / Usuario</Label>
-                    <Input id="email" value={user.email} readOnly />
+                    <Input 
+                        id="email" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)} 
+                        readOnly={user.role !== 'Evaluador'}
+                        disabled={isSubmitting}
+                    />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="escuela">Escuela</Label>
@@ -160,49 +168,49 @@ export default function PerfilPage() {
 
       <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
         <DialogContent>
-            <form onSubmit={handlePasswordChange}>
-                <DialogHeader>
-                    <DialogTitle>Cambiar mi Contraseña</DialogTitle>
-                    <DialogDescription>
-                        Ingresa tu nueva contraseña. Se recomienda usar una combinación segura que puedas recordar.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="new-password">Nueva Contraseña</Label>
-                        <Input 
-                            id="new-password" 
-                            type="password" 
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            required 
-                            disabled={isSubmitting}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="confirm-password">Confirmar Nueva Contraseña</Label>
-                        <Input 
-                            id="confirm-password" 
-                            type="password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            required 
-                            disabled={isSubmitting}
-                        />
-                    </div>
-                </div>
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button type="button" variant="secondary" disabled={isSubmitting}>Cancelar</Button>
-                    </DialogClose>
-                    <Button type="submit" disabled={isSubmitting}>
-                        <Save className="mr-2 h-4 w-4" />
-                        {isSubmitting ? "Guardando..." : "Guardar Contraseña"}
-                    </Button>
-                </DialogFooter>
-            </form>
+          <form onSubmit={handlePasswordChange}>
+              <DialogHeader>
+                  <DialogTitle>Cambiar mi Contraseña</DialogTitle>
+                  <DialogDescription>
+                      Ingresa tu nueva contraseña. Se recomienda usar una combinación segura que puedas recordar.
+                  </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                  <div className="space-y-2">
+                      <Label htmlFor="new-password">Nueva Contraseña</Label>
+                      <Input 
+                          id="new-password" 
+                          type="password" 
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          required 
+                          disabled={isSubmitting}
+                      />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="confirm-password">Confirmar Nueva Contraseña</Label>
+                      <Input 
+                          id="confirm-password" 
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required 
+                          disabled={isSubmitting}
+                      />
+                  </div>
+              </div>
+              <DialogFooter>
+                  <DialogClose asChild>
+                      <Button type="button" variant="secondary" disabled={isSubmitting}>Cancelar</Button>
+                  </DialogClose>
+                  <Button type="submit" disabled={isSubmitting}>
+                      <Save className="mr-2 h-4 w-4" />
+                      {isSubmitting ? "Guardando..." : "Guardar Contraseña"}
+                  </Button>
+              </DialogFooter>
+          </form>
         </DialogContent>
-      </Dialog>
+    </Dialog>
 
     </div>
   );
