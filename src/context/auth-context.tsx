@@ -3,11 +3,12 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import type { User } from '@/lib/types';
-import { updateUserPasswordInDb } from '@/lib/userService';
+import { updateUserPasswordInDb, updateUserInDb } from '@/lib/userService';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  updateUser: (updatedUser: User) => Promise<void>;
   updateUserPassword: (newPassword: string) => Promise<void>;
 }
 
@@ -33,6 +34,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
     }
   }, []);
+  
+  const updateUser = async (updatedUser: User) => {
+    if (!user || user.id !== updatedUser.id) {
+      throw new Error("Unauthorized update attempt.");
+    }
+    await updateUserInDb(updatedUser);
+    setUser(updatedUser);
+    sessionStorage.setItem(MOCK_USER_SESSION_KEY, JSON.stringify(updatedUser));
+  };
+
 
   const updateUserPassword = async (newPassword: string) => {
     if (!user) {
@@ -45,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
 
-  const value = { user, loading, updateUserPassword };
+  const value = { user, loading, updateUser, updateUserPassword };
 
   return (
     <AuthContext.Provider value={value}>
@@ -66,3 +77,5 @@ export const mockLogout = () => {
     sessionStorage.removeItem(MOCK_USER_SESSION_KEY);
     window.location.href = '/';
 };
+
+    

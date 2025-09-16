@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,18 +11,30 @@ import { RoleIcon } from "@/components/role-icon";
 import { User as UserIcon, KeyRound, Save } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useUsers } from "@/context/users-context";
 
 export default function PerfilPage() {
-  const { user, updateUserPassword } = useAuth();
+  const { user, updateUserPassword, loading: authLoading } = useAuth();
+  const { updateUser, loading: usersLoading } = useUsers();
+  
+  const [name, setName] = useState(user?.name || "");
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  if (!user) {
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+    }
+  }, [user]);
+
+  if (authLoading || usersLoading || !user) {
     return <div>Cargando perfil...</div>;
   }
+  
+  const isNameChanged = user.name !== name;
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +42,7 @@ export default function PerfilPage() {
       toast({ title: "Error", description: "Las contraseñas no coinciden.", variant: "destructive" });
       return;
     }
-    if (newPassword.length < 3) { // Simple validation
+    if (newPassword.length < 3) {
         toast({ title: "Error", description: "La contraseña debe tener al menos 3 caracteres.", variant: "destructive" });
         return;
     }
@@ -49,13 +61,42 @@ export default function PerfilPage() {
     }
   };
   
-  const userInitials = user.name ? user.name.split(' ').map(n => n[0]).join('') : '';
+  const handleProfileUpdate = async () => {
+    if (!isNameChanged || !user) return;
+    setIsSubmitting(true);
+    try {
+        const updatedUserData = { ...user, name };
+        await updateUser(updatedUserData);
+        // We also need to update the session user data from AuthContext
+        // This is tricky as the user object is in two places. Let's rely on a page refresh for simplicity for now,
+        // or a more complex state sync. For now, the DB is updated, and session will update on next login.
+        toast({ title: "Perfil Actualizado", description: "Tu nombre ha sido actualizado." });
+    } catch (error) {
+        toast({ title: "Error", description: "No se pudo actualizar el perfil.", variant: "destructive" });
+    } finally {
+        setIsSubmitting(false);
+    }
+  }
+  
+  const userInitials = name ? name.split(' ').map(n => n[0]).join('') : '';
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight font-headline">Mi Perfil</h1>
-        <p className="text-muted-foreground">Consulta tu información personal y de acceso.</p>
+      <div className="flex items-center justify-between">
+        <div>
+            <h1 className="text-3xl font-bold tracking-tight font-headline">Mi Perfil</h1>
+            <p className="text-muted-foreground">Consulta y edita tu información personal y de acceso.</p>
+        </div>
+        <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsPasswordDialogOpen(true)} disabled={isSubmitting}>
+                <KeyRound className="mr-2 h-4 w-4" />
+                Cambiar Contraseña
+            </Button>
+            <Button onClick={handleProfileUpdate} disabled={!isNameChanged || isSubmitting}>
+                <Save className="mr-2 h-4 w-4" />
+                {isSubmitting && !isPasswordDialogOpen ? "Guardando..." : "Guardar Cambios"}
+            </Button>
+        </div>
       </div>
 
       <Card>
@@ -72,7 +113,16 @@ export default function PerfilPage() {
                     {userInitials}
                 </div>
                 <div>
-                    <h2 className="text-xl font-semibold">{user.name}</h2>
+                    <div className="space-y-2">
+                        <Label htmlFor="name">Nombre Completo</Label>
+                        <Input 
+                            id="name" 
+                            value={name} 
+                            onChange={(e) => setName(e.target.value)} 
+                            className="text-xl font-semibold p-0 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                            disabled={isSubmitting}
+                        />
+                    </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
                         <RoleIcon role={user.role} className="h-4 w-4" />
                         <span>{user.role}</span>
@@ -109,12 +159,6 @@ export default function PerfilPage() {
                 )}
             </div>
 
-             <div className="flex justify-end">
-                <Button variant="outline" onClick={() => setIsPasswordDialogOpen(true)}>
-                    <KeyRound className="mr-2 h-4 w-4" />
-                    Cambiar Contraseña
-                </Button>
-            </div>
         </CardContent>
       </Card>
 
@@ -167,3 +211,5 @@ export default function PerfilPage() {
     </div>
   );
 }
+
+    

@@ -1,7 +1,7 @@
 
 
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
 import type { User } from "./types";
 
 const firebaseConfig = {
@@ -171,9 +171,17 @@ export async function updateUserInDb(user: User) {
     try {
         const userRef = doc(db, "users", user.id);
         const userData = { ...user };
-        // Don't save the id within the document itself
-        delete userData.id; 
-        await updateDoc(userRef, userData);
+        
+        const dataToSet: Partial<User> = {};
+        // We build a clean object to avoid saving "id" inside the document.
+        (Object.keys(userData) as Array<keyof User>).forEach(key => {
+            if (key !== 'id') {
+                // Type assertion is needed because TS can't infer that key is not 'id'.
+                (dataToSet as any)[key] = userData[key];
+            }
+        });
+        
+        await setDoc(userRef, dataToSet, { merge: true });
     } catch (error) {
         console.error(`Error updating user ${user.id}:`, error);
         throw new Error("Failed to update user in database.");
@@ -204,3 +212,5 @@ export async function deleteUserFromDb(userId: string) {
         throw new Error("Failed to delete user from database.");
     }
 }
+
+    
