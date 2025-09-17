@@ -124,7 +124,7 @@ export default function ResultadosPage() {
 
         let results = allResults;
 
-        // Role-based pre-filtering. Evaluador, Administrador, and Referente see everything by default.
+        // Role-based pre-filtering.
         if (user.role === "Director") {
             results = results.filter(r => r.school === user.school);
         } else if (user.role === "Docente") {
@@ -136,31 +136,42 @@ export default function ResultadosPage() {
             );
         }
         
-        // Then apply UI filters (not for Docente)
+        // --- Apply UI filters for all roles ---
+
+        // School Year Filter (not shown for Docente, but logic is here for others)
+        if (user.role !== 'Docente' && appliedFilters.schoolYear !== "all") {
+            results = results.filter(r => r.schoolYear === appliedFilters.schoolYear);
+        }
+
+        // Exam Filter
+        if (appliedFilters.exam !== "all") {
+            results = results.filter(r => r.examName === appliedFilters.exam);
+        }
+
+        // School Filter (not shown for Docente)
+        if (user.role !== 'Docente' && appliedFilters.school !== "all") {
+            results = results.filter(r => r.school === appliedFilters.school);
+        }
+        
+        // Grade & Course Filters (not shown for Docente)
         if (user.role !== 'Docente') {
-            if (appliedFilters.schoolYear !== "all") {
-                results = results.filter(r => r.schoolYear === appliedFilters.schoolYear);
-            }
-            if (appliedFilters.exam !== "all") {
-                results = results.filter(r => r.examName === appliedFilters.exam);
-            }
-            if (appliedFilters.school !== "all") {
-                results = results.filter(r => r.school === appliedFilters.school);
-            }
             if (appliedFilters.grade !== "all") {
                 results = results.filter(r => r.grade === appliedFilters.grade);
             }
             if (appliedFilters.course !== "all") {
                 results = results.filter(r => r.course === appliedFilters.course);
             }
-            if (appliedFilters.studentName) {
-                results = results.filter(r => r.studentName.toLowerCase().includes(appliedFilters.studentName.toLowerCase()));
-            }
-            if (appliedFilters.status !== "all") {
-                results = results.filter(r => r.status === appliedFilters.status);
-            }
+        }
+        
+        // Student Name Filter
+        if (appliedFilters.studentName) {
+            results = results.filter(r => r.studentName.toLowerCase().includes(appliedFilters.studentName.toLowerCase()));
         }
 
+        // Status Filter
+        if (appliedFilters.status !== "all") {
+            results = results.filter(r => r.status === appliedFilters.status);
+        }
 
         // Global search term
         if (searchTerm) {
@@ -486,5 +497,6 @@ export default function ResultadosPage() {
 }
 
     
+
 
 
