@@ -91,6 +91,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
   }, [pathname]);
 
   const showSearch = ![
+    '/dashboard',
     '/dashboard/analisis',
     '/dashboard/perfil',
     '/dashboard/admin',
