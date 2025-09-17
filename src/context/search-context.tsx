@@ -1,7 +1,8 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 interface SearchContextType {
   searchTerm: string;
@@ -12,6 +13,12 @@ const SearchContext = createContext<SearchContextType | undefined>(undefined);
 
 export function SearchProvider({ children }: { children: ReactNode }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // Clear search term on route change
+    setSearchTerm('');
+  }, [pathname]);
 
   return (
     <SearchContext.Provider value={{ searchTerm, setSearchTerm }}>
