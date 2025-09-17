@@ -13,11 +13,13 @@ import { useResults } from "@/context/results-context";
 import { StudentActionsClient } from "./student-actions-client";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useSearch } from "@/context/search-context";
 
 export default function AlumnosPage() {
   const { user } = useAuth(); 
   const { students: allStudents } = useStudents();
   const { results: allResults } = useResults();
+  const { searchTerm } = useSearch();
 
   const [gradeFilter, setGradeFilter] = useState("all");
   const [courseFilter, setCourseFilter] = useState("all");
@@ -60,8 +62,15 @@ export default function AlumnosPage() {
         filtered = filtered.filter(student => student.course === courseFilter);
       }
     }
+
+    if (searchTerm) {
+      filtered = filtered.filter(student => 
+        student.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
     return filtered;
-  }, [studentsInScope, gradeFilter, courseFilter, user.role]);
+  }, [studentsInScope, gradeFilter, courseFilter, user.role, searchTerm]);
   
   const availableGrades = useMemo(() => {
       const grades = studentsInScope.map(s => s.grade);
