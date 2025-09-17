@@ -17,6 +17,7 @@ import { useExams } from "@/context/exams-context";
 import { useResults } from "@/context/results-context"
 import { useSchools } from "@/context/schools-context"
 import { useStudents } from "@/context/students-context"
+import { useSettings } from "@/context/settings-context"
 
 const GRADE_COLORS: Record<string, { main: string, approved: string, disapproved: string }> = {
     "1er Grado": { main: "hsl(var(--chart-1))", approved: "hsl(var(--chart-1))", disapproved: "hsl(var(--chart-1-light))" },
@@ -44,6 +45,7 @@ export default function AnalisisPage() {
     const { results, loading: resultsLoading } = useResults();
     const { schools, regions, loading: schoolsLoading } = useSchools();
     const { students, loading: studentsLoading } = useStudents();
+    const { settings } = useSettings();
     const searchParams = useSearchParams();
 
     const [filters, setFilters] = useState({
@@ -66,7 +68,7 @@ export default function AnalisisPage() {
                 grade: "all",
                 course: "all",
                 exam: "all",
-                schoolYear: "all",
+                schoolYear: settings.currentSchoolYear,
             };
 
             if (user.role === 'Director') {
@@ -81,7 +83,7 @@ export default function AnalisisPage() {
             setAppliedFilters(initialFilters);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user]);
+    }, [user, settings.currentSchoolYear]);
 
     // Effect to handle exam filter from URL
     useEffect(() => {
@@ -145,31 +147,35 @@ export default function AnalisisPage() {
             filteredResults = filteredResults.filter(r => 
                 r.school === user.school &&
                 r.grade === user.grade &&
-                r.course === user.course
+                r.course === user.course &&
+                r.schoolYear === settings.currentSchoolYear
             );
         }
 
-        // 2. Apply user-selected filters
-        if (appliedFilters.schoolYear !== "all") {
-            filteredResults = filteredResults.filter(r => r.schoolYear === appliedFilters.schoolYear);
+        // 2. Apply user-selected filters (not applied for Docente)
+        if (user?.role !== 'Docente') {
+            if (appliedFilters.schoolYear !== "all") {
+                filteredResults = filteredResults.filter(r => r.schoolYear === appliedFilters.schoolYear);
+            }
+            if (appliedFilters.region !== "all") {
+                const schoolsInRegion = schools.filter(s => s.region === appliedFilters.region).map(s => s.name);
+                const schoolsInRegionSet = new Set(schoolsInRegion);
+                filteredResults = filteredResults.filter(r => schoolsInRegionSet.has(r.school));
+            }
+            if (appliedFilters.exam !== 'all') {
+                filteredResults = filteredResults.filter(r => r.examName === appliedFilters.exam);
+            }
+            if (appliedFilters.school !== 'all') {
+                filteredResults = filteredResults.filter(r => r.school === appliedFilters.school);
+            }
+            if (appliedFilters.grade !== 'all') {
+                filteredResults = filteredResults.filter(r => r.grade === appliedFilters.grade);
+            }
+            if (appliedFilters.course !== 'all') {
+                filteredResults = filteredResults.filter(r => r.course === appliedFilters.course);
+            }
         }
-        if (appliedFilters.region !== "all") {
-            const schoolsInRegion = schools.filter(s => s.region === appliedFilters.region).map(s => s.name);
-            const schoolsInRegionSet = new Set(schoolsInRegion);
-            filteredResults = filteredResults.filter(r => schoolsInRegionSet.has(r.school));
-        }
-        if (appliedFilters.exam !== 'all') {
-            filteredResults = filteredResults.filter(r => r.examName === appliedFilters.exam);
-        }
-        if (appliedFilters.school !== 'all') {
-            filteredResults = filteredResults.filter(r => r.school === appliedFilters.school);
-        }
-        if (appliedFilters.grade !== 'all') {
-            filteredResults = filteredResults.filter(r => r.grade === appliedFilters.grade);
-        }
-        if (appliedFilters.course !== 'all') {
-            filteredResults = filteredResults.filter(r => r.course === appliedFilters.course);
-        }
+        
 
         // --- Data: Aprobados vs. Desaprobados ---
         const aprobadosPorGrado: Record<string, { Aprobados: number, Desaprobados: number }> = {};
@@ -273,7 +279,7 @@ export default function AnalisisPage() {
         }));
 
         return { dataAprobados, examAnalysisData, questionAnalysisData };
-    }, [appliedFilters, user, results, exams, schools]);
+    }, [appliedFilters, user, results, exams, schools, settings.currentSchoolYear]);
     
     const handleExport = () => {
         let csvContent = "";
@@ -392,6 +398,8 @@ export default function AnalisisPage() {
 
     const showGlobalFilters = ['Evaluador', 'Administrador', 'Referente'].includes(user.role);
     const showGradeCourseFilters = user.role !== 'Docente';
+    const showSchoolYearFilter = user.role !== 'Docente';
+
 
     return (
         <div className="flex flex-col gap-8">
@@ -415,16 +423,18 @@ export default function AnalisisPage() {
                     <CardDescription>Selecciona los criterios para acotar tu búsqueda. Los gráficos se actualizarán automáticamente.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="filtro-ciclo-lectivo">Ciclo Lectivo</Label>
-                        <Select onValueChange={(v) => handleFilterChange('schoolYear', v)} value={filters.schoolYear}>
-                            <SelectTrigger id="filtro-ciclo-lectivo"><SelectValue placeholder="Ciclo" /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todos</SelectItem>
-                                {availableSchoolYears.map((year) => <SelectItem key={year} value={year}>{year}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                    {showSchoolYearFilter && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="filtro-ciclo-lectivo">Ciclo Lectivo</Label>
+                            <Select onValueChange={(v) => handleFilterChange('schoolYear', v)} value={filters.schoolYear}>
+                                <SelectTrigger id="filtro-ciclo-lectivo"><SelectValue placeholder="Ciclo" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todos</SelectItem>
+                                    {availableSchoolYears.map((year) => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
                     {showGlobalFilters && (
                         <>
                             <div className="grid gap-2">

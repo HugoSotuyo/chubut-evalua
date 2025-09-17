@@ -31,6 +31,7 @@ import { useStudents } from "@/context/students-context";
 import { useExams } from "@/context/exams-context";
 import { useResults } from "@/context/results-context";
 import { useAuth } from "@/context/auth-context";
+import { useSettings } from "@/context/settings-context";
 
 
 export default function Dashboard() {
@@ -39,6 +40,7 @@ export default function Dashboard() {
     const { students } = useStudents();
     const { exams } = useExams();
     const { results } = useResults();
+    const { settings } = useSettings();
 
     const filteredData = useMemo(() => {
         if (!user) return { users: [], students: [], exams: [], results: [] };
@@ -52,14 +54,24 @@ export default function Dashboard() {
         }
 
         if (user.role === 'Docente') {
-            const courseStudents = students.filter(s => s.school === user.school && s.grade === user.grade && s.course === user.course);
-            const courseResults = results.filter(r => r.school === user.school && r.grade === user.grade && r.course === user.course);
+            const courseStudents = students.filter(s => 
+                s.school === user.school && 
+                s.grade === user.grade && 
+                s.course === user.course &&
+                s.schoolYear === settings.currentSchoolYear
+            );
+            const courseResults = results.filter(r => 
+                r.school === user.school && 
+                r.grade === user.grade && 
+                r.course === user.course &&
+                r.schoolYear === settings.currentSchoolYear
+            );
             const courseExams = exams.filter(e => e.grade === user.grade);
              return { users, students: courseStudents, exams: courseExams, results: courseResults };
         }
 
         return { users, students, exams, results };
-    }, [user, users, students, exams, results]);
+    }, [user, users, students, exams, results, settings.currentSchoolYear]);
 
     const stats = useMemo(() => {
         const activeTeachers = filteredData.users.filter(u => u.role === 'Docente' && u.status === 'Activo').length;

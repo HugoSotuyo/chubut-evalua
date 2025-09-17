@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useCa
 import { getAllStudents, addStudent as addStudentDb, updateStudent as updateStudentDb, deleteStudent as deleteStudentDb } from '@/lib/studentsService';
 import type { Student } from '@/lib/types';
 import { useSettings } from './settings-context';
+import { useAuth } from './auth-context';
 
 type NewStudent = Omit<Student, 'id' | 'results' | 'schoolYear'>;
 
@@ -22,22 +23,35 @@ export function StudentsProvider({ children }: { children: ReactNode }) {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const { settings, loading: settingsLoading } = useSettings();
+  const { user } = useAuth();
 
   const refreshStudents = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      const allStudents = await getAllStudents();
+      let allStudents = await getAllStudents();
+      
+      // If the user is a teacher, pre-filter the students list to only the current school year.
+      if (user.role === 'Docente' && settings.currentSchoolYear) {
+          allStudents = allStudents.filter(student => student.schoolYear === settings.currentSchoolYear);
+      }
+      
       setStudents(allStudents);
     } catch (error) {
       console.error("Failed to fetch students:", error);
     } finally {
         setLoading(false);
     }
-  }, []);
+  }, [user, settings.currentSchoolYear]);
 
   useEffect(() => {
-    refreshStudents();
-  }, [refreshStudents]);
+    if (!settingsLoading) {
+      refreshStudents();
+    }
+  }, [refreshStudents, settingsLoading]);
 
   const addStudent = async (studentData: NewStudent) => {
     const studentWithYear = { ...studentData, schoolYear: settings.currentSchoolYear };

@@ -14,16 +14,18 @@ import { StudentActionsClient } from "./student-actions-client";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSearch } from "@/context/search-context";
+import { useSettings } from "@/context/settings-context";
 
 export default function AlumnosPage() {
   const { user } = useAuth(); 
   const { students: allStudents } = useStudents();
   const { results: allResults } = useResults();
   const { searchTerm } = useSearch();
+  const { settings } = useSettings();
 
   const [gradeFilter, setGradeFilter] = useState("all");
   const [courseFilter, setCourseFilter] = useState("all");
-  const [schoolYearFilter, setSchoolYearFilter] = useState("all");
+  const [schoolYearFilter, setSchoolYearFilter] = useState(settings.currentSchoolYear);
 
   if (!user) {
     return <div>Cargando...</div>
