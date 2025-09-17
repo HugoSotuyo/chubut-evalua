@@ -152,6 +152,11 @@ export default function AnalisisPage() {
             );
         }
 
+        // Apply exam filter for all roles if selected
+        if (appliedFilters.exam !== 'all') {
+            filteredResults = filteredResults.filter(r => r.examName === appliedFilters.exam);
+        }
+
         // 2. Apply user-selected filters (not applied for Docente)
         if (user?.role !== 'Docente') {
             if (appliedFilters.schoolYear !== "all") {
@@ -161,9 +166,6 @@ export default function AnalisisPage() {
                 const schoolsInRegion = schools.filter(s => s.region === appliedFilters.region).map(s => s.name);
                 const schoolsInRegionSet = new Set(schoolsInRegion);
                 filteredResults = filteredResults.filter(r => schoolsInRegionSet.has(r.school));
-            }
-            if (appliedFilters.exam !== 'all') {
-                filteredResults = filteredResults.filter(r => r.examName === appliedFilters.exam);
             }
             if (appliedFilters.school !== 'all') {
                 filteredResults = filteredResults.filter(r => r.school === appliedFilters.school);
