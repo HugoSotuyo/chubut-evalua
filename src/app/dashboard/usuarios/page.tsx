@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useMemo, useEffect } from "react";
@@ -47,6 +48,7 @@ export default function UsuariosPage() {
     school: "all",
     grade: "all",
     course: "all",
+    schoolYear: "all",
   });
   const [appliedFilters, setAppliedFilters] = useState(filters);
 
@@ -75,6 +77,10 @@ export default function UsuariosPage() {
     return [...new Set(courses)].sort();
   }, [users]);
 
+  const uniqueSchoolYears = useMemo(() => {
+    return [...new Set(users.map(u => u.schoolYear).filter(Boolean))].sort((a,b) => b.localeCompare(a));
+  }, [users]);
+
   const filteredUsers = useMemo(() => {
     if (!currentUser) return [];
 
@@ -94,6 +100,9 @@ export default function UsuariosPage() {
         }
         if (appliedFilters.course !== "all") {
             results = results.filter(u => u.course === appliedFilters.course);
+        }
+        if (appliedFilters.schoolYear !== "all") {
+            results = results.filter(u => u.schoolYear === appliedFilters.schoolYear);
         }
     }
     
@@ -248,7 +257,21 @@ export default function UsuariosPage() {
                     <CardDescription>Filtra la lista de usuarios por diferentes criterios.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="school-year-filter">Ciclo Lectivo</Label>
+                            <Select onValueChange={(v) => handleFilterChange("schoolYear", v)} value={filters.schoolYear}>
+                                <SelectTrigger id="school-year-filter">
+                                    <SelectValue placeholder="Seleccionar ciclo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todos los Ciclos</SelectItem>
+                                    {uniqueSchoolYears.map(year => (
+                                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <div className="grid gap-2">
                             <Label htmlFor="role-filter">Rol</Label>
                             <Select onValueChange={(v) => handleFilterChange("role", v)} value={filters.role}>

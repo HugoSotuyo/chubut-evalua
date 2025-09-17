@@ -24,18 +24,16 @@ export function ResultsProvider({ children }: { children: ReactNode }) {
   const { settings, loading: settingsLoading } = useSettings();
 
   const refreshResults = useCallback(async () => {
-    if (settingsLoading) return;
     setLoading(true);
     try {
         const allResults = await getAllResults();
-        const filteredResults = allResults.filter(r => r.schoolYear === settings.currentSchoolYear);
-        setResults(filteredResults);
+        setResults(allResults);
     } catch (error) {
         console.error("Failed to fetch results:", error);
     } finally {
         setLoading(false);
     }
-  }, [settings.currentSchoolYear, settingsLoading]);
+  }, []);
 
   useEffect(() => {
     refreshResults();

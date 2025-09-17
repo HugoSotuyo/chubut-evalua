@@ -13,7 +13,7 @@ export type User = {
   grade?: string;
   course?: string;
   dni?: string;
-  schoolYear?: string;
+  schoolYear: string;
 };
 
 export type Question = {

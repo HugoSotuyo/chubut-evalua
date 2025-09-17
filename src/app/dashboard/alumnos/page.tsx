@@ -23,6 +23,7 @@ export default function AlumnosPage() {
 
   const [gradeFilter, setGradeFilter] = useState("all");
   const [courseFilter, setCourseFilter] = useState("all");
+  const [schoolYearFilter, setSchoolYearFilter] = useState("all");
 
   if (!user) {
     return <div>Cargando...</div>
@@ -34,9 +35,16 @@ export default function AlumnosPage() {
   })), [allStudents, allResults]);
 
   const studentsInScope = useMemo(() => {
+    let baseList = studentsWithResults;
+    
+    // Primero, filtrar por ciclo lectivo si no es "todos"
+    if (schoolYearFilter !== "all") {
+        baseList = baseList.filter(student => student.schoolYear === schoolYearFilter);
+    }
+      
     if (user.role === 'Docente') {
       if (user.school && user.grade && user.course) {
-        return studentsWithResults.filter(student => 
+        return baseList.filter(student => 
             student.school === user.school && 
             student.grade === user.grade && 
             student.course === user.course
@@ -45,12 +53,12 @@ export default function AlumnosPage() {
       return [];
     } else if (user.role === 'Director') {
       if (user.school) {
-        return studentsWithResults.filter(student => student.school === user.school);
+        return baseList.filter(student => student.school === user.school);
       }
       return [];
     }
-    return studentsWithResults;
-  }, [studentsWithResults, user]);
+    return baseList;
+  }, [studentsWithResults, user, schoolYearFilter]);
   
   const studentList = useMemo(() => {
     let filtered = studentsInScope;
@@ -81,6 +89,11 @@ export default function AlumnosPage() {
       const courses = studentsInScope.map(s => s.course);
       return [...new Set(courses)].sort();
   }, [studentsInScope]);
+  
+  const availableSchoolYears = useMemo(() => {
+    return [...new Set(allStudents.map(s => s.schoolYear).filter(Boolean))].sort((a, b) => b.localeCompare(a));
+  }, [allStudents]);
+
 
   const getCardTexts = () => {
     switch (user.role) {
@@ -129,6 +142,20 @@ export default function AlumnosPage() {
             <CardDescription>Filtra la lista de alumnos por grado y curso.</CardDescription>
           </CardHeader>
           <CardContent className="grid md:grid-cols-4 gap-4">
+             <div className="grid gap-2">
+              <Label htmlFor="school-year-filter">Ciclo Lectivo</Label>
+              <Select onValueChange={setSchoolYearFilter} value={schoolYearFilter}>
+                <SelectTrigger id="school-year-filter">
+                  <SelectValue placeholder="Seleccionar ciclo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los Ciclos</SelectItem>
+                  {availableSchoolYears.map((year) => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="grade-filter">Grado</Label>
               <Select onValueChange={setGradeFilter} value={gradeFilter}>

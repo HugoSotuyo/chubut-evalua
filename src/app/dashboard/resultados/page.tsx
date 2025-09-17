@@ -31,6 +31,7 @@ type Filters = {
     status: string;
     grade: string;
     course: string;
+    schoolYear: string;
 }
 
 export default function ResultadosPage() {
@@ -49,6 +50,7 @@ export default function ResultadosPage() {
         status: "all",
         grade: "all",
         course: "all",
+        schoolYear: "all",
     });
 
     const [appliedFilters, setAppliedFilters] = useState<Filters>(filters);
@@ -68,6 +70,7 @@ export default function ResultadosPage() {
                 status: "all",
                 grade: user.role === 'Docente' ? user.grade ?? 'all' : 'all',
                 course: user.role === 'Docente' ? user.course ?? 'all' : 'all',
+                schoolYear: 'all',
             };
             setFilters(initialFilters);
             setAppliedFilters(initialFilters);
@@ -94,6 +97,10 @@ export default function ResultadosPage() {
         return schools.map(s => s.name).sort();
     }, [schools]);
 
+    const availableSchoolYears = useMemo(() => {
+        return [...new Set(allResults.map(r => r.schoolYear).filter(Boolean))].sort((a,b) => b.localeCompare(a));
+    }, [allResults]);
+
 
     const filteredResults = useMemo(() => {
         if (!user) return [];
@@ -112,6 +119,9 @@ export default function ResultadosPage() {
         }
         
         // Then apply UI filters
+        if (appliedFilters.schoolYear !== "all") {
+            results = results.filter(r => r.schoolYear === appliedFilters.schoolYear);
+        }
         if (appliedFilters.exam !== "all") {
             results = results.filter(r => r.examName === appliedFilters.exam);
         }
@@ -148,9 +158,9 @@ export default function ResultadosPage() {
     }
     
     const handleExport = () => {
-        const headers = ["ID", "Alumno", "Examen", "Escuela", "Grado", "Curso", "Nota", "Estado"];
+        const headers = ["ID", "Alumno", "Examen", "Escuela", "Grado", "Curso", "Nota", "Estado", "Ciclo Lectivo"];
         const rows = filteredResults.map(res => 
-            [res.id, res.studentName, res.examName, res.school, res.grade, res.course, res.score, res.status].join(';')
+            [res.id, res.studentName, res.examName, res.school, res.grade, res.course, res.score, res.status, res.schoolYear].join(';')
         );
         
         const bom = "﻿";
@@ -236,7 +246,19 @@ export default function ResultadosPage() {
                     </div>
                     <CardDescription>Utiliza los filtros para encontrar resultados específicos y luego presiona "Aplicar Filtros".</CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 xl:grid-cols-7 gap-6 items-end">
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 xl:grid-cols-8 gap-6 items-end">
+                    <div className="grid gap-2">
+                        <Label htmlFor="filtro-ciclo-lectivo">Ciclo Lectivo</Label>
+                        <Select onValueChange={(value) => handleFilterChange("schoolYear", value)} value={filters.schoolYear}>
+                            <SelectTrigger id="filtro-ciclo-lectivo"><SelectValue placeholder="Ciclo" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos</SelectItem>
+                                {availableSchoolYears.map(year => (
+                                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                     <div className="grid gap-2">
                         <Label htmlFor="filtro-examen">Examen</Label>
                         <Select onValueChange={(value) => handleFilterChange("exam", value)} value={filters.exam}>

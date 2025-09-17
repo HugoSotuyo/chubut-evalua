@@ -24,18 +24,16 @@ export function StudentsProvider({ children }: { children: ReactNode }) {
   const { settings, loading: settingsLoading } = useSettings();
 
   const refreshStudents = useCallback(async () => {
-    if (settingsLoading) return;
     setLoading(true);
     try {
       const allStudents = await getAllStudents();
-      const filteredStudents = allStudents.filter(s => s.schoolYear === settings.currentSchoolYear);
-      setStudents(filteredStudents);
+      setStudents(allStudents);
     } catch (error) {
       console.error("Failed to fetch students:", error);
     } finally {
         setLoading(false);
     }
-  }, [settings.currentSchoolYear, settingsLoading]);
+  }, []);
 
   useEffect(() => {
     refreshStudents();
