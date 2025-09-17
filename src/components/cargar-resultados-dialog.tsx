@@ -134,7 +134,11 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
             const maxPuntaje = question?.puntaje ?? 0;
         
             if (sanitizedValue === '' || sanitizedValue === '.') {
-                setScores(prev => ({ ...prev, [questionIndex]: 0 }));
+                setScores(prev => {
+                    const newScores = {...prev};
+                    delete newScores[questionIndex];
+                    return newScores;
+                });
                 return;
             }
         
@@ -151,7 +155,10 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
     };
     
     const handleScoreBlur = (questionIndex: number) => {
-        const score = scores[questionIndex] || 0;
+        const score = scores[questionIndex];
+        // Don't check for undefined here because a score of 0 is valid
+        if (score === undefined) return;
+        
         const maxPuntaje = selectedExam?.questions[questionIndex]?.puntaje ?? 0;
         if (score > maxPuntaje) {
             setDisplayScores(prev => ({ ...prev, [questionIndex]: maxPuntaje.toString() }));
@@ -162,11 +169,21 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
             });
         }
     }
+    
+    const areAllScoresEntered = useMemo(() => {
+        if (!selectedExam) {
+            return false;
+        }
+        const questionCount = selectedExam.questions.length;
+        const enteredScoresCount = Object.keys(scores).length;
+        return questionCount === enteredScoresCount;
+    }, [selectedExam, scores]);
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedExam) {
-            toast({ variant: "destructive", title: "Error", description: "Por favor, selecciona un examen." });
+        if (!selectedExam || !areAllScoresEntered) {
+            toast({ variant: "destructive", title: "Error", description: "Por favor, selecciona un examen y califica todas las preguntas." });
             return;
         }
 
@@ -271,7 +288,7 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
                              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                                 Cancelar
                             </Button>
-                            <Button type="submit" disabled={!selectedExamId}>
+                            <Button type="submit" disabled={!selectedExamId || !areAllScoresEntered}>
                                 <Save className="mr-2 h-4 w-4" />
                                 Guardar Resultados
                             </Button>
