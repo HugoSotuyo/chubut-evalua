@@ -57,25 +57,43 @@ export default function UsuariosPage() {
   const { user: currentUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // When school year filter changes, reset other filters
+  useEffect(() => {
+    setFilters(prev => ({
+        ...prev,
+        role: "all",
+        school: "all",
+        grade: "all",
+        course: "all",
+    }));
+  }, [filters.schoolYear]);
+
+  const usersForFilterOptions = useMemo(() => {
+    if (filters.schoolYear === 'all') {
+        return users;
+    }
+    return users.filter(u => u.schoolYear === filters.schoolYear);
+  }, [users, filters.schoolYear]);
+
   const uniqueRoles = useMemo(() => {
-    const roles = users.map(user => user.role);
+    const roles = usersForFilterOptions.map(user => user.role);
     return [...new Set(roles)].filter(role => role !== 'Evaluador');
-  }, [users]);
+  }, [usersForFilterOptions]);
   
   const uniqueSchools = useMemo(() => {
-    const schoolNames = users.map(user => user.school).filter(Boolean);
+    const schoolNames = usersForFilterOptions.map(user => user.school).filter(Boolean);
     return [...new Set(schoolNames)].sort();
-  }, [users]);
+  }, [usersForFilterOptions]);
 
   const uniqueGrades = useMemo(() => {
-    const grades = users.map(user => user.grade).filter(Boolean);
+    const grades = usersForFilterOptions.map(user => user.grade).filter(Boolean);
     return [...new Set(grades)].sort();
-  }, [users]);
+  }, [usersForFilterOptions]);
 
   const uniqueCourses = useMemo(() => {
-    const courses = users.map(user => user.course).filter(Boolean);
+    const courses = usersForFilterOptions.map(user => user.course).filter(Boolean);
     return [...new Set(courses)].sort();
-  }, [users]);
+  }, [usersForFilterOptions]);
 
   const uniqueSchoolYears = useMemo(() => {
     return [...new Set(users.map(u => u.schoolYear).filter(Boolean))].sort((a,b) => b.localeCompare(a));
@@ -730,3 +748,4 @@ function ChangePasswordDialog({ isOpen, onOpenChange, user, onSave, isSubmitting
         </Dialog>
     );
 }
+
