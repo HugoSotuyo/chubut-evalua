@@ -24,13 +24,13 @@ export default function RegisterPage() {
         </div>
       </div>
       <div className="hidden bg-secondary lg:flex lg:items-center lg:justify-center lg:flex-col lg:p-12">
-        <div className="flex items-center gap-4 text-primary-foreground mb-4">
+        <div className="flex items-center gap-4 text-secondary-foreground mb-4">
           <GraduationCap className="h-12 w-12" />
           <h1 className="text-4xl font-bold font-headline">
             Chubut evalúa
           </h1>
         </div>
-        <p className="text-xl text-primary-foreground/80 font-medium text-center mb-8">
+        <p className="text-xl text-secondary-foreground/80 font-medium text-center mb-8">
           Provincia de Chubut
         </p>
         <Image
@@ -41,7 +41,7 @@ export default function RegisterPage() {
           data-ai-hint="classroom teaching"
           className="h-auto w-full max-w-3xl rounded-lg object-cover shadow-2xl"
         />
-        <p className="text-center text-primary-foreground/60 mt-8 text-sm">
+        <p className="text-center text-secondary-foreground/60 mt-8 text-sm">
           Fomentando la excelencia académica en cada rincón de la provincia.
         </p>
       </div>
