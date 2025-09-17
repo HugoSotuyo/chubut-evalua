@@ -41,10 +41,10 @@ const getGradeOrder = (grade: string): number => {
 
 export default function AnalisisPage() {
     const { user, loading: authLoading } = useAuth();
-    const { exams, loading: examsLoading } = useExams();
-    const { results, loading: resultsLoading } = useResults();
-    const { schools, regions, loading: schoolsLoading } = useSchools();
-    const { students, loading: studentsLoading } = useStudents();
+    const { exams: allExams, loading: examsLoading } = useExams();
+    const { results: allResults, loading: resultsLoading } = useResults();
+    const { schools: allSchools, regions: allRegions, loading: schoolsLoading } = useSchools();
+    const { students: allStudents, loading: studentsLoading } = useStudents();
     const { settings } = useSettings();
     const searchParams = useSearchParams();
 
@@ -68,7 +68,7 @@ export default function AnalisisPage() {
                 grade: "all",
                 course: "all",
                 exam: "all",
-                schoolYear: settings.currentSchoolYear,
+                schoolYear: user.role === 'Docente' ? settings.currentSchoolYear : "all",
             };
 
             if (user.role === 'Director') {
@@ -84,13 +84,26 @@ export default function AnalisisPage() {
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, settings.currentSchoolYear]);
+    
+     // When school year filter changes, reset other filters
+    useEffect(() => {
+        setFilters(prev => ({
+            ...prev,
+            region: 'all',
+            school: (user?.role === "Director" || user?.role === "Docente") ? user.school : 'all',
+            grade: user?.role === 'Docente' ? user.grade ?? 'all' : 'all',
+            course: user?.role === 'Docente' ? user.course ?? 'all' : 'all',
+            exam: 'all',
+        }));
+    }, [filters.schoolYear, user]);
+
 
     // Effect to handle exam filter from URL
     useEffect(() => {
         const examFromUrl = searchParams.get("exam");
         if (examFromUrl) {
             const decodedExamName = decodeURIComponent(examFromUrl);
-            const examExists = exams.some(e => e.name === decodedExamName);
+            const examExists = allExams.some(e => e.name === decodedExamName);
             if (examExists && decodedExamName !== filters.exam) {
                  const newFilters = { ...filters, exam: decodedExamName };
                  setFilters(newFilters);
@@ -98,35 +111,53 @@ export default function AnalisisPage() {
             }
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchParams, exams]);
+    }, [searchParams, allExams]);
+
+    const availableSchoolYears = useMemo(() => {
+        return [...new Set(allResults.map(r => r.schoolYear).filter(Boolean))].sort((a,b) => b.localeCompare(a));
+    }, [allResults]);
+
+    const resultsForFilterOptions = useMemo(() => {
+        if (filters.schoolYear === 'all') {
+            return allResults;
+        }
+        return allResults.filter(r => r.schoolYear === filters.schoolYear);
+    }, [allResults, filters.schoolYear]);
+
+    const studentsForFilterOptions = useMemo(() => {
+        if (filters.schoolYear === 'all') {
+            return allStudents;
+        }
+        return allStudents.filter(s => s.schoolYear === filters.schoolYear);
+    }, [allStudents, filters.schoolYear]);
 
 
     const availableRegions = useMemo(() => {
-        return regions.map(d => d.name).sort((a,b) => a.localeCompare(b));
-    }, [regions]);
+        return allRegions.map(d => d.name).sort((a,b) => a.localeCompare(b));
+    }, [allRegions]);
 
     const availableSchools = useMemo(() => {
-        return schools.map(s => s.name).sort();
-    }, [schools]);
+        const schoolNames = new Set(resultsForFilterOptions.map(r => r.school));
+        return Array.from(schoolNames).sort();
+    }, [resultsForFilterOptions]);
     
     const availableGrades = useMemo(() => {
-        return [...new Set(students.map(s => s.grade).filter(Boolean))].sort();
-    }, [students]);
+        const gradeNames = new Set(studentsForFilterOptions.map(s => s.grade).filter(Boolean));
+        return Array.from(gradeNames).sort();
+    }, [studentsForFilterOptions]);
 
     const availableCourses = useMemo(() => {
-        return [...new Set(students.map(s => s.course).filter(Boolean))].sort();
-    }, [students]);
+        const courseNames = new Set(studentsForFilterOptions.map(s => s.course).filter(Boolean));
+        return Array.from(courseNames).sort();
+    }, [studentsForFilterOptions]);
     
     const availableExams = useMemo(() => {
         if (user?.role === 'Docente' && user.grade) {
-            return exams.filter(e => e.grade === user.grade && e.status === 'Cerrado');
+            return allExams.filter(e => e.grade === user.grade && e.status === 'Cerrado');
         }
-        return exams;
-    }, [exams, user]);
-
-    const availableSchoolYears = useMemo(() => {
-        return [...new Set(results.map(r => r.schoolYear).filter(Boolean))].sort((a,b) => b.localeCompare(a));
-    }, [results]);
+        const examNames = new Set(resultsForFilterOptions.map(r => r.examName));
+        return Array.from(examNames).sort().map(name => ({ id: name, name }));
+    }, [resultsForFilterOptions, allExams, user]);
 
     const handleFilterChange = (filterName: keyof typeof filters, value: string) => {
         setFilters(prev => ({...prev, [filterName]: value}));
@@ -137,8 +168,8 @@ export default function AnalisisPage() {
     }
     
     const { dataAprobados, examAnalysisData, questionAnalysisData } = useMemo(() => {
-        const existingExamIds = new Set(exams.map(e => e.id));
-        let filteredResults = results.filter(r => existingExamIds.has(r.examId));
+        const existingExamIds = new Set(allExams.map(e => e.id));
+        let filteredResults = allResults.filter(r => existingExamIds.has(r.examId));
 
         // 1. Role-based pre-filtering
         if (user?.role === 'Director') {
@@ -163,7 +194,7 @@ export default function AnalisisPage() {
                 filteredResults = filteredResults.filter(r => r.schoolYear === appliedFilters.schoolYear);
             }
             if (appliedFilters.region !== "all") {
-                const schoolsInRegion = schools.filter(s => s.region === appliedFilters.region).map(s => s.name);
+                const schoolsInRegion = allSchools.filter(s => s.region === appliedFilters.region).map(s => s.name);
                 const schoolsInRegionSet = new Set(schoolsInRegion);
                 filteredResults = filteredResults.filter(r => schoolsInRegionSet.has(r.school));
             }
@@ -253,7 +284,7 @@ export default function AnalisisPage() {
 
         // --- Data: Análisis por Pregunta ---
         const questionAnalysis: Record<string, { totalScore: number, totalMaxScore: number }> = {};
-        const selectedExam = exams.find(e => e.name === appliedFilters.exam);
+        const selectedExam = allExams.find(e => e.name === appliedFilters.exam);
         
         if (selectedExam) {
             const examResultsForQuestionAnalysis = filteredResults.filter(r => r.examId === selectedExam.id);
@@ -281,7 +312,7 @@ export default function AnalisisPage() {
         }));
 
         return { dataAprobados, examAnalysisData, questionAnalysisData };
-    }, [appliedFilters, user, results, exams, schools, settings.currentSchoolYear]);
+    }, [appliedFilters, user, allResults, allExams, allSchools, settings.currentSchoolYear]);
     
     const handleExport = () => {
         let csvContent = "";
@@ -758,3 +789,4 @@ export default function AnalisisPage() {
     
 
     
+
