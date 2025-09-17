@@ -52,6 +52,7 @@ export default function AnalisisPage() {
         grade: "all",
         course: "all",
         exam: "all",
+        schoolYear: "all",
     });
 
     const [appliedFilters, setAppliedFilters] = useState(filters);
@@ -65,6 +66,7 @@ export default function AnalisisPage() {
                 grade: "all",
                 course: "all",
                 exam: "all",
+                schoolYear: "all",
             };
 
             if (user.role === 'Director') {
@@ -120,6 +122,10 @@ export default function AnalisisPage() {
         return exams;
     }, [exams, user]);
 
+    const availableSchoolYears = useMemo(() => {
+        return [...new Set(results.map(r => r.schoolYear).filter(Boolean))].sort((a,b) => b.localeCompare(a));
+    }, [results]);
+
     const handleFilterChange = (filterName: keyof typeof filters, value: string) => {
         setFilters(prev => ({...prev, [filterName]: value}));
     }
@@ -144,6 +150,9 @@ export default function AnalisisPage() {
         }
 
         // 2. Apply user-selected filters
+        if (appliedFilters.schoolYear !== "all") {
+            filteredResults = filteredResults.filter(r => r.schoolYear === appliedFilters.schoolYear);
+        }
         if (appliedFilters.region !== "all") {
             const schoolsInRegion = schools.filter(s => s.region === appliedFilters.region).map(s => s.name);
             const schoolsInRegionSet = new Set(schoolsInRegion);
@@ -406,6 +415,16 @@ export default function AnalisisPage() {
                     <CardDescription>Selecciona los criterios para acotar tu búsqueda. Los gráficos se actualizarán automáticamente.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="filtro-ciclo-lectivo">Ciclo Lectivo</Label>
+                        <Select onValueChange={(v) => handleFilterChange('schoolYear', v)} value={filters.schoolYear}>
+                            <SelectTrigger id="filtro-ciclo-lectivo"><SelectValue placeholder="Ciclo" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos</SelectItem>
+                                {availableSchoolYears.map((year) => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
                     {showGlobalFilters && (
                         <>
                             <div className="grid gap-2">
@@ -721,6 +740,8 @@ export default function AnalisisPage() {
 
     
 
+
+    
 
     
 
