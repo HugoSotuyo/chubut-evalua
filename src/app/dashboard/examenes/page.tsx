@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useExams } from "@/context/exams-context";
 import { useAuth } from "@/context/auth-context";
+import { useSearch } from "@/context/search-context";
 import { PlusCircle, Trash2, Save, ArrowLeft, Paperclip, CalendarIcon } from "lucide-react";
 import Link from "next/link";
 import { ExamActionsClient } from "./exam-actions-client";
@@ -73,6 +74,7 @@ export default function ExamenesPage() {
   const { exams: allExams, updateExam } = useExams();
   const { toast } = useToast();
   const { settings } = useSettings();
+  const { searchTerm } = useSearch();
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingExam, setEditingExam] = useState<Exam | null>(null);
@@ -80,16 +82,21 @@ export default function ExamenesPage() {
 
   const filteredExams = useMemo(() => {
     if (!user) return [];
-    return allExams.filter(exam => {
-        if (user.role === 'Docente') {
-            return exam.grade === user.grade && exam.status === 'Cerrado';
-        }
-        if (user.role === 'Director') {
-            return exam.status === 'Cerrado';
-        }
-        return true;
-    });
-  }, [allExams, user]);
+    let exams = allExams;
+    
+    if (user.role === 'Docente') {
+        exams = exams.filter(exam => exam.grade === user.grade && exam.status === 'Cerrado');
+    }
+    if (user.role === 'Director') {
+        exams = exams.filter(exam => exam.status === 'Cerrado');
+    }
+    
+    if (searchTerm) {
+        exams = exams.filter(exam => exam.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+
+    return exams;
+  }, [allExams, user, searchTerm]);
 
   const handleOpenEditDialog = (exam: Exam) => {
     setEditingExam(exam);
