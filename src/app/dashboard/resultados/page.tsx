@@ -38,8 +38,6 @@ export default function ResultadosPage() {
     const { user, loading: authLoading } = useAuth();
     const { results: allResults, deleteResult, loading: resultsLoading } = useResults();
     const { exams, loading: examsLoading } = useExams();
-    const { students } = useStudents();
-    const { schools } = useSchools();
     const { searchTerm } = useSearch();
     const { toast } = useToast();
     
@@ -77,29 +75,46 @@ export default function ResultadosPage() {
         }
     }, [user]);
 
-    const availableExams = useMemo(() => {
-        if (!user) return [];
-        if (user.role === 'Docente') {
-            return exams.filter(e => e.grade === user.grade);
-        }
-        return exams;
-    }, [exams, user]);
-
-    const availableGrades = useMemo(() => {
-        return [...new Set(students.map(s => s.grade).filter(Boolean))].sort();
-    }, [students]);
-
-    const availableCourses = useMemo(() => {
-        return [...new Set(students.map(s => s.course).filter(Boolean))].sort();
-    }, [students]);
-    
-    const availableSchools = useMemo(() => {
-        return schools.map(s => s.name).sort();
-    }, [schools]);
-
     const availableSchoolYears = useMemo(() => {
         return [...new Set(allResults.map(r => r.schoolYear).filter(Boolean))].sort((a,b) => b.localeCompare(a));
     }, [allResults]);
+
+    const resultsForFilterOptions = useMemo(() => {
+        if (filters.schoolYear === 'all') {
+            return allResults;
+        }
+        return allResults.filter(r => r.schoolYear === filters.schoolYear);
+    }, [allResults, filters.schoolYear]);
+
+    const availableExams = useMemo(() => {
+        const examNames = new Set(resultsForFilterOptions.map(r => r.examName));
+        return Array.from(examNames).sort();
+    }, [resultsForFilterOptions]);
+
+    const availableSchools = useMemo(() => {
+        const schoolNames = new Set(resultsForFilterOptions.map(r => r.school));
+        return Array.from(schoolNames).sort();
+    }, [resultsForFilterOptions]);
+    
+    const availableGrades = useMemo(() => {
+        const gradeNames = new Set(resultsForFilterOptions.map(r => r.grade).filter(Boolean));
+        return Array.from(gradeNames).sort();
+    }, [resultsForFilterOptions]);
+
+    const availableCourses = useMemo(() => {
+        const courseNames = new Set(resultsForFilterOptions.map(r => r.course).filter(Boolean));
+        return Array.from(courseNames).sort();
+    }, [resultsForFilterOptions]);
+    
+    useEffect(() => {
+        setFilters(prev => ({
+            ...prev,
+            exam: 'all',
+            school: (user?.role === "Director" || user?.role === "Docente") ? user.school : 'all',
+            grade: user?.role === 'Docente' ? user.grade ?? 'all' : 'all',
+            course: user?.role === 'Docente' ? user.course ?? 'all' : 'all',
+        }));
+    }, [filters.schoolYear, user]);
 
 
     const filteredResults = useMemo(() => {
@@ -266,7 +281,7 @@ export default function ResultadosPage() {
                             <SelectContent>
                                 <SelectItem value="all">Todos</SelectItem>
                                 {availableExams.map(exam => (
-                                    <SelectItem key={exam.id} value={exam.name}>{exam.name}</SelectItem>
+                                    <SelectItem key={exam} value={exam}>{exam}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -462,3 +477,4 @@ export default function ResultadosPage() {
 }
 
     
+
