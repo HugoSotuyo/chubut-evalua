@@ -61,7 +61,7 @@ export default function AnalisisPage() {
     
     // Effect to set initial filters based on user role
     useEffect(() => {
-        if (user) {
+        if (user && !searchParams.get("exam")) {
             let initialFilters = {
                 region: "all",
                 school: "all",
@@ -104,14 +104,23 @@ export default function AnalisisPage() {
         if (examFromUrl) {
             const decodedExamName = decodeURIComponent(examFromUrl);
             const examExists = allExams.some(e => e.name === decodedExamName);
+            
             if (examExists && decodedExamName !== filters.exam) {
-                 const newFilters = { ...filters, exam: decodedExamName };
+                const resultForExam = allResults.find(r => r.examName === decodedExamName);
+                const yearOfExam = resultForExam ? resultForExam.schoolYear : "all";
+
+                 const newFilters = {
+                    ...filters,
+                    exam: decodedExamName,
+                    schoolYear: yearOfExam
+                };
+
                  setFilters(newFilters);
                  setAppliedFilters(newFilters);
             }
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchParams, allExams]);
+    }, [searchParams, allExams, allResults]);
 
     const availableSchoolYears = useMemo(() => {
         return [...new Set(allResults.map(r => r.schoolYear).filter(Boolean))].sort((a,b) => b.localeCompare(a));
@@ -789,4 +798,5 @@ export default function AnalisisPage() {
     
 
     
+
 
