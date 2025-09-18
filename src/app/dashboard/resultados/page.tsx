@@ -50,7 +50,7 @@ export default function ResultadosPage() {
         status: "all",
         grade: "all",
         course: "all",
-        schoolYear: "all",
+        schoolYear: settings.currentSchoolYear || "all",
     });
 
     const [appliedFilters, setAppliedFilters] = useState<Filters>(filters);
@@ -70,8 +70,11 @@ export default function ResultadosPage() {
                 status: "all",
                 grade: user.role === 'Docente' ? user.grade ?? 'all' : 'all',
                 course: user.role === 'Docente' ? user.course ?? 'all' : 'all',
-                schoolYear: user.role === 'Docente' ? settings.currentSchoolYear : 'all',
+                schoolYear: settings.currentSchoolYear || 'all',
             };
+            if(user.role === 'Docente') {
+                initialFilters.schoolYear = settings.currentSchoolYear;
+            }
             setFilters(initialFilters);
             setAppliedFilters(initialFilters);
         }
@@ -153,8 +156,8 @@ export default function ResultadosPage() {
             results = results.filter(r => r.examName === appliedFilters.exam);
         }
 
-        // School Filter (not shown for Docente)
-        if (user.role !== 'Docente' && appliedFilters.school !== "all") {
+        // School Filter (not shown for Docente or Director)
+        if (!['Docente', 'Director'].includes(user.role) && appliedFilters.school !== "all") {
             results = results.filter(r => r.school === appliedFilters.school);
         }
         
@@ -500,13 +503,3 @@ export default function ResultadosPage() {
         </div>
     )
 }
-
-    
-
-
-
-
-
-
-
-    

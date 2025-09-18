@@ -25,7 +25,7 @@ export default function AlumnosPage() {
 
   const [gradeFilter, setGradeFilter] = useState("all");
   const [courseFilter, setCourseFilter] = useState("all");
-  const [schoolYearFilter, setSchoolYearFilter] = useState(settings.currentSchoolYear);
+  const [schoolYearFilter, setSchoolYearFilter] = useState(settings.currentSchoolYear || "all");
 
   if (!user) {
     return <div>Cargando...</div>

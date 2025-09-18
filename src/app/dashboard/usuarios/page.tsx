@@ -32,11 +32,14 @@ import { useSchools } from "@/context/schools-context";
 import { Input } from "@/components/ui/input";
 import type { UserRole } from "@/lib/auth";
 import type { School } from "@/lib/types";
+import { useSettings } from "@/context/settings-context";
 
 
 export default function UsuariosPage() {
   const { users, deleteUser, enableUser, updateUser, updateUserPassword } = useUsers();
   const { schools } = useSchools();
+  const { settings } = useSettings();
+
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -48,7 +51,7 @@ export default function UsuariosPage() {
     school: "all",
     grade: "all",
     course: "all",
-    schoolYear: "all",
+    schoolYear: settings.currentSchoolYear || "all",
   });
   const [appliedFilters, setAppliedFilters] = useState(filters);
 

@@ -54,7 +54,7 @@ export default function AnalisisPage() {
         grade: "all",
         course: "all",
         exam: "all",
-        schoolYear: "all",
+        schoolYear: settings.currentSchoolYear || "all",
     });
 
     const [appliedFilters, setAppliedFilters] = useState(filters);
@@ -68,7 +68,7 @@ export default function AnalisisPage() {
                 grade: "all",
                 course: "all",
                 exam: "all",
-                schoolYear: user.role === 'Docente' ? settings.currentSchoolYear : "all",
+                schoolYear: settings.currentSchoolYear || "all",
             };
 
             if (user.role === 'Director') {
@@ -77,6 +77,7 @@ export default function AnalisisPage() {
                 initialFilters.school = user.school;
                 initialFilters.grade = user.grade ?? 'all';
                 initialFilters.course = user.course ?? 'all';
+                initialFilters.schoolYear = settings.currentSchoolYear; // Force current year for teacher
             }
             
             setFilters(initialFilters);
@@ -107,7 +108,7 @@ export default function AnalisisPage() {
             
             if (examExists && decodedExamName !== filters.exam) {
                 const resultForExam = allResults.find(r => r.examName === decodedExamName);
-                const yearOfExam = resultForExam ? resultForExam.schoolYear : "all";
+                const yearOfExam = resultForExam ? resultForExam.schoolYear : settings.currentSchoolYear;
 
                  const newFilters = {
                     ...filters,
@@ -120,7 +121,7 @@ export default function AnalisisPage() {
             }
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchParams, allExams, allResults]);
+    }, [searchParams, allExams, allResults, settings.currentSchoolYear]);
 
     const availableSchoolYears = useMemo(() => {
         return [...new Set(allResults.map(r => r.schoolYear).filter(Boolean))].sort((a,b) => b.localeCompare(a));
@@ -780,23 +781,3 @@ export default function AnalisisPage() {
         </div>
     )
 }
-
-    
-
-    
-
-
-
-
-
-
-    
-
-
-    
-
-    
-
-    
-
-
