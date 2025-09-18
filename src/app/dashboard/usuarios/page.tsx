@@ -62,11 +62,11 @@ export default function UsuariosPage() {
     setFilters(prev => ({
         ...prev,
         role: "all",
-        school: "all",
+        school: currentUser?.role === 'Director' ? prev.school : "all",
         grade: "all",
         course: "all",
     }));
-  }, [filters.schoolYear]);
+  }, [filters.schoolYear, currentUser?.role]);
 
   const usersForFilterOptions = useMemo(() => {
     if (filters.schoolYear === 'all') {
@@ -106,6 +106,16 @@ export default function UsuariosPage() {
 
     if (currentUser.role === "Director") {
         results = users.filter(u => u.school === currentUser.school && u.role === "Docente");
+        if (appliedFilters.schoolYear !== "all") {
+             results = results.filter(u => u.schoolYear === appliedFilters.schoolYear);
+        }
+         if (appliedFilters.grade !== "all") {
+            results = results.filter(u => u.grade === appliedFilters.grade);
+        }
+        if (appliedFilters.course !== "all") {
+            results = results.filter(u => u.course === appliedFilters.course);
+        }
+
     } else {
        if (appliedFilters.role !== "all") {
             results = results.filter(u => u.role === appliedFilters.role);
@@ -239,7 +249,7 @@ export default function UsuariosPage() {
     return <div>Cargando...</div>;
   }
   
-  const showAdvancedFilters = ['Evaluador', 'Administrador', 'Referente'].includes(currentUser.role);
+  const showAdvancedFilters = ['Evaluador', 'Administrador', 'Referente', 'Director'].includes(currentUser.role);
   const isEvaluator = currentUser.role === 'Evaluador';
 
   return (
@@ -290,34 +300,38 @@ export default function UsuariosPage() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="role-filter">Rol</Label>
-                            <Select onValueChange={(v) => handleFilterChange("role", v)} value={filters.role}>
-                                <SelectTrigger id="role-filter">
-                                    <SelectValue placeholder="Seleccionar rol" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Todos los Roles</SelectItem>
-                                    {uniqueRoles.map(role => (
-                                        <SelectItem key={role} value={role}>{role}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="school-filter">Escuela</Label>
-                            <Select onValueChange={(v) => handleFilterChange("school", v)} value={filters.school}>
-                                <SelectTrigger id="school-filter">
-                                    <SelectValue placeholder="Seleccionar escuela" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Todas las Escuelas</SelectItem>
-                                    {uniqueSchools.map(school => (
-                                        <SelectItem key={school} value={school}>{school}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                        {currentUser.role !== 'Director' && (
+                            <>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="role-filter">Rol</Label>
+                                    <Select onValueChange={(v) => handleFilterChange("role", v)} value={filters.role}>
+                                        <SelectTrigger id="role-filter">
+                                            <SelectValue placeholder="Seleccionar rol" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Todos los Roles</SelectItem>
+                                            {uniqueRoles.map(role => (
+                                                <SelectItem key={role} value={role}>{role}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="school-filter">Escuela</Label>
+                                    <Select onValueChange={(v) => handleFilterChange("school", v)} value={filters.school}>
+                                        <SelectTrigger id="school-filter">
+                                            <SelectValue placeholder="Seleccionar escuela" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Todas las Escuelas</SelectItem>
+                                            {uniqueSchools.map(school => (
+                                                <SelectItem key={school} value={school}>{school}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </>
+                        )}
                         <div className="grid gap-2">
                             <Label htmlFor="grade-filter">Grado</Label>
                             <Select onValueChange={(v) => handleFilterChange("grade", v)} value={filters.grade}>
@@ -749,3 +763,5 @@ function ChangePasswordDialog({ isOpen, onOpenChange, user, onSave, isSubmitting
     );
 }
 
+
+    
