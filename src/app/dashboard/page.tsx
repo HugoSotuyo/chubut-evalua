@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useMemo } from "react";
@@ -46,30 +47,31 @@ export default function Dashboard() {
         if (!user || !settings.currentSchoolYear) return { users: [], students: [], exams: [], results: [] };
 
         // Start by filtering all data for the current school year
-        const users = allUsers.filter(u => u.schoolYear === settings.currentSchoolYear);
-        const students = allStudents.filter(s => s.schoolYear === settings.currentSchoolYear);
-        const results = allResults.filter(r => r.schoolYear === settings.currentSchoolYear);
+        const usersInYear = allUsers.filter(u => u.schoolYear === settings.currentSchoolYear);
+        const studentsInYear = allStudents.filter(s => s.schoolYear === settings.currentSchoolYear);
+        const resultsInYear = allResults.filter(r => r.schoolYear === settings.currentSchoolYear);
+        
         // We can't filter exams by school year directly, so we'll derive them from results.
-        const relevantExamIds = new Set(results.map(r => r.examId));
-        const exams = allExams.filter(e => relevantExamIds.has(e.id));
+        const relevantExamIds = new Set(resultsInYear.map(r => r.examId));
+        const examsInYear = allExams.filter(e => relevantExamIds.has(e.id));
 
 
         if (user.role === 'Director') {
-            const schoolStudents = students.filter(s => s.school === user.school);
-            const schoolResults = results.filter(r => r.school === user.school);
+            const schoolStudents = studentsInYear.filter(s => s.school === user.school);
+            const schoolResults = resultsInYear.filter(r => r.school === user.school);
             const schoolRelevantExamIds = new Set(schoolResults.map(r => r.examId));
             const schoolExams = allExams.filter(e => schoolRelevantExamIds.has(e.id));
-            const schoolTeachers = users.filter(u => u.school === user.school);
+            const schoolTeachers = usersInYear.filter(u => u.school === user.school && u.role === 'Docente');
             return { users: schoolTeachers, students: schoolStudents, exams: schoolExams, results: schoolResults };
         }
 
         if (user.role === 'Docente') {
-            const courseStudents = students.filter(s => 
+            const courseStudents = studentsInYear.filter(s => 
                 s.school === user.school && 
                 s.grade === user.grade && 
                 s.course === user.course
             );
-            const courseResults = results.filter(r => 
+            const courseResults = resultsInYear.filter(r => 
                 r.school === user.school && 
                 r.grade === user.grade && 
                 r.course === user.course
@@ -79,7 +81,7 @@ export default function Dashboard() {
         }
 
         // For Evaluador, Administrador, Referente, return all data from the current year
-        return { users, students, exams, results };
+        return { users: usersInYear, students: studentsInYear, exams: examsInYear, results: resultsInYear };
     }, [user, allUsers, allStudents, allExams, allResults, settings.currentSchoolYear]);
 
     const stats = useMemo(() => {
@@ -258,7 +260,7 @@ export default function Dashboard() {
                     <div className="ml-auto font-medium text-sm text-right">
                         <div>{result.school}</div>
                         <Badge variant={result.status === "Aprobado" ? "default" : "destructive"}>
-                            {result.score.toFixed(0)}%
+                            {(result.score / 10).toFixed(2)}
                         </Badge>
                     </div>
                 </div>
@@ -274,6 +276,8 @@ export default function Dashboard() {
     </div>
   );
 }
+
+    
 
     
 

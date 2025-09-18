@@ -197,7 +197,7 @@ export default function ResultadosPage() {
     const handleExport = () => {
         const headers = ["ID", "Alumno", "Examen", "Escuela", "Grado", "Curso", "Nota", "Estado", "Ciclo Lectivo"];
         const rows = filteredResults.map(res => 
-            [res.id, res.studentName, res.examName, res.school, res.grade, res.course, res.score, res.status, res.schoolYear].join(';')
+            [res.id, res.studentName, res.examName, res.school, res.grade, res.course, (res.score / 10).toFixed(2), res.status, res.schoolYear].join(';')
         );
         
         const bom = "﻿";
@@ -405,7 +405,7 @@ export default function ResultadosPage() {
                                 <TableCell>{result.school}</TableCell>
                                 <TableCell>{result.grade}</TableCell>
                                 <TableCell>{result.course}</TableCell>
-                                <TableCell>{result.score.toFixed(1)}%</TableCell>
+                                <TableCell>{(result.score / 10).toFixed(2)}</TableCell>
                                 <TableCell>
                                     <Badge variant={result.status === "Desaprobado" ? "destructive" : "default"}>{result.status}</Badge>
                                 </TableCell>
@@ -507,3 +507,6 @@ export default function ResultadosPage() {
 
 
 
+
+
+    
