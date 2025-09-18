@@ -82,7 +82,7 @@ export default function ExamenesPage() {
   const [editingExam, setEditingExam] = useState<Exam | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [schoolYearFilter, setSchoolYearFilter] = useState("all");
+  const [schoolYearFilter, setSchoolYearFilter] = useState(settings.currentSchoolYear || "all");
 
   const availableSchoolYears = useMemo(() => {
     return [...new Set(allResults.map(r => r.schoolYear).filter(Boolean))].sort((a,b) => b.localeCompare(a));
@@ -547,5 +547,3 @@ export default function ExamenesPage() {
     </>
   );
 }
-
-    
