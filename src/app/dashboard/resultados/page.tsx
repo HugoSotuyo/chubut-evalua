@@ -89,9 +89,14 @@ export default function ResultadosPage() {
     }, [allResults, filters.schoolYear]);
 
     const availableExams = useMemo(() => {
+        if (user?.role === 'Docente' && user.grade) {
+            const examNames = new Set(exams.filter(e => e.grade === user.grade).map(e => e.name));
+            return Array.from(examNames).sort();
+        }
         const examNames = new Set(resultsForFilterOptions.map(r => r.examName));
         return Array.from(examNames).sort();
-    }, [resultsForFilterOptions]);
+    }, [resultsForFilterOptions, exams, user]);
+
 
     const availableSchools = useMemo(() => {
         const schoolNames = new Set(resultsForFilterOptions.map(r => r.school));
@@ -497,6 +502,7 @@ export default function ResultadosPage() {
 }
 
     
+
 
 
 
