@@ -36,19 +36,29 @@ import { useSettings } from "@/context/settings-context";
 
 export default function Dashboard() {
     const { user } = useAuth();
-    const { users } = useUsers();
-    const { students } = useStudents();
-    const { exams } = useExams();
-    const { results } = useResults();
+    const { users: allUsers } = useUsers();
+    const { students: allStudents } = useStudents();
+    const { exams: allExams } = useExams();
+    const { results: allResults } = useResults();
     const { settings } = useSettings();
 
     const filteredData = useMemo(() => {
-        if (!user) return { users: [], students: [], exams: [], results: [] };
+        if (!user || !settings.currentSchoolYear) return { users: [], students: [], exams: [], results: [] };
+
+        // Start by filtering all data for the current school year
+        const users = allUsers.filter(u => u.schoolYear === settings.currentSchoolYear);
+        const students = allStudents.filter(s => s.schoolYear === settings.currentSchoolYear);
+        const results = allResults.filter(r => r.schoolYear === settings.currentSchoolYear);
+        // We can't filter exams by school year directly, so we'll derive them from results.
+        const relevantExamIds = new Set(results.map(r => r.examId));
+        const exams = allExams.filter(e => relevantExamIds.has(e.id));
+
 
         if (user.role === 'Director') {
             const schoolStudents = students.filter(s => s.school === user.school);
             const schoolResults = results.filter(r => r.school === user.school);
-            const schoolExams = exams.filter(e => schoolResults.some(r => r.examId === e.id));
+            const schoolRelevantExamIds = new Set(schoolResults.map(r => r.examId));
+            const schoolExams = allExams.filter(e => schoolRelevantExamIds.has(e.id));
             const schoolTeachers = users.filter(u => u.school === user.school);
             return { users: schoolTeachers, students: schoolStudents, exams: schoolExams, results: schoolResults };
         }
@@ -57,21 +67,20 @@ export default function Dashboard() {
             const courseStudents = students.filter(s => 
                 s.school === user.school && 
                 s.grade === user.grade && 
-                s.course === user.course &&
-                s.schoolYear === settings.currentSchoolYear
+                s.course === user.course
             );
             const courseResults = results.filter(r => 
                 r.school === user.school && 
                 r.grade === user.grade && 
-                r.course === user.course &&
-                r.schoolYear === settings.currentSchoolYear
+                r.course === user.course
             );
-            const courseExams = exams.filter(e => e.grade === user.grade);
-             return { users, students: courseStudents, exams: courseExams, results: courseResults };
+            const courseExams = allExams.filter(e => e.grade === user.grade); // For teachers, exams are by grade
+             return { users: allUsers, students: courseStudents, exams: courseExams, results: courseResults };
         }
 
+        // For Evaluador, Administrador, Referente, return all data from the current year
         return { users, students, exams, results };
-    }, [user, users, students, exams, results, settings.currentSchoolYear]);
+    }, [user, allUsers, allStudents, allExams, allResults, settings.currentSchoolYear]);
 
     const stats = useMemo(() => {
         const activeTeachers = filteredData.users.filter(u => u.role === 'Docente' && u.status === 'Activo').length;
@@ -131,7 +140,7 @@ export default function Dashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalStudents}</div>
               <p className="text-xs text-muted-foreground">
-                Total de alumnos en el sistema.
+                Total de alumnos en el ciclo lectivo actual.
               </p>
             </CardContent>
           </Card>
@@ -146,7 +155,7 @@ export default function Dashboard() {
                 <CardContent>
                 <div className="text-2xl font-bold">{stats.activeTeachers}</div>
                 <p className="text-xs text-muted-foreground">
-                    Total de docentes con acceso activo.
+                    Docentes activos en el ciclo actual.
                 </p>
                 </CardContent>
             </Card>
@@ -159,7 +168,7 @@ export default function Dashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{stats.closedExams}</div>
               <p className="text-xs text-muted-foreground">
-                Evaluaciones finalizadas.
+                Evaluaciones finalizadas en el ciclo actual.
               </p>
             </CardContent>
           </Card>
@@ -173,7 +182,7 @@ export default function Dashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{stats.pendingExams}</div>
               <p className="text-xs text-muted-foreground">
-                Evaluaciones actualmente en curso.
+                Evaluaciones en curso en el ciclo actual.
               </p>
             </CardContent>
           </Card>
@@ -184,7 +193,7 @@ export default function Dashboard() {
               <div className="grid gap-2">
                 <CardTitle>Rendimiento General por Grado</CardTitle>
                 <CardDescription>
-                  Promedio de rendimiento general en todos los exámenes.
+                  Promedio de rendimiento en el ciclo lectivo actual.
                 </CardDescription>
               </div>
               <Button asChild size="sm" className="ml-auto gap-1">
@@ -229,7 +238,7 @@ export default function Dashboard() {
             <CardHeader>
               <CardTitle>Resultados Recientes</CardTitle>
               <CardDescription>
-                Últimos resultados de exámenes cargados en el sistema.
+                Últimos resultados cargados en el ciclo actual.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-8">
@@ -255,7 +264,7 @@ export default function Dashboard() {
                 </div>
             )) : (
                 <div className="text-center text-muted-foreground">
-                    Aún no hay resultados cargados.
+                    Aún no hay resultados cargados en este ciclo.
                 </div>
             )}
             </CardContent>
@@ -265,5 +274,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
+    
 
     
