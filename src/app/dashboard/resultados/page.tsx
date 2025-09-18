@@ -405,7 +405,7 @@ export default function ResultadosPage() {
                                 <TableCell>{result.school}</TableCell>
                                 <TableCell>{result.grade}</TableCell>
                                 <TableCell>{result.course}</TableCell>
-                                <TableCell>{result.score.toFixed(0)}/100</TableCell>
+                                <TableCell>{result.score.toFixed(1)}%</TableCell>
                                 <TableCell>
                                     <Badge variant={result.status === "Desaprobado" ? "destructive" : "default"}>{result.status}</Badge>
                                 </TableCell>
@@ -502,6 +502,7 @@ export default function ResultadosPage() {
 }
 
     
+
 
 
 
