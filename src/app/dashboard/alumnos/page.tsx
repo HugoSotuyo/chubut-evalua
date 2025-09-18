@@ -40,7 +40,7 @@ export default function AlumnosPage() {
     let baseList = studentsWithResults;
     
     // Primero, filtrar por ciclo lectivo si no es "todos"
-    if (schoolYearFilter !== "all") {
+    if (schoolYearFilter !== "all" && user.role !== 'Docente') {
         baseList = baseList.filter(student => student.schoolYear === schoolYearFilter);
     }
       
@@ -49,7 +49,8 @@ export default function AlumnosPage() {
         return baseList.filter(student => 
             student.school === user.school && 
             student.grade === user.grade && 
-            student.course === user.course
+            student.course === user.course &&
+            student.schoolYear === settings.currentSchoolYear
         );
       }
       return [];
@@ -60,7 +61,7 @@ export default function AlumnosPage() {
       return [];
     }
     return baseList;
-  }, [studentsWithResults, user, schoolYearFilter]);
+  }, [studentsWithResults, user, schoolYearFilter, settings.currentSchoolYear]);
   
   const studentList = useMemo(() => {
     let filtered = studentsInScope;
@@ -206,6 +207,8 @@ export default function AlumnosPage() {
               <TableRow>
                 <TableHead>Nombre Completo</TableHead>
                 <TableHead>DNI</TableHead>
+                <TableHead>Grado</TableHead>
+                <TableHead>Curso</TableHead>
                 <TableHead>Exámenes Cargados</TableHead>
                 <TableHead>
                   <span className="sr-only">Acciones</span>
@@ -218,6 +221,8 @@ export default function AlumnosPage() {
                   <TableRow key={student.id}>
                     <TableCell className="font-medium">{student.name}</TableCell>
                     <TableCell>{student.dni}</TableCell>
+                    <TableCell>{student.grade}</TableCell>
+                    <TableCell>{student.course}</TableCell>
                     <TableCell>
                       {student.results && student.results.length > 0 ? (
                         <Badge variant="secondary">{student.results.length} cargado(s)</Badge>
@@ -232,7 +237,7 @@ export default function AlumnosPage() {
                 ))
               ) : (
                 <TableRow>
-                    <TableCell colSpan={4} className="text-center">
+                    <TableCell colSpan={6} className="text-center">
                         No se encontraron alumnos que coincidan con los filtros.
                     </TableCell>
                 </TableRow>
