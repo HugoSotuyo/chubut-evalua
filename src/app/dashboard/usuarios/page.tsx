@@ -144,7 +144,18 @@ export default function UsuariosPage() {
       );
     }
     
-    return results.filter(u => u.role !== 'Evaluador');
+    const finalResults = results.filter(u => u.role !== 'Evaluador');
+
+    if (currentUser.role === 'Director') {
+      const getGradeNumber = (grade: string | undefined): number => {
+        if (!grade) return Infinity;
+        const match = grade.match(/^(\d+)/);
+        return match ? parseInt(match[1], 10) : Infinity;
+      };
+      finalResults.sort((a, b) => getGradeNumber(a.grade) - getGradeNumber(b.grade));
+    }
+
+    return finalResults;
   }, [users, appliedFilters, searchTerm, currentUser]);
   
   const handleFilterChange = (filterName: keyof typeof filters, value: string) => {
@@ -765,6 +776,9 @@ function ChangePasswordDialog({ isOpen, onOpenChange, user, onSave, isSubmitting
         </Dialog>
     );
 }
+
+
+    
 
 
     
