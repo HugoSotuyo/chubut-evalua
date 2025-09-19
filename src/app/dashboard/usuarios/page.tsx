@@ -503,8 +503,8 @@ export default function UsuariosPage() {
                     </DialogDescription>
                 </DialogHeader>
                 {selectedUser && (
-                    <div className="grid gap-2 py-2">
-                        <div className="flex items-center gap-4">
+                    <div className="grid gap-4 py-2">
+                        <div className="flex items-center gap-4 mb-2">
                              <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-2xl font-bold">
                                 {selectedUser.name.split(' ').map(n => n[0]).join('')}
                             </div>
@@ -520,34 +520,36 @@ export default function UsuariosPage() {
                             <Label htmlFor="email">Email</Label>
                             <Input id="email" value={selectedUser.email} readOnly />
                         </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="escuela">Escuela</Label>
-                            <Input id="escuela" value={selectedUser.school} readOnly />
-                        </div>
-                        {selectedUser.grade && (
+                        <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="grado">Grado</Label>
-                                <Input id="grado" value={selectedUser.grade} readOnly />
+                                <Label htmlFor="escuela">Escuela</Label>
+                                <Input id="escuela" value={selectedUser.school} readOnly />
                             </div>
-                        )}
-                        {selectedUser.course && (
+                            {selectedUser.grade && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="grado">Grado</Label>
+                                    <Input id="grado" value={selectedUser.grade} readOnly />
+                                </div>
+                            )}
+                            {selectedUser.course && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="curso">Curso</Label>
+                                    <Input id="curso" value={selectedUser.course} readOnly />
+                                </div>
+                            )}
+                            {selectedUser.schoolYear && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="schoolYear">Ciclo Lectivo</Label>
+                                    <Input id="schoolYear" value={selectedUser.schoolYear} readOnly />
+                                </div>
+                            )}
                             <div className="space-y-2">
-                                <Label htmlFor="curso">Curso</Label>
-                                <Input id="curso" value={selectedUser.course} readOnly />
-                            </div>
-                        )}
-                        {selectedUser.schoolYear && (
-                            <div className="space-y-2">
-                                <Label htmlFor="schoolYear">Ciclo Lectivo</Label>
-                                <Input id="schoolYear" value={selectedUser.schoolYear} readOnly />
-                            </div>
-                        )}
-                        <div className="space-y-2">
-                            <Label>Estado</Label>
-                            <div>
-                                <Badge variant={selectedUser.status === "Pendiente" ? "secondary" : (selectedUser.status === "Activo" ? "default" : "destructive")}>
-                                    {selectedUser.status}
-                                </Badge>
+                                <Label>Estado</Label>
+                                <div>
+                                    <Badge variant={selectedUser.status === "Pendiente" ? "secondary" : (selectedUser.status === "Activo" ? "default" : "destructive")}>
+                                        {selectedUser.status}
+                                    </Badge>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -795,5 +797,6 @@ function ChangePasswordDialog({ isOpen, onOpenChange, user, onSave, isSubmitting
 
 
     
+
 
 
