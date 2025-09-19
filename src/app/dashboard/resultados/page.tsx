@@ -186,7 +186,7 @@ export default function ResultadosPage() {
             results = results.filter(r => r.studentName.toLowerCase().includes(searchTerm.toLowerCase()));
         }
 
-        return results;
+        return results.sort((a, b) => a.examName.localeCompare(b.examName));
     }, [allResults, appliedFilters, searchTerm, user, settings.currentSchoolYear]);
 
     const handleFilterChange = <K extends keyof Filters>(filterName: K, value: Filters[K]) => {
