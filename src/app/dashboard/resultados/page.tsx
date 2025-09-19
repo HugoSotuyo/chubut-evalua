@@ -256,7 +256,7 @@ export default function ResultadosPage() {
         return exams.find(e => e.id === selectedResult.examId) ?? null;
     }, [selectedResult, exams]);
 
-    if (authLoading || resultsLoading || examsLoading) {
+    if (authLoading || resultsLoading || examsLoading || !user) {
         return <div className="flex h-screen w-full items-center justify-center">Cargando...</div>;
     }
 
@@ -352,15 +352,17 @@ export default function ResultadosPage() {
                             </div>
                         </>
                     )}
-                    <div className="grid gap-2">
-                        <Label htmlFor="filtro-alumno">Alumno</Label>
-                        <Input
-                            id="filtro-alumno"
-                            placeholder="Buscar por nombre..."
-                            value={filters.studentName}
-                            onChange={(e) => handleFilterChange("studentName", e.target.value)}
-                        />
-                    </div>
+                    {user.role !== 'Docente' && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="filtro-alumno">Alumno</Label>
+                            <Input
+                                id="filtro-alumno"
+                                placeholder="Buscar por nombre..."
+                                value={filters.studentName}
+                                onChange={(e) => handleFilterChange("studentName", e.target.value)}
+                            />
+                        </div>
+                    )}
                     <div className="grid gap-2">
                         <Label htmlFor="filtro-estado">Estado</Label>
                         <Select onValueChange={(value) => handleFilterChange("status", value)} value={filters.status}>
