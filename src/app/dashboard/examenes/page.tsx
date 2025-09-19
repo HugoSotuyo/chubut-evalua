@@ -114,7 +114,7 @@ export default function ExamenesPage() {
         exams = exams.filter(exam => exam.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }
 
-    return exams;
+    return exams.sort((a, b) => b.created.localeCompare(a.created));
   }, [allExams, user, searchTerm, schoolYearFilter, allResults]);
 
   const handleOpenEditDialog = (exam: Exam) => {
