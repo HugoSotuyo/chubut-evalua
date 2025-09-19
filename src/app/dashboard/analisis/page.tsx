@@ -104,15 +104,16 @@ export default function AnalisisPage() {
         const examFromUrl = searchParams.get("exam");
         if (examFromUrl) {
             const decodedExamName = decodeURIComponent(examFromUrl);
-            const examExists = allExams.some(e => e.name === decodedExamName);
+            const examObject = allExams.find(e => e.name === decodedExamName);
             
-            if (examExists && decodedExamName !== filters.exam) {
-                const resultForExam = allResults.find(r => r.examName === decodedExamName);
+            if (examObject && decodedExamName !== filters.exam) {
+                const resultForExam = allResults.find(r => r.examId === examObject.id);
                 const yearOfExam = resultForExam ? resultForExam.schoolYear : settings.currentSchoolYear;
-
+                
                  const newFilters = {
                     ...filters,
                     exam: decodedExamName,
+                    grade: examObject.grade,
                     schoolYear: yearOfExam
                 };
 
@@ -143,8 +144,10 @@ export default function AnalisisPage() {
 
 
     const availableRegions = useMemo(() => {
-        return allRegions.map(d => d.name).sort((a,b) => a.localeCompare(b));
-    }, [allRegions]);
+        const schoolNamesInResults = new Set(resultsForFilterOptions.map(r => r.school));
+        const regionsForSchools = new Set(allSchools.filter(s => schoolNamesInResults.has(s.name)).map(s => s.region));
+        return Array.from(regionsForSchools).sort();
+    }, [resultsForFilterOptions, allSchools]);
 
     const availableSchools = useMemo(() => {
         const schoolNames = new Set(resultsForFilterOptions.map(r => r.school));
