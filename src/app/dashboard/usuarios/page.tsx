@@ -153,7 +153,17 @@ export default function UsuariosPage() {
         return match ? parseInt(match[1], 10) : Infinity;
       };
       finalResults.sort((a, b) => getGradeNumber(a.grade) - getGradeNumber(b.grade));
+    } else {
+        finalResults.sort((a, b) => {
+            if (a.school && b.school) {
+                return a.school.localeCompare(b.school);
+            }
+            if (a.school) return -1;
+            if (b.school) return 1;
+            return 0;
+        });
     }
+
 
     return finalResults;
   }, [users, appliedFilters, searchTerm, currentUser]);
