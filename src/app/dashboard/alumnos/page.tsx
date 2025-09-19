@@ -79,6 +79,13 @@ export default function AlumnosPage() {
         student.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+    
+    const getGradeNumber = (grade: string | undefined): number => {
+        if (!grade) return Infinity;
+        const match = grade.match(/^(\d+)/);
+        return match ? parseInt(match[1], 10) : Infinity;
+    };
+    filtered.sort((a, b) => getGradeNumber(a.grade) - getGradeNumber(b.grade));
 
     return filtered;
   }, [studentsInScope, gradeFilter, courseFilter, user.role, searchTerm]);
