@@ -76,6 +76,8 @@ export function ExamActionsClient({ exam, userRole, onEdit }: ExamActionsProps) 
     document.body.removeChild(link);
   };
 
+  const userCanManage = userRole === 'Evaluador' || userRole === 'Administrador' || userRole === 'Referente';
+
   return (
     <>
       <DropdownMenu>
@@ -87,27 +89,17 @@ export function ExamActionsClient({ exam, userRole, onEdit }: ExamActionsProps) 
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-          {userRole === 'Director' || userRole === 'Docente' ? (
-            <>
-              <DropdownMenuItem onSelect={handleViewAnalysis}>Ver Análisis</DropdownMenuItem>
-              {exam.fileDataUrl && (
-                <DropdownMenuItem onSelect={handleDownloadFile}>
-                  <Download className="mr-2 h-4 w-4"/>
-                  Descargar Examen
-                </DropdownMenuItem>
-              )}
-            </>
-          ) : (
+          <DropdownMenuItem onSelect={handleViewAnalysis}>Ver Análisis</DropdownMenuItem>
+          {exam.fileDataUrl && (
+            <DropdownMenuItem onSelect={handleDownloadFile}>
+              <Download className="mr-2 h-4 w-4"/>
+              Descargar Examen
+            </DropdownMenuItem>
+          )}
+          {userCanManage && (
             <>
               <DropdownMenuItem onSelect={() => onEdit(exam)}>Editar</DropdownMenuItem>
-              <DropdownMenuItem onSelect={handleViewAnalysis}>Ver Análisis</DropdownMenuItem>
               <DropdownMenuSeparator />
-              {exam.fileDataUrl && (
-                <DropdownMenuItem onSelect={handleDownloadFile}>
-                  <Download className="mr-2 h-4 w-4"/>
-                  Descargar Examen
-                </DropdownMenuItem>
-              )}
               <DropdownMenuItem onSelect={handleToggleStatus} disabled={isSubmitting}>
                 {exam.status === "Abierto" ? "Cerrar Examen" : "Abrir Examen"}
               </DropdownMenuItem>

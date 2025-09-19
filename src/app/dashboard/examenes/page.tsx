@@ -214,7 +214,7 @@ export default function ExamenesPage() {
     return <div>Cargando...</div>;
   }
 
-  const userCanCreateExams = !["Director", "Docente"].includes(user.role);
+  const userCanCreateExams = user.role === 'Evaluador' || user.role === 'Referente';
 
   return (
     <>
@@ -547,5 +547,3 @@ export default function ExamenesPage() {
     </>
   );
 }
-
-    
