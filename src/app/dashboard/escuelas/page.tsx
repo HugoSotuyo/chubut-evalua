@@ -75,6 +75,16 @@ export default function EscuelasPage() {
     if (searchTerm) {
       results = results.filter(school => school.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }
+    
+    // Sort by region, then by school name
+    results.sort((a, b) => {
+      if (a.region < b.region) return -1;
+      if (a.region > b.region) return 1;
+      if (a.name < b.name) return -1;
+      if (a.name > b.name) return 1;
+      return 0;
+    });
+
     return results;
   }, [schools, regionFilter, searchTerm]);
 
@@ -584,5 +594,7 @@ export default function EscuelasPage() {
     </div>
   )
 }
+
+    
 
     
