@@ -158,9 +158,11 @@ export default function UsuariosPage() {
             if (a.school && b.school) {
                 if (a.school < b.school) return -1;
                 if (a.school > b.school) return 1;
+            } else if (a.school) {
+                return -1;
+            } else if (b.school) {
+                return 1;
             }
-            if (a.school) return -1;
-            if (b.school) return 1;
             return 0;
         });
     }
@@ -501,7 +503,7 @@ export default function UsuariosPage() {
                     </DialogDescription>
                 </DialogHeader>
                 {selectedUser && (
-                    <div className="grid gap-4 py-4">
+                    <div className="grid gap-2 py-2">
                         <div className="flex items-center gap-4">
                              <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-2xl font-bold">
                                 {selectedUser.name.split(' ').map(n => n[0]).join('')}
@@ -793,4 +795,5 @@ function ChangePasswordDialog({ isOpen, onOpenChange, user, onSave, isSubmitting
 
 
     
+
 
