@@ -156,7 +156,8 @@ export default function UsuariosPage() {
     } else {
         finalResults.sort((a, b) => {
             if (a.school && b.school) {
-                return a.school.localeCompare(b.school);
+                if (a.school < b.school) return -1;
+                if (a.school > b.school) return 1;
             }
             if (a.school) return -1;
             if (b.school) return 1;
@@ -492,7 +493,7 @@ export default function UsuariosPage() {
         </AlertDialog>
 
         <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
-            <DialogContent>
+            <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Perfil del Usuario</DialogTitle>
                     <DialogDescription>
@@ -792,3 +793,4 @@ function ChangePasswordDialog({ isOpen, onOpenChange, user, onSave, isSubmitting
 
 
     
+
