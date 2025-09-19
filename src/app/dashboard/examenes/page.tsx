@@ -291,7 +291,7 @@ export default function ExamenesPage() {
                     <TableCell>
                       <Badge variant={exam.status === "Cerrado" ? "default" : "destructive"}>{exam.status}</Badge>
                     </TableCell>
-                    <TableCell>{exam.created}</TableCell>
+                    <TableCell>{format(parseISO(exam.created), "dd/MM/yyyy")}</TableCell>
                     <TableCell>
                       <ExamActionsClient exam={exam} userRole={user.role} onEdit={handleOpenEditDialog} />
                     </TableCell>
@@ -547,3 +547,5 @@ export default function ExamenesPage() {
     </>
   );
 }
+
+    
