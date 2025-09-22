@@ -4,7 +4,8 @@ import { getMessaging } from 'firebase-admin/messaging';
 import { getFirestore } from 'firebase-admin/firestore';
 import { initializeApp, getApps, App, applicationDefault } from 'firebase-admin/app';
 
-// Initialize Firebase Admin SDK
+// Correctly initialize Firebase Admin SDK
+// This pattern ensures it's initialized only once.
 if (!getApps().length) {
   initializeApp({
     credential: applicationDefault(),
