@@ -3,10 +3,11 @@
 
 import { useEffect } from 'react';
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { getMessaging, getToken, onMessage, Messaging } from 'firebase/messaging';
 import { getFirestore, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
+import type { User } from './types';
 
 const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -25,40 +26,47 @@ if (getApps().length === 0) {
 }
 
 const db = getFirestore(app);
-const messaging = (typeof window !== 'undefined') ? getMessaging(app) : null;
+const messaging = (typeof window !== 'undefined' && typeof window.navigator !== 'undefined' && 'serviceWorker' in window.navigator) ? getMessaging(app) : null;
+
+export const requestPermissionAndToken = async (user: User): Promise<boolean> => {
+    if (!messaging || !user) {
+        console.error("Messaging not initialized or no user.");
+        return false;
+    }
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            console.log('Notification permission granted.');
+            const currentToken = await getToken(messaging, { vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY });
+            if (currentToken) {
+                if (!user.fcmTokens || !user.fcmTokens.includes(currentToken)) {
+                    const userRef = doc(db, 'users', user.id);
+                    await updateDoc(userRef, {
+                        fcmTokens: arrayUnion(currentToken)
+                    });
+                     console.log('FCM token saved to user profile.');
+                }
+                return true;
+            } else {
+                console.log('No registration token available. Request permission to generate one.');
+                return false;
+            }
+        } else {
+            console.log('Unable to get permission to notify.');
+            return false;
+        }
+    } catch (error) {
+        console.error('An error occurred while retrieving token. ', error);
+        return false;
+    }
+};
+
 
 export const FirebaseMessagingProvider = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && user && messaging) {
-      
-      const requestPermissionAndToken = async () => {
-        try {
-          const permission = await Notification.requestPermission();
-          if (permission === 'granted') {
-            const currentToken = await getToken(messaging, { vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY });
-            if (currentToken) {
-              if (!user.fcmTokens || !user.fcmTokens.includes(currentToken)) {
-                const userRef = doc(db, 'users', user.id);
-                await updateDoc(userRef, {
-                  fcmTokens: arrayUnion(currentToken)
-                });
-              }
-            } else {
-              console.log('No registration token available. Request permission to generate one.');
-            }
-          } else {
-            console.log('Unable to get permission to notify.');
-          }
-        } catch (error) {
-          console.error('An error occurred while retrieving token. ', error);
-        }
-      };
-
-      requestPermissionAndToken();
-
+    if (messaging) {
       const unsubscribe = onMessage(messaging, (payload) => {
         console.log('Message received. ', payload);
         toast({
@@ -71,7 +79,7 @@ export const FirebaseMessagingProvider = () => {
         unsubscribe();
       };
     }
-  }, [user, toast]);
+  }, [toast]);
 
   return null;
 };

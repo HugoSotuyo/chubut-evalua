@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RoleIcon } from "@/components/role-icon";
-import { User as UserIcon, KeyRound, Save } from "lucide-react";
+import { User as UserIcon, KeyRound, Save, Bell } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useUsers } from "@/context/users-context";
+import { requestPermissionAndToken } from "@/lib/firebase";
 
 export default function PerfilPage() {
   const { user, updateUserPassword, updateUser, loading: authLoading } = useAuth();
@@ -23,12 +24,18 @@ export default function PerfilPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notificationsAllowed, setNotificationsAllowed] = useState(false);
+  const [canRequestNotifications, setCanRequestNotifications] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
       setName(user.name);
       setEmail(user.email);
+    }
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+        setNotificationsAllowed(Notification.permission === 'granted');
+        setCanRequestNotifications(Notification.permission === 'default');
     }
   }, [user]);
 
@@ -74,7 +81,19 @@ export default function PerfilPage() {
     } finally {
         setIsSubmitting(false);
     }
-  }
+  };
+
+  const handleEnableNotifications = async () => {
+    if (!user) return;
+    const success = await requestPermissionAndToken(user);
+    if (success) {
+      setNotificationsAllowed(true);
+      setCanRequestNotifications(false);
+      toast({ title: "Notificaciones Habilitadas", description: "Recibirás avisos importantes de la plataforma." });
+    } else {
+      toast({ title: "Permiso denegado", description: "No se pudieron activar las notificaciones. Revisa la configuración de tu navegador.", variant: "destructive" });
+    }
+  };
   
   const userInitials = name ? name.split(' ').map(n => n[0]).join('') : '';
 
@@ -162,6 +181,29 @@ export default function PerfilPage() {
                     </div>
                 )}
             </div>
+
+            {canRequestNotifications && (
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-1">
+                        <Label className="text-base">Activar Notificaciones</Label>
+                        <p className="text-sm text-muted-foreground">
+                            Recibe alertas y avisos importantes directamente en tu navegador.
+                        </p>
+                    </div>
+                    <Button onClick={handleEnableNotifications}>
+                        <Bell className="mr-2 h-4 w-4" />
+                        Activar
+                    </Button>
+                </div>
+            )}
+
+             {notificationsAllowed && (
+                <div className="flex items-center gap-3 text-sm text-green-600 rounded-lg border border-green-200 bg-green-50 p-4">
+                    <Bell className="h-5 w-5" />
+                    <span>Las notificaciones de la plataforma están activas en este navegador.</span>
+                </div>
+            )}
+
 
         </CardContent>
       </Card>
