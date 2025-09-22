@@ -1,7 +1,7 @@
 
 
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc, setDoc, or } from "firebase/firestore";
 import type { User, UserRole } from "./types";
 
 const firebaseConfig = {
@@ -88,12 +88,13 @@ export async function findDirectorBySchool(schoolName: string, schoolYear: strin
         where("role", "==", "Director"), 
         where("school", "==", schoolName),
         where("schoolYear", "==", schoolYear),
-        where("status", "==", "Activo")
+        or(where("status", "==", "Activo"), where("status", "==", "Pendiente"))
     );
     
     try {
         const querySnapshot = await getDocs(q);
         if (querySnapshot.empty) {
+            console.log(`No director found for school "${schoolName}" in year ${schoolYear} with status Active or Pending.`);
             return null;
         }
         const userDoc = querySnapshot.docs[0];
