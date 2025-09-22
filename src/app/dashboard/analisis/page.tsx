@@ -97,6 +97,14 @@ export default function AnalisisPage() {
             exam: 'all',
         }));
     }, [filters.schoolYear, user]);
+    
+    // When grade filter changes, reset exam filter
+    useEffect(() => {
+        setFilters(prev => ({
+            ...prev,
+            exam: 'all',
+        }));
+    }, [filters.grade]);
 
 
     // Effect to handle exam filter from URL
@@ -165,12 +173,22 @@ export default function AnalisisPage() {
     }, [studentsForFilterOptions]);
     
     const availableExams = useMemo(() => {
+        let examsToShow = allExams;
+
         if (user?.role === 'Docente' && user.grade) {
-            return allExams.filter(e => e.grade === user.grade && e.status === 'Cerrado');
+            examsToShow = allExams.filter(e => e.grade === user.grade && e.status === 'Cerrado');
         }
-        const examNames = new Set(resultsForFilterOptions.map(r => r.examName));
-        return Array.from(examNames).sort().map(name => ({ id: name, name }));
-    }, [resultsForFilterOptions, allExams, user]);
+
+        if (filters.grade !== 'all') {
+            examsToShow = examsToShow.filter(e => e.grade === filters.grade);
+        }
+        
+        // Filter based on results for the selected school year to avoid showing exams from other years
+        const examIdsInYear = new Set(resultsForFilterOptions.map(r => r.examId));
+        examsToShow = examsToShow.filter(e => examIdsInYear.has(e.id));
+        
+        return examsToShow.map(e => ({ id: e.id, name: e.name })).sort((a,b) => a.name.localeCompare(b.name));
+    }, [allExams, user, filters.grade, resultsForFilterOptions]);
 
     const handleFilterChange = (filterName: keyof typeof filters, value: string) => {
         setFilters(prev => ({...prev, [filterName]: value}));
