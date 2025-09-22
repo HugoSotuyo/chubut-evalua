@@ -34,7 +34,8 @@ function DashboardLayoutContent({
     }
 
     return (
-        <FirebaseMessagingProvider>
+        <>
+            <FirebaseMessagingProvider />
             <SidebarProvider>
                 <div className="flex min-h-screen">
                     <Sidebar>
@@ -56,7 +57,7 @@ function DashboardLayoutContent({
                     </div>
                 </div>
             </SidebarProvider>
-        </FirebaseMessagingProvider>
+        </>
     );
 }
 

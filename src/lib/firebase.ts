@@ -27,7 +27,7 @@ if (getApps().length === 0) {
 const db = getFirestore(app);
 const messaging = (typeof window !== 'undefined') ? getMessaging(app) : null;
 
-export const FirebaseMessagingProvider = ({ children }: { children: ReactNode }) => {
+export const FirebaseMessagingProvider = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -73,5 +73,5 @@ export const FirebaseMessagingProvider = ({ children }: { children: ReactNode })
     }
   }, [user, toast]);
 
-  return <>{children}</>;
+  return null;
 };
