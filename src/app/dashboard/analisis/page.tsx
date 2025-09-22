@@ -284,6 +284,7 @@ export default function AnalisisPage() {
         
         const examAnalysisData = Object.entries(examAnalysis).map(([examName, data]) => {
             const examRow: { name: string, [key: string]: any } = { name: examName };
+            const originalExam = allExams.find(e => e.name === examName);
             let examGrade = 'Sin Grado'; // Default grade
             
             Object.entries(data.byGrade).forEach(([grade, gradeData]) => {
@@ -309,8 +310,16 @@ export default function AnalisisPage() {
             });
 
             examRow.gradeForSort = examGrade;
+            examRow.createdForSort = originalExam ? originalExam.created : '0'; // Add created date for sorting
             return examRow;
-        }).sort((a,b) => getGradeOrder(a.gradeForSort) - getGradeOrder(b.gradeForSort));
+        }).sort((a,b) => {
+            const gradeOrder = getGradeOrder(a.gradeForSort) - getGradeOrder(b.gradeForSort);
+            if (gradeOrder !== 0) {
+                return gradeOrder;
+            }
+            // Secondary sort: by creation date, descending (newest first)
+            return b.createdForSort.localeCompare(a.createdForSort);
+        });
 
 
         // --- Data: Análisis por Pregunta ---
