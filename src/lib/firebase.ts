@@ -63,10 +63,11 @@ export const requestPermissionAndToken = async (user: User): Promise<boolean> =>
 
 
 export const FirebaseMessagingProvider = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (messaging) {
+    if (user && messaging) {
       const unsubscribe = onMessage(messaging, (payload) => {
         console.log('Message received. ', payload);
         toast({
@@ -79,7 +80,7 @@ export const FirebaseMessagingProvider = () => {
         unsubscribe();
       };
     }
-  }, [toast]);
+  }, [user, toast]);
 
   return null;
 };
