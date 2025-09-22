@@ -36,7 +36,7 @@ const initialUsers: Omit<User, 'id'>[] = [
     { name: 'Evaluador General', email: 'evaluador@chubut.edu.ar', dni: '1', role: 'Evaluador', school: 'Sistema', status: 'Activo', password: 'hdsp6032', schoolYear: '2024' },
 ];
 
-type NewUserPayload = Omit<User, 'id' | 'status'>;
+type NewUserPayload = Omit<User, 'id' | 'status' | 'fcmTokens'>;
 
 export async function findUserByEmailAndYear(email: string, schoolYear: string): Promise<User | null> {
     const db = getDb();
@@ -78,6 +78,30 @@ export async function findUserByEmail(identifier: string): Promise<User | null> 
     // Prefer returning an active user if multiple exist (e.g., same email across different inactive years)
     const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
     return users.find(u => u.status === "Activo") || users[0];
+}
+
+export async function findDirectorBySchool(schoolName: string, schoolYear: string): Promise<User | null> {
+    const db = getDb();
+    const usersRef = collection(db, "users");
+    const q = query(
+        usersRef, 
+        where("role", "==", "Director"), 
+        where("school", "==", schoolName),
+        where("schoolYear", "==", schoolYear),
+        where("status", "==", "Activo")
+    );
+    
+    try {
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            return null;
+        }
+        const userDoc = querySnapshot.docs[0];
+        return { id: userDoc.id, ...userDoc.data() } as User;
+    } catch (error) {
+        console.error("Error finding director by school:", error);
+        throw error;
+    }
 }
 
 export async function findUserByRole(role: UserRole): Promise<User | null> {
@@ -230,5 +254,3 @@ export async function deleteUserFromDb(userId: string) {
         throw new Error("Failed to delete user from database.");
     }
 }
-
-    

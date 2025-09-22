@@ -16,6 +16,7 @@ import { ResultsProvider } from "@/context/results-context";
 import { ExamsProvider } from "@/context/exams-context";
 import { AuditLogProvider } from "@/context/audit-log-context";
 import { SettingsProvider } from "@/context/settings-context";
+import { FirebaseMessagingProvider } from "@/lib/firebase";
 
 function DashboardLayoutContent({
     children,
@@ -33,27 +34,29 @@ function DashboardLayoutContent({
     }
 
     return (
-        <SidebarProvider>
-            <div className="flex min-h-screen">
-                <Sidebar>
-                    <SidebarContent>
-                        <SidebarHeader>
-                            <div className="flex items-center gap-2">
-                                <GraduationCap className="size-6 text-primary" />
-                                <span className="text-lg font-semibold font-headline">Chubut evalúa</span>
-                            </div>
-                        </SidebarHeader>
-                        <DashboardNav userRole={user.role} />
-                    </SidebarContent>
-                </Sidebar>
-                <div className="flex flex-col flex-1">
-                    <DashboardHeader user={user} />
-                    <main className="flex-1 p-4 md:p-8 pt-6">
-                        {children}
-                    </main>
+        <FirebaseMessagingProvider>
+            <SidebarProvider>
+                <div className="flex min-h-screen">
+                    <Sidebar>
+                        <SidebarContent>
+                            <SidebarHeader>
+                                <div className="flex items-center gap-2">
+                                    <GraduationCap className="size-6 text-primary" />
+                                    <span className="text-lg font-semibold font-headline">Chubut evalúa</span>
+                                </div>
+                            </SidebarHeader>
+                            <DashboardNav userRole={user.role} />
+                        </SidebarContent>
+                    </Sidebar>
+                    <div className="flex flex-col flex-1">
+                        <DashboardHeader user={user} />
+                        <main className="flex-1 p-4 md:p-8 pt-6">
+                            {children}
+                        </main>
+                    </div>
                 </div>
-            </div>
-        </SidebarProvider>
+            </SidebarProvider>
+        </FirebaseMessagingProvider>
     );
 }
 

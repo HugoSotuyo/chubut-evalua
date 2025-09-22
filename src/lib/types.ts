@@ -14,6 +14,7 @@ export type User = {
   course?: string;
   dni?: string;
   schoolYear: string;
+  fcmTokens?: string[];
 };
 
 export type Question = {

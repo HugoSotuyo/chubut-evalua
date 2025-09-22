@@ -1,12 +1,13 @@
 
+
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
-import { getAllUsers, updateUserStatusInDb, deleteUserFromDb, addUser as addUserToDb, updateUserInDb, updateUserPasswordInDb } from '@/lib/userService'; 
+import { getAllUsers, updateUserStatusInDb, deleteUserFromDb, addUser as addUserToDb, updateUserInDb, updateUserPasswordInDb, findDirectorBySchool } from '@/lib/userService'; 
 import type { User } from "@/lib/types";
 import { useAuditLogs } from './audit-log-context';
 
-type NewUserPayload = Omit<User, 'id' | 'status'>;
+type NewUserPayload = Omit<User, 'id' | 'status' | 'fcmTokens'>;
 
 interface UsersContextType {
   users: User[];
@@ -47,6 +48,17 @@ export function UsersProvider({ children }: { children: ReactNode }) {
       if (result.success && result.newUser) {
         await addAuditLog({ action: "ALTA_USUARIO_PENDIENTE", details: `Se registró el usuario "${result.newUser.email}" (${result.newUser.role}), pendiente de habilitación.` });
         setUsers(prevUsers => [...prevUsers, result.newUser!]);
+
+        if (result.newUser.role === 'Docente') {
+          const director = await findDirectorBySchool(result.newUser.school, result.newUser.schoolYear);
+          if (director) {
+              fetch('/api/send-notification', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ directorId: director.id, newUserName: result.newUser.name }),
+              });
+          }
+        }
       }
       return { success: result.success, message: result.message };
     } catch (error) {
@@ -89,7 +101,7 @@ export function UsersProvider({ children }: { children: ReactNode }) {
       }
       setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
     } catch (error) {
-      console.error(`Failed to delete user ${userId}:`, error);
+      console.error(`Error deleting user ${userId}:`, error);
       throw error; // Re-throw to be caught in the component for user feedback
     }
   };

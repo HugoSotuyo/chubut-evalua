@@ -10,5 +10,12 @@
       "**/.*",
       "**/node_modules/**"
     ]
+  },
+  "functions": {
+    "source": ".",
+    "runtime": "nodejs20"
+  },
+  "messaging": {
+    "public": "public"
   }
 }
