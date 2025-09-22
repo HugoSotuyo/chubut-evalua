@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, ReactNode } from 'react';
+import { useEffect } from 'react';
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { getFirestore, doc, updateDoc, arrayUnion } from 'firebase/firestore';

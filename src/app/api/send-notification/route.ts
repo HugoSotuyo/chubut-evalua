@@ -2,26 +2,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMessaging } from 'firebase-admin/messaging';
 import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps, App } from 'firebase-admin/app';
+import { initializeApp, getApps, App, applicationDefault } from 'firebase-admin/app';
 
-const firebaseConfig = {
-  credential: {
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-  },
-  databaseURL: `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseio.com`
-};
-
-
-let adminApp: App;
+// Initialize Firebase Admin SDK
 if (!getApps().length) {
-  adminApp = initializeApp(firebaseConfig);
-} else {
-  adminApp = getApps()[0];
+  initializeApp({
+    credential: applicationDefault(),
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  });
 }
 
-const db = getFirestore(adminApp);
+const db = getFirestore();
 
 export async function POST(req: NextRequest) {
   if (req.method !== 'POST') {
@@ -45,6 +36,7 @@ export async function POST(req: NextRequest) {
     const tokens = userData?.fcmTokens || [];
 
     if (tokens.length === 0) {
+      console.log(`Director ${directorId} has no FCM tokens. No notification sent.`);
       return NextResponse.json({ success: true, message: 'Director has no tokens, no notification sent.' });
     }
 
@@ -56,7 +48,7 @@ export async function POST(req: NextRequest) {
       tokens: tokens,
     };
 
-    const response = await getMessaging(adminApp).sendEachForMulticast(message);
+    const response = await getMessaging().sendEachForMulticast(message);
     
     console.log('Successfully sent message:', response);
     
