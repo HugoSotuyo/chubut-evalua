@@ -9,7 +9,7 @@ import { initializeApp, getApps, App, applicationDefault } from 'firebase-admin/
 if (!getApps().length) {
   initializeApp({
     credential: applicationDefault(),
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID, // This is crucial for authentication
   });
 }
 
