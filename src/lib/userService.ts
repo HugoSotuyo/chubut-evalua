@@ -1,7 +1,7 @@
 
 
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc, setDoc, or } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc, setDoc, or, and } from "firebase/firestore";
 import type { User, UserRole } from "./types";
 
 const firebaseConfig = {
@@ -85,10 +85,12 @@ export async function findDirectorBySchool(schoolName: string, schoolYear: strin
     const usersRef = collection(db, "users");
     const q = query(
         usersRef, 
-        where("role", "==", "Director"), 
-        where("school", "==", schoolName),
-        where("schoolYear", "==", schoolYear),
-        or(where("status", "==", "Activo"), where("status", "==", "Pendiente"))
+        and(
+            where("role", "==", "Director"), 
+            where("school", "==", schoolName),
+            where("schoolYear", "==", schoolYear),
+            or(where("status", "==", "Activo"), where("status", "==", "Pendiente"))
+        )
     );
     
     try {
