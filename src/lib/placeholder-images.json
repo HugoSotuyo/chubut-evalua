@@ -1,62 +1,74 @@
 [
   {
-    "src": "https://picsum.photos/seed/chubut_whales/1200/800",
+    "src": "https://firebasestorage.googleapis.com/v0/b/chubut-evala.appspot.com/o/login-backgrounds%2F3FXvjUSyyHqzgfy0W.jpg?alt=media&token=e1a8e1b0-1b1e-4b4b-8c1e-1b1e1b1e1b1e",
     "width": 1200,
     "height": 800,
     "hint": "Southern Right Whale"
   },
   {
-    "src": "https://picsum.photos/seed/chubut_penguins/1200/800",
+    "src": "https://firebasestorage.googleapis.com/v0/b/chubut-evala.appspot.com/o/login-backgrounds%2F9dYsG5tIB5D00UesN.jpg?alt=media&token=e1a8e1b0-1b1e-4b4b-8c1e-1b1e1b1e1b1e",
     "width": 1200,
     "height": 800,
     "hint": "Magellanic penguins"
   },
   {
-    "src": "https://picsum.photos/seed/chubut_trochita/1200/800",
+    "src": "https://firebasestorage.googleapis.com/v0/b/chubut-evala.appspot.com/o/login-backgrounds%2FOtagmOR03ijMlf5KE.jpg?alt=media&token=e1a8e1b0-1b1e-4b4b-8c1e-1b1e1b1e1b1e",
     "width": 1200,
     "height": 800,
     "hint": "La Trochita train"
   },
   {
-    "src": "https://picsum.photos/seed/chubut_alerces/1200/800",
+    "src": "https://firebasestorage.googleapis.com/v0/b/chubut-evala.appspot.com/o/login-backgrounds%2FK9NnPcWvbwKuo8Ni1.jpg?alt=media&token=e1a8e1b0-1b1e-4b4b-8c1e-1b1e1b1e1b1e",
     "width": 1200,
     "height": 800,
     "hint": "Los Alerces Park"
   },
   {
-    "src": "https://picsum.photos/seed/chubut_gaiman/1200/800",
+    "src": "https://firebasestorage.googleapis.com/v0/b/chubut-evala.appspot.com/o/login-backgrounds%2FLSV1rWHyTgmsadd4A.jpg?alt=media&token=e1a8e1b0-1b1e-4b4b-8c1e-1b1e1b1e1b1e",
     "width": 1200,
     "height": 800,
     "hint": "Gaiman welsh tea"
   },
   {
-    "src": "https://picsum.photos/seed/chubut_piedra/1200/800",
+    "src": "https://firebasestorage.googleapis.com/v0/b/chubut-evala.appspot.com/o/login-backgrounds%2Fs3K0df5Kxv5WOBkeM.jpg?alt=media&token=e1a8e1b0-1b1e-4b4b-8c1e-1b1e1b1e1b1e",
     "width": 1200,
     "height": 800,
     "hint": "Piedra Parada"
   },
   {
-    "src": "https://picsum.photos/seed/chubut_dams/1200/800",
+    "src": "https://firebasestorage.googleapis.com/v0/b/chubut-evala.appspot.com/o/login-backgrounds%2FAIKBnXx3PM90w1kdk.jpg?alt=media&token=e1a8e1b0-1b1e-4b4b-8c1e-1b1e1b1e1b1e",
     "width": 1200,
     "height": 800,
     "hint": "Florentino Ameghino dam"
   },
   {
-    "src": "https://picsum.photos/seed/chubut_orcas/1200/800",
+    "src": "https://firebasestorage.googleapis.com/v0/b/chubut-evala.appspot.com/o/login-backgrounds%2FLi2SLioppx65ZgzNk.jpg?alt=media&token=e1a8e1b0-1b1e-4b4b-8c1e-1b1e1b1e1b1e",
     "width": 1200,
     "height": 800,
     "hint": "orcas hunting"
   },
   {
-    "src": "https://picsum.photos/seed/chubut_sarmiento/1200/800",
+    "src": "https://firebasestorage.googleapis.com/v0/b/chubut-evala.appspot.com/o/login-backgrounds%2FVNuUOrHFeIFGe1gKx.jpg?alt=media&token=e1a8e1b0-1b1e-4b4b-8c1e-1b1e1b1e1b1e",
     "width": 1200,
     "height": 800,
     "hint": "Sarmiento petrified forest"
   },
   {
-    "src": "https://picsum.photos/seed/chubut_coast/1200/800",
+    "src": "https://firebasestorage.googleapis.com/v0/b/chubut-evala.appspot.com/o/login-backgrounds%2F4YdR2IReCZcFZ7aKG.jpg?alt=media&token=e1a8e1b0-1b1e-4b4b-8c1e-1b1e1b1e1b1e",
     "width": 1200,
     "height": 800,
     "hint": "Patagonian coast"
+  },
+  {
+    "src": "https://firebasestorage.googleapis.com/v0/b/chubut-evala.appspot.com/o/login-backgrounds%2FO2gMVX1Uu9leqyjvY.jpg?alt=media&token=e1a8e1b0-1b1e-4b4b-8c1e-1b1e1b1e1b1e",
+    "width": 1200,
+    "height": 800,
+    "hint": "Chubut river"
+  },
+  {
+    "src": "https://firebasestorage.googleapis.com/v0/b/chubut-evala.appspot.com/o/login-backgrounds%2F4ATsZcdDFkOk6IIG4.jpg?alt=media&token=e1a8e1b0-1b1e-4b4b-8c1e-1b1e1b1e1b1e",
+    "width": 1200,
+    "height": 800,
+    "hint": "Tulip field"
   }
 ]
