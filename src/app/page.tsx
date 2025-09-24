@@ -18,9 +18,7 @@ type ImageData = {
 
 const buildImageUrl = (fileName: string) => {
     const bucketName = "chubut-evala.appspot.com";
-    // This token is a placeholder but it's often consistent for public assets or can be omitted if rules allow
-    const token = "e1a8e1b0-1b1e-4b4b-8c1e-1b1e1b1e1b1e"; 
-    return `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/login-backgrounds%2F${fileName}?alt=media&token=${token}`;
+    return `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/login-backgrounds%2F${fileName}?alt=media`;
 }
 
 export default function LoginPage() {
