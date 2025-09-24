@@ -4,8 +4,10 @@ import Link from "next/link";
 import { LoginForm } from "@/components/login-form";
 import { GraduationCap } from "lucide-react";
 import { SuspenseWrapper } from "@/components/suspense-wrapper";
+import images from "@/lib/placeholder-images.json";
 
 export default function LoginPage() {
+  const randomImage = images[Math.floor(Math.random() * images.length)];
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">
@@ -39,11 +41,11 @@ export default function LoginPage() {
           Provincia de Chubut
         </p>
         <Image
-          src="https://picsum.photos/1200/800"
-          alt="Image"
-          width="1200"
-          height="800"
-          data-ai-hint="education students"
+          src={randomImage.src}
+          alt="Imagen de la provincia de Chubut"
+          width={randomImage.width}
+          height={randomImage.height}
+          data-ai-hint={randomImage.hint}
           className="h-auto w-full max-w-3xl rounded-lg object-cover shadow-2xl"
         />
         <p className="text-center text-secondary-foreground/60 mt-8 text-sm">

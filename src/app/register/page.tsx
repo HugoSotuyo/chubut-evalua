@@ -1,9 +1,13 @@
+
 import Image from "next/image";
 import Link from "next/link";
 import { RegisterForm } from "@/components/register-form";
 import { GraduationCap } from "lucide-react";
+import images from "@/lib/placeholder-images.json";
 
 export default function RegisterPage() {
+  const randomImage = images[Math.floor(Math.random() * images.length)];
+
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
       <div className="flex items-center justify-center py-12">
@@ -34,11 +38,11 @@ export default function RegisterPage() {
           Provincia de Chubut
         </p>
         <Image
-          src="https://picsum.photos/1200/800"
-          alt="Image"
-          width="1200"
-          height="800"
-          data-ai-hint="classroom teaching"
+          src={randomImage.src}
+          alt="Imagen de la provincia de Chubut"
+          width={randomImage.width}
+          height={randomImage.height}
+          data-ai-hint={randomImage.hint}
           className="h-auto w-full max-w-3xl rounded-lg object-cover shadow-2xl"
         />
         <p className="text-center text-secondary-foreground/60 mt-8 text-sm">

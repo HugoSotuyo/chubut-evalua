@@ -1,0 +1,62 @@
+[
+  {
+    "src": "https://picsum.photos/seed/chubut1/1200/800",
+    "width": 1200,
+    "height": 800,
+    "hint": "Patagonia landscape"
+  },
+  {
+    "src": "https://picsum.photos/seed/chubut2/1200/800",
+    "width": 1200,
+    "height": 800,
+    "hint": "whale watching"
+  },
+  {
+    "src": "https://picsum.photos/seed/chubut3/1200/800",
+    "width": 1200,
+    "height": 800,
+    "hint": "penguins colony"
+  },
+  {
+    "src": "https://picsum.photos/seed/chubut4/1200/800",
+    "width": 1200,
+    "height": 800,
+    "hint": "mountain range"
+  },
+  {
+    "src": "https://picsum.photos/seed/chubut5/1200/800",
+    "width": 1200,
+    "height": 800,
+    "hint": "welsh architecture"
+  },
+  {
+    "src": "https://picsum.photos/seed/chubut6/1200/800",
+    "width": 1200,
+    "height": 800,
+    "hint": "students learning"
+  },
+  {
+    "src": "https://picsum.photos/seed/chubut7/1200/800",
+    "width": 1200,
+    "height": 800,
+    "hint": "classroom education"
+  },
+  {
+    "src": "https://picsum.photos/seed/chubut8/1200/800",
+    "width": 1200,
+    "height": 800,
+    "hint": "Andes mountains"
+  },
+  {
+    "src": "https://picsum.photos/seed/chubut9/1200/800",
+    "width": 1200,
+    "height": 800,
+    "hint": "Gaiman teahouse"
+  },
+  {
+    "src": "https://picsum.photos/seed/chubut10/1200/800",
+    "width": 1200,
+    "height": 800,
+    "hint": "children studying"
+  }
+]
