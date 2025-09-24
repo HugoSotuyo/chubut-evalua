@@ -7,20 +7,30 @@ import { useState, useEffect } from "react";
 import { LoginForm } from "@/components/login-form";
 import { GraduationCap } from "lucide-react";
 import { SuspenseWrapper } from "@/components/suspense-wrapper";
-import images from "@/lib/placeholder-images.json";
+import imageData from "@/lib/placeholder-images.json";
 
 type ImageData = {
-  src: string;
+  fileName: string;
   width: number;
   height: number;
   hint: string;
 };
 
+const buildImageUrl = (fileName: string) => {
+    const bucketName = "chubut-evala.appspot.com";
+    // This token is a placeholder but it's often consistent for public assets or can be omitted if rules allow
+    const token = "e1a8e1b0-1b1e-4b4b-8c1e-1b1e1b1e1b1e"; 
+    return `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/login-backgrounds%2F${fileName}?alt=media&token=${token}`;
+}
+
 export default function LoginPage() {
   const [randomImage, setRandomImage] = useState<ImageData | null>(null);
+  const [imageUrl, setImageUrl] = useState<string>("");
 
   useEffect(() => {
-    setRandomImage(images[Math.floor(Math.random() * images.length)]);
+    const selectedImage = imageData[Math.floor(Math.random() * imageData.length)];
+    setRandomImage(selectedImage);
+    setImageUrl(buildImageUrl(selectedImage.fileName));
   }, []);
 
   return (
@@ -54,9 +64,9 @@ export default function LoginPage() {
         <p className="text-xl text-secondary-foreground/80 font-medium text-center mb-8">
           Provincia de Chubut
         </p>
-        {randomImage && (
+        {randomImage && imageUrl && (
           <Image
-            src={randomImage.src}
+            src={imageUrl}
             alt="Imagen de la provincia de Chubut"
             width={randomImage.width}
             height={randomImage.height}

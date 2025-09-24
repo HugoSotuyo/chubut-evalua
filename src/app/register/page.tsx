@@ -6,20 +6,29 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { RegisterForm } from "@/components/register-form";
 import { GraduationCap } from "lucide-react";
-import images from "@/lib/placeholder-images.json";
+import imageData from "@/lib/placeholder-images.json";
 
 type ImageData = {
-  src: string;
+  fileName: string;
   width: number;
   height: number;
   hint: string;
 };
 
+const buildImageUrl = (fileName: string) => {
+    const bucketName = "chubut-evala.appspot.com";
+    const token = "e1a8e1b0-1b1e-4b4b-8c1e-1b1e1b1e1b1e";
+    return `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/login-backgrounds%2F${fileName}?alt=media&token=${token}`;
+}
+
 export default function RegisterPage() {
   const [randomImage, setRandomImage] = useState<ImageData | null>(null);
+  const [imageUrl, setImageUrl] = useState<string>("");
 
   useEffect(() => {
-    setRandomImage(images[Math.floor(Math.random() * images.length)]);
+    const selectedImage = imageData[Math.floor(Math.random() * imageData.length)];
+    setRandomImage(selectedImage);
+    setImageUrl(buildImageUrl(selectedImage.fileName));
   }, []);
 
   return (
@@ -51,15 +60,15 @@ export default function RegisterPage() {
         <p className="text-xl text-secondary-foreground/80 font-medium text-center mb-8">
           Provincia de Chubut
         </p>
-        {randomImage && (
+        {randomImage && imageUrl && (
             <Image
-            src={randomImage.src}
-            alt="Imagen de la provincia de Chubut"
-            width={randomImage.width}
-            height={randomImage.height}
-            data-ai-hint={randomImage.hint}
-            className="h-auto w-full max-w-3xl rounded-lg object-cover shadow-2xl"
-            priority
+              src={imageUrl}
+              alt="Imagen de la provincia de Chubut"
+              width={randomImage.width}
+              height={randomImage.height}
+              data-ai-hint={randomImage.hint}
+              className="h-auto w-full max-w-3xl rounded-lg object-cover shadow-2xl"
+              priority
             />
         )}
         <p className="text-center text-secondary-foreground/60 mt-8 text-sm">
