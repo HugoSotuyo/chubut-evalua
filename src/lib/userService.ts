@@ -1,7 +1,8 @@
 
 
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc, setDoc, or, and } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
+import { or, and } from "firebase/firestore/lite";
 import type { User, UserRole } from "./types";
 
 const firebaseConfig = {
