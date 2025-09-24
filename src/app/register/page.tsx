@@ -1,12 +1,26 @@
 
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import { RegisterForm } from "@/components/register-form";
 import { GraduationCap } from "lucide-react";
 import images from "@/lib/placeholder-images.json";
 
+type ImageData = {
+  src: string;
+  width: number;
+  height: number;
+  hint: string;
+};
+
 export default function RegisterPage() {
-  const randomImage = images[Math.floor(Math.random() * images.length)];
+  const [randomImage, setRandomImage] = useState<ImageData | null>(null);
+
+  useEffect(() => {
+    setRandomImage(images[Math.floor(Math.random() * images.length)]);
+  }, []);
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
@@ -37,14 +51,17 @@ export default function RegisterPage() {
         <p className="text-xl text-secondary-foreground/80 font-medium text-center mb-8">
           Provincia de Chubut
         </p>
-        <Image
-          src={randomImage.src}
-          alt="Imagen de la provincia de Chubut"
-          width={randomImage.width}
-          height={randomImage.height}
-          data-ai-hint={randomImage.hint}
-          className="h-auto w-full max-w-3xl rounded-lg object-cover shadow-2xl"
-        />
+        {randomImage && (
+            <Image
+            src={randomImage.src}
+            alt="Imagen de la provincia de Chubut"
+            width={randomImage.width}
+            height={randomImage.height}
+            data-ai-hint={randomImage.hint}
+            className="h-auto w-full max-w-3xl rounded-lg object-cover shadow-2xl"
+            priority
+            />
+        )}
         <p className="text-center text-secondary-foreground/60 mt-8 text-sm">
           Fomentando la excelencia académica en cada rincón de la provincia.
         </p>
