@@ -8,10 +8,9 @@ import { LoginForm } from "@/components/login-form";
 import { GraduationCap } from "lucide-react";
 import { SuspenseWrapper } from "@/components/suspense-wrapper";
 import imageData from "@/lib/placeholder-images.json";
-import { buildImageUrl } from "@/lib/utils";
 
 type ImageData = {
-  fileName: string;
+  seed: string;
   width: number;
   height: number;
   hint: string;
@@ -24,7 +23,7 @@ export default function LoginPage() {
   useEffect(() => {
     const selectedImage = imageData[Math.floor(Math.random() * imageData.length)];
     setRandomImage(selectedImage);
-    setImageUrl(buildImageUrl(selectedImage.fileName));
+    setImageUrl(`https://picsum.photos/seed/${selectedImage.seed}/${selectedImage.width}/${selectedImage.height}`);
   }, []);
 
   return (
