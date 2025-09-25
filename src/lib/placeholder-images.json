@@ -1,74 +1,74 @@
 [
   {
-    "seed": "101",
+    "seed": "201",
     "width": 1200,
     "height": 800,
-    "hint": "library books"
+    "hint": "Patagonia landscape"
   },
   {
-    "seed": "102",
+    "seed": "202",
     "width": 1200,
     "height": 800,
-    "hint": "student reading"
+    "hint": "Buenos Aires"
   },
   {
-    "seed": "103",
+    "seed": "203",
     "width": 1200,
     "height": 800,
-    "hint": "classroom pencils"
+    "hint": "Iguazu falls"
   },
   {
-    "seed": "104",
+    "seed": "204",
     "width": 1200,
     "height": 800,
-    "hint": "open book"
+    "hint": "Andes mountains"
   },
   {
-    "seed": "105",
+    "seed": "205",
     "width": 1200,
     "height": 800,
-    "hint": "bookshelf glasses"
+    "hint": "Argentina flag"
   },
   {
-    "seed": "106",
+    "seed": "206",
     "width": 1200,
     "height": 800,
-    "hint": "child learning"
+    "hint": "Bariloche lake"
   },
   {
-    "seed": "107",
+    "seed": "207",
     "width": 1200,
     "height": 800,
-    "hint": "stack books"
+    "hint": "Ushuaia city"
   },
   {
-    "seed": "108",
+    "seed": "208",
     "width": 1200,
     "height": 800,
-    "hint": "study desk"
+    "hint": "gaucho horse"
   },
   {
-    "seed": "109",
+    "seed": "209",
     "width": 1200,
     "height": 800,
-    "hint": "person writing"
+    "hint": "Perito Moreno"
   },
   {
-    "seed": "110",
+    "seed": "210",
     "width": 1200,
     "height": 800,
-    "hint": "library aisle"
+    "hint": "La Boca"
   },
   {
-    "seed": "111",
+    "seed": "211",
     "width": 1200,
     "height": 800,
-    "hint": "graduation cap"
+    "hint": "vineyard Mendoza"
   },
   {
-    "seed": "112",
+    "seed": "212",
     "width": 1200,
     "height": 800,
-    "hint": "reading glasses"
+    "hint": "obelisco Argentina"
   }
 ]
