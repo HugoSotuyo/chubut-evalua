@@ -84,24 +84,32 @@ export async function findUserByEmail(identifier: string): Promise<User | null> 
 export async function findDirectorBySchool(schoolName: string, schoolYear: string): Promise<User | null> {
     const db = getDb();
     const usersRef = collection(db, "users");
-    const q = query(
-        usersRef, 
-        and(
-            where("role", "==", "Director"), 
-            where("school", "==", schoolName),
-            where("schoolYear", "==", schoolYear),
-            or(where("status", "==", "Activo"), where("status", "==", "Pendiente"))
-        )
-    );
     
+    const baseQueryConstraints = [
+        where("role", "==", "Director"),
+        where("school", "==", schoolName),
+        where("schoolYear", "==", schoolYear),
+    ];
+
     try {
-        const querySnapshot = await getDocs(q);
+        // First, try to find an 'Activo' director
+        const activeQuery = query(usersRef, ...baseQueryConstraints, where("status", "==", "Activo"));
+        let querySnapshot = await getDocs(activeQuery);
+
+        // If no active director, try to find a 'Pendiente' one
+        if (querySnapshot.empty) {
+            const pendingQuery = query(usersRef, ...baseQueryConstraints, where("status", "==", "Pendiente"));
+            querySnapshot = await getDocs(pendingQuery);
+        }
+
         if (querySnapshot.empty) {
             console.log(`No director found for school "${schoolName}" in year ${schoolYear} with status Active or Pending.`);
             return null;
         }
+        
         const userDoc = querySnapshot.docs[0];
         return { id: userDoc.id, ...userDoc.data() } as User;
+
     } catch (error) {
         console.error("Error finding director by school:", error);
         throw error;
@@ -258,3 +266,4 @@ export async function deleteUserFromDb(userId: string) {
         throw new Error("Failed to delete user from database.");
     }
 }
+
