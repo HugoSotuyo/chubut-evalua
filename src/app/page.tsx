@@ -19,7 +19,7 @@ type ImageData = {
 // Reemplaza 'YOUR_ACCESS_TOKEN' con un token de acceso real de una de tus imágenes en Firebase Storage.
 const buildImageUrl = (fileName: string) => {
     const bucketName = "chubut-evala.appspot.com";
-    const accessToken = "e1a8e1b0-1b1e-4b4b-8c1e-1b1e1b1e1b1e"; // <-- REEMPLAZA ESTE TOKEN
+    const accessToken = '0fc7d008-069d-4f6b-843c-c053b33c64bd'; // <-- REEMPLAZA ESTE TOKEN
     return `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/login-backgrounds%2F${fileName}?alt=media&token=${accessToken}`;
 }
 
