@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { RegisterForm } from "@/components/register-form";
 import { GraduationCap } from "lucide-react";
 import imageData from "@/lib/placeholder-images.json";
+import { buildImageUrl } from "@/lib/utils";
 
 type ImageData = {
   fileName: string;
@@ -14,13 +15,6 @@ type ImageData = {
   height: number;
   hint: string;
 };
-
-// Reemplaza 'YOUR_ACCESS_TOKEN' con un token de acceso real de una de tus imágenes en Firebase Storage.
-const buildImageUrl = (fileName: string) => {
-    const bucketName = "chubut-evala.appspot.com";
-    const accessToken = '0fc7d008-069d-4f6b-843c-c053b33c64bd'; // <-- REEMPLAZA ESTE TOKEN
-    return `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/login-backgrounds%2F${fileName}?alt=media&token=${accessToken}`;
-}
 
 export default function RegisterPage() {
   const [randomImage, setRandomImage] = useState<ImageData | null>(null);
