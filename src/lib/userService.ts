@@ -2,7 +2,6 @@
 
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getFirestore, collection, query, where, getDocs, addDoc, getCountFromServer, Firestore, doc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
-import { or, and } from "firebase/firestore/lite";
 import type { User, UserRole } from "./types";
 
 const firebaseConfig = {
@@ -93,12 +92,12 @@ export async function findDirectorBySchool(schoolName: string, schoolYear: strin
 
     try {
         // First, try to find an 'Activo' director
-        const activeQuery = query(usersRef, ...baseQueryConstraints, where("status", "==", "Activo"));
+        const activeQuery = query(usersRef, where("role", "==", "Director"), where("school", "==", schoolName), where("schoolYear", "==", schoolYear), where("status", "==", "Activo"));
         let querySnapshot = await getDocs(activeQuery);
 
         // If no active director, try to find a 'Pendiente' one
         if (querySnapshot.empty) {
-            const pendingQuery = query(usersRef, ...baseQueryConstraints, where("status", "==", "Pendiente"));
+            const pendingQuery = query(usersRef, where("role", "==", "Director"), where("school", "==", schoolName), where("schoolYear", "==", schoolYear), where("status", "==", "Pendiente"));
             querySnapshot = await getDocs(pendingQuery);
         }
 
@@ -266,4 +265,3 @@ export async function deleteUserFromDb(userId: string) {
         throw new Error("Failed to delete user from database.");
     }
 }
-
