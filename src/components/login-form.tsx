@@ -2,14 +2,17 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, HelpCircle } from "lucide-react";
 import { findUserByEmail, seedInitialUsers, findUserByRole } from "@/lib/userService";
 import type { UserRole } from "@/lib/auth";
+import { useUsers } from "@/context/users-context";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+
 
 export function LoginForm() {
   const router = useRouter();
@@ -19,6 +22,14 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { users } = useUsers();
+  const [isSupportDialogOpen, setIsSupportDialogOpen] = useState(false);
+
+  const supportEmail = useMemo(() => {
+    const evaluator = users.find(u => u.role === 'Evaluador');
+    return evaluator ? evaluator.email : 'soporte@chubut.edu.ar';
+  }, [users]);
+
 
   useEffect(() => {
     const registrationSuccess = searchParams.get('registration_success');
@@ -132,54 +143,85 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleLogin} className="grid gap-4">
-      <div className="grid gap-2">
-        <Label htmlFor="email">DNI / Email</Label>
-        <Input
-          id="email"
-          type="text"
-          placeholder="tu.dni@chubut.edu.ar"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={isSubmitting}
-        />
-      </div>
-      <div className="grid gap-2">
-        <div className="flex items-center">
-          <Label htmlFor="password">Contraseña</Label>
-          <a
-            href="#"
-            className="ml-auto inline-block text-sm underline"
-          >
-            ¿Olvidaste tu contraseña?
-          </a>
-        </div>
-        <div className="relative">
+    <>
+      <form onSubmit={handleLogin} className="grid gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="email">DNI / Email</Label>
           <Input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="pr-10"
-            required
+            id="email"
+            type="text"
+            placeholder="tu.dni@chubut.edu.ar"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             disabled={isSubmitting}
           />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground"
-            disabled={isSubmitting}
-          >
-            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-          </button>
         </div>
-      </div>
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? "Ingresando..." : "Ingresar"}
-      </Button>
-      <Button variant="outline" className="w-full" disabled={isSubmitting}>
-        Ingresar con Google
-      </Button>
-    </form>
+        <div className="grid gap-2">
+          <div className="flex items-center">
+            <Label htmlFor="password">Contraseña</Label>
+            <Button
+              type="button"
+              variant="link"
+              className="ml-auto h-auto p-0 text-sm underline"
+              onClick={() => setIsSupportDialogOpen(true)}
+            >
+              ¿Olvidaste tu contraseña?
+            </Button>
+          </div>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="pr-10"
+              required
+              disabled={isSubmitting}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground"
+              disabled={isSubmitting}
+            >
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? "Ingresando..." : "Ingresar"}
+        </Button>
+        <Button variant="outline" className="w-full" disabled={isSubmitting}>
+          Ingresar con Google
+        </Button>
+      </form>
+
+      <Dialog open={isSupportDialogOpen} onOpenChange={setIsSupportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <div className="flex items-center gap-4 mb-4">
+                  <HelpCircle className="h-8 w-8 text-primary" />
+                  <DialogTitle className="text-2xl">Recuperar Contraseña</DialogTitle>
+              </div>
+              <DialogDescription className="space-y-4 text-base text-left">
+                  <p>Para solicitar una nueva contraseña, por favor envía un correo electrónico a la siguiente dirección:</p>
+                  <div className="rounded-md bg-muted p-3 text-center">
+                      <a href={`mailto:${supportEmail}`} className="text-lg font-semibold text-primary underline">
+                          {supportEmail}
+                      </a>
+                  </div>
+                  <p>En el asunto, indica "Solicitud de Nueva Contraseña" y en el cuerpo del mensaje, asegúrate de incluir todos tus datos de perfil para que podamos identificarte:</p>
+                  <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1">
+                      <li>Nombre completo</li>
+                      <li>DNI / Email con el que te registraste</li>
+                      <li>Rol (Docente, Director, etc.)</li>
+                      <li>Región y Escuela</li>
+                      <li>Grado y curso (si aplica)</li>
+                  </ul>
+              </DialogDescription>
+            </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
