@@ -61,7 +61,7 @@ const AyudaDocente = () => (
                                     </ol>
                                 </AlertDescription>
                             </Alert>
-                            <div className="text-sm">Solo podrás cargar exámenes que estén en estado <Badge>Cerrado</Badge> y que correspondan a tu grado. Además, no podrás cargar un examen que el alumno ya tenga calificado.</div>
+                            <div className="text-sm">Solo podrás cargar exámenes que estén en estado <Badge variant="destructive">Cerrado</Badge> y que correspondan a tu grado. Además, no podrás cargar un examen que el alumno ya tenga calificado.</div>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
@@ -122,6 +122,38 @@ const AyudaDirector = () => (
     </Card>
 );
 
+const AyudaAdministrador = () => (
+    <Card>
+        <CardHeader>
+            <CardTitle>Guía para Administradores</CardTitle>
+            <CardDescription>Instrucciones para gestionar usuarios y escuelas en el sistema.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="usuarios">
+                    <AccordionTrigger>Gestión de Usuarios</AccordionTrigger>
+                    <AccordionContent>
+                        <div className="text-sm">Puedes habilitar y eliminar cualquier usuario del sistema desde la sección <Badge variant="secondary">Usuarios</Badge>. Este rol está pensado para mantener la base de datos de usuarios, pero no interviene en la creación de contenido pedagógico.</div>
+                    </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="escuelas">
+                    <AccordionTrigger>Gestión de Escuelas y Regiones</AccordionTrigger>
+                    <AccordionContent>
+                        <div className="text-sm">En <Badge variant="secondary">Escuelas</Badge>, puedes crear nuevas regiones y escuelas. También puedes activar o desactivar escuelas. Una escuela inactiva no aparecerá en los formularios de registro para nuevos usuarios.</div>
+                    </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="analisis">
+                    <AccordionTrigger>Visualización de Datos</AccordionTrigger>
+                    <AccordionContent>
+                        <div className="text-sm">Aunque no gestionas exámenes ni resultados, tienes acceso a la sección de <Badge variant="secondary">Análisis</Badge> para poder supervisar los datos a nivel global.</div>
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
+        </CardContent>
+    </Card>
+);
+
+
 const AyudaEvaluador = () => (
      <Card>
         <CardHeader>
@@ -133,7 +165,7 @@ const AyudaEvaluador = () => (
                 <AccordionItem value="examenes">
                     <AccordionTrigger>Gestión de Exámenes</AccordionTrigger>
                     <AccordionContent>
-                        <div className="text-sm">Puedes crear, editar y eliminar exámenes desde la sección <Badge variant="secondary">Exámenes</Badge>. Es crucial que gestiones el estado de un examen: <Badge>Abierto</Badge> (los docentes pueden cargar resultados) o <Badge>Cerrado</Badge> (solo para consulta y análisis).</div>
+                        <div className="text-sm">Puedes crear, editar y eliminar exámenes desde la sección <Badge variant="secondary">Exámenes</Badge>. Es crucial que gestiones el estado de un examen: <Badge>Abierto</Badge> o <Badge variant="destructive">Cerrado</Badge>.</div>
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="escuelas">
@@ -182,9 +214,9 @@ export default function AyudaPage() {
             case "Evaluador":
                 return <AyudaEvaluador />;
             case "Administrador":
-                 return <AyudaEvaluador />; // O un componente específico para Admin
+                 return <AyudaAdministrador />;
             case "Referente":
-                 return <AyudaEvaluador />; // O un componente específico para Referente
+                 return <AyudaEvaluador />; // Referente has similar permissions to Evaluador for exams
             default:
                 return <AyudaDefault />;
         }
@@ -202,5 +234,7 @@ export default function AyudaPage() {
         </div>
     );
 }
+
+    
 
     
