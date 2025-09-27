@@ -167,47 +167,48 @@ export default function PerfilPage() {
       </Card>
 
       <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
-        <form onSubmit={handlePasswordChange}>
-              <DialogHeader>
-                  <DialogTitle>Cambiar mi Contraseña</DialogTitle>
-                  <DialogDescription>
-                      Ingresa tu nueva contraseña. Se recomienda usar una combinación segura que puedas recordar.
-                  </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                  <div className="space-y-2">
-                      <Label htmlFor="new-password">Nueva Contraseña</Label>
-                      <Input 
-                          id="new-password" 
-                          type="password" 
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          required 
-                          disabled={isSubmitting}
-                      />
-                  </div>
-                  <div className="space-y-2">
-                      <Label htmlFor="confirm-password">Confirmar Nueva Contraseña</Label>
-                      <Input 
-                          id="confirm-password" 
-                          type="password"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          required 
-                          disabled={isSubmitting}
-                      />
-                  </div>
-              </div>
-              <DialogFooter>
-                  <DialogClose asChild>
-                      <Button type="button" variant="secondary" disabled={isSubmitting}>Cancelar</Button>
-                  </DialogClose>
-                  <Button type="submit" disabled={isSubmitting}>
-                      <Save className="mr-2 h-4 w-4" />
-                      {isSubmitting ? "Guardando..." : "Guardar Contraseña"}
-                  </Button>
-              </DialogFooter>
-          </form>
+        <DialogContent>
+          <form onSubmit={handlePasswordChange}>
+                <DialogHeader>
+                    <DialogTitle>Cambiar mi Contraseña</DialogTitle>
+                    <DialogDescription>
+                        Ingresa tu nueva contraseña. Se recomienda usar una combinación segura que puedas recordar.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="new-password">Nueva Contraseña</Label>
+                        <Input 
+                            id="new-password" 
+                            type="password" 
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            required 
+                            disabled={isSubmitting}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="confirm-password">Confirmar Nueva Contraseña</Label>
+                        <Input 
+                            id="confirm-password" 
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required 
+                            disabled={isSubmitting}
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button type="button" variant="secondary" disabled={isSubmitting}>Cancelar</Button>
+                    </DialogClose>
+                    <Button type="submit" disabled={isSubmitting}>
+                        <Save className="mr-2 h-4 w-4" />
+                        {isSubmitting ? "Guardando..." : "Guardar Contraseña"}
+                    </Button>
+                </DialogFooter>
+            </form>
         </DialogContent>
     </Dialog>
 
