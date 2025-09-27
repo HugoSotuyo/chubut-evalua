@@ -1,5 +1,4 @@
 
-
 import type { UserRole } from "@/lib/auth";
 import {
   Home,
@@ -13,6 +12,7 @@ import {
   User as UserIcon,
   KeyRound,
   Library,
+  HelpCircle,
 } from "lucide-react";
 
 export type NavItem = {
@@ -33,5 +33,6 @@ export const navItems: NavItem[] = [
   { href: "/dashboard/alumnos", icon: StudentIcon, label: "Alumnos", roles: ["Director", "Docente"], showInMenu: true },
   { href: "/dashboard/roles", icon: KeyRound, label: "Roles y Permisos", roles: ["Evaluador", "Administrador"], showInMenu: true },
   { href: "/dashboard/admin", icon: Shield, label: "Admin General", roles: ["Evaluador"], showInMenu: true },
+  { href: "/dashboard/ayuda", icon: HelpCircle, label: "Ayuda", roles: ["Evaluador", "Referente", "Administrador", "Director", "Docente"], showInMenu: true },
   { href: "/dashboard/perfil", icon: UserIcon, label: "Mi Perfil", roles: ["Evaluador", "Referente", "Administrador", "Director", "Docente"], showInMenu: false },
 ];
