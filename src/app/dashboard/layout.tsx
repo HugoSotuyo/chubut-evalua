@@ -16,7 +16,6 @@ import { ResultsProvider } from "@/context/results-context";
 import { ExamsProvider } from "@/context/exams-context";
 import { AuditLogProvider } from "@/context/audit-log-context";
 import { SettingsProvider } from "@/context/settings-context";
-import { FirebaseMessagingProvider } from "@/lib/firebase";
 
 function DashboardLayoutContent({
     children,
@@ -35,7 +34,6 @@ function DashboardLayoutContent({
 
     return (
         <>
-            <FirebaseMessagingProvider />
             <SidebarProvider>
                 <div className="flex min-h-screen">
                     <Sidebar>
