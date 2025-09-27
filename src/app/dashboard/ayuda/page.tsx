@@ -20,7 +20,7 @@ const AyudaDocente = () => (
                     <AccordionTrigger>¿Cómo gestiono mis alumnos?</AccordionTrigger>
                     <AccordionContent>
                         <div className="space-y-4">
-                            <p>La sección <Badge variant="secondary">Alumnos</Badge> te permite administrar la lista de estudiantes de tu curso.</p>
+                            <div className="text-sm">La sección <Badge variant="secondary">Alumnos</Badge> te permite administrar la lista de estudiantes de tu curso.</div>
                             <Alert>
                                 <Lightbulb className="h-4 w-4" />
                                 <AlertTitle>Agregar un nuevo alumno</AlertTitle>
@@ -61,14 +61,14 @@ const AyudaDocente = () => (
                                     </ol>
                                 </AlertDescription>
                             </Alert>
-                            <p>Solo podrás cargar exámenes que estén en estado <Badge>Cerrado</Badge> y que correspondan a tu grado. Además, no podrás cargar un examen que el alumno ya tenga calificado.</p>
+                            <div className="text-sm">Solo podrás cargar exámenes que estén en estado <Badge>Cerrado</Badge> y que correspondan a tu grado. Además, no podrás cargar un examen que el alumno ya tenga calificado.</div>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
                  <AccordionItem value="analisis">
                     <AccordionTrigger>¿Cómo veo el rendimiento de mi curso?</AccordionTrigger>
                     <AccordionContent>
-                        <p>La sección de <Badge variant="secondary">Análisis</Badge> te muestra gráficos y tablas sobre el rendimiento de tus alumnos. Como docente, los datos que verás estarán automáticamente filtrados para mostrar solo los resultados de tu curso en el ciclo lectivo actual.</p>
+                        <div className="text-sm">La sección de <Badge variant="secondary">Análisis</Badge> te muestra gráficos y tablas sobre el rendimiento de tus alumnos. Como docente, los datos que verás estarán automáticamente filtrados para mostrar solo los resultados de tu curso en el ciclo lectivo actual.</div>
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
@@ -88,7 +88,7 @@ const AyudaDirector = () => (
                     <AccordionTrigger>¿Cómo habilito a un nuevo docente?</AccordionTrigger>
                     <AccordionContent>
                         <div className="space-y-4">
-                            <p>Cuando un docente se registra en la plataforma y selecciona tu escuela, aparecerá en la sección <Badge variant="secondary">Usuarios</Badge> con estado <Badge>Pendiente</Badge>.</p>
+                            <div className="text-sm">Cuando un docente se registra en la plataforma y selecciona tu escuela, aparecerá en la sección <Badge variant="secondary">Usuarios</Badge> con estado <Badge>Pendiente</Badge>.</div>
                              <Alert>
                                 <Lightbulb className="h-4 w-4" />
                                 <AlertTitle>Habilitar un docente</AlertTitle>
@@ -101,20 +101,20 @@ const AyudaDirector = () => (
                                     </ol>
                                 </AlertDescription>
                             </Alert>
-                             <p>Recibirás una notificación push en tu dispositivo cada vez que un nuevo docente se registre en tu escuela.</p>
+                             <p className="text-sm">Recibirás una notificación push en tu dispositivo cada vez que un nuevo docente se registre en tu escuela.</p>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
                  <AccordionItem value="alumnos">
                     <AccordionTrigger>¿Puedo gestionar los alumnos de mi escuela?</AccordionTrigger>
                     <AccordionContent>
-                        <p>Sí, en la sección <Badge variant="secondary">Alumnos</Badge>, puedes ver a todos los estudiantes de tu escuela, sin importar el curso. Los docentes solo pueden ver a los alumnos de su propio curso.</p>
+                        <div className="text-sm">Sí, en la sección <Badge variant="secondary">Alumnos</Badge>, puedes ver a todos los estudiantes de tu escuela, sin importar el curso. Los docentes solo pueden ver a los alumnos de su propio curso.</div>
                     </AccordionContent>
                 </AccordionItem>
                  <AccordionItem value="analisis">
                     <AccordionTrigger>¿Cómo analizo los datos de mi escuela?</AccordionTrigger>
                     <AccordionContent>
-                        <p>La sección de <Badge variant="secondary">Análisis</Badge> te permite ver el rendimiento general de tu escuela. Puedes utilizar los filtros por <span className="font-semibold">Grado</span> y <span className="font-semibold">Curso</span> para desglosar los datos y obtener una visión más detallada. También puedes filtrar por <span className="font-semibold">Ciclo Lectivo</span> para comparar el rendimiento a lo largo del tiempo.</p>
+                        <p className="text-sm">La sección de <Badge variant="secondary">Análisis</Badge> te permite ver el rendimiento general de tu escuela. Puedes utilizar los filtros por <span className="font-semibold">Grado</span> y <span className="font-semibold">Curso</span> para desglosar los datos y obtener una visión más detallada. También puedes filtrar por <span className="font-semibold">Ciclo Lectivo</span> para comparar el rendimiento a lo largo del tiempo.</p>
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
@@ -133,19 +133,19 @@ const AyudaEvaluador = () => (
                 <AccordionItem value="examenes">
                     <AccordionTrigger>Gestión de Exámenes</AccordionTrigger>
                     <AccordionContent>
-                        <p>Puedes crear, editar y eliminar exámenes desde la sección <Badge variant="secondary">Exámenes</Badge>. Es crucial que gestiones el estado de un examen: <Badge>Abierto</Badge> (los docentes pueden cargar resultados) o <Badge>Cerrado</Badge> (solo para consulta y análisis).</p>
+                        <div className="text-sm">Puedes crear, editar y eliminar exámenes desde la sección <Badge variant="secondary">Exámenes</Badge>. Es crucial que gestiones el estado de un examen: <Badge>Abierto</Badge> (los docentes pueden cargar resultados) o <Badge>Cerrado</Badge> (solo para consulta y análisis).</div>
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="escuelas">
                     <AccordionTrigger>Gestión de Escuelas y Regiones</AccordionTrigger>
                     <AccordionContent>
-                        <p>En <Badge variant="secondary">Escuelas</Badge>, puedes crear nuevas regiones y escuelas. También puedes activar o desactivar escuelas. Una escuela inactiva no aparecerá en los formularios de registro.</p>
+                        <div className="text-sm">En <Badge variant="secondary">Escuelas</Badge>, puedes crear nuevas regiones y escuelas. También puedes activar o desactivar escuelas. Una escuela inactiva no aparecerá en los formularios de registro.</div>
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="admin">
                     <AccordionTrigger>Panel de Administración General</AccordionTrigger>
                     <AccordionContent>
-                        <p>En <Badge variant="secondary">Admin General</Badge>, puedes configurar parámetros clave del sistema, como la <span className="font-semibold">Nota Mínima de Aprobación</span> y el <span className="font-semibold">Ciclo Lectivo Actual</span>. También tienes acceso a un registro de auditoría de todas las acciones importantes realizadas en la plataforma.</p>
+                        <div className="text-sm">En <Badge variant="secondary">Admin General</Badge>, puedes configurar parámetros clave del sistema, como la <span className="font-semibold">Nota Mínima de Aprobación</span> y el <span className="font-semibold">Ciclo Lectivo Actual</span>. También tienes acceso a un registro de auditoría de todas las acciones importantes realizadas en la plataforma.</div>
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
