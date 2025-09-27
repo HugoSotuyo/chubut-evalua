@@ -47,7 +47,7 @@ const AyudaDocente = () => (
                     <AccordionTrigger>¿Cómo cargo los resultados de un examen?</AccordionTrigger>
                     <AccordionContent>
                          <div className="space-y-4">
-                            <p>Puedes cargar los resultados de un examen para cada alumno de forma individual.</p>
+                            <div className="text-sm">Puedes cargar los resultados de un examen para cada alumno de forma individual.</div>
                             <Alert>
                                 <Lightbulb className="h-4 w-4" />
                                 <AlertTitle>Cargar un examen</AlertTitle>
@@ -101,7 +101,7 @@ const AyudaDirector = () => (
                                     </ol>
                                 </AlertDescription>
                             </Alert>
-                             <p className="text-sm">Recibirás una notificación push en tu dispositivo cada vez que un nuevo docente se registre en tu escuela.</p>
+                             <div className="text-sm">Recibirás una notificación push en tu dispositivo cada vez que un nuevo docente se registre en tu escuela.</div>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
@@ -114,7 +114,7 @@ const AyudaDirector = () => (
                  <AccordionItem value="analisis">
                     <AccordionTrigger>¿Cómo analizo los datos de mi escuela?</AccordionTrigger>
                     <AccordionContent>
-                        <p className="text-sm">La sección de <Badge variant="secondary">Análisis</Badge> te permite ver el rendimiento general de tu escuela. Puedes utilizar los filtros por <span className="font-semibold">Grado</span> y <span className="font-semibold">Curso</span> para desglosar los datos y obtener una visión más detallada. También puedes filtrar por <span className="font-semibold">Ciclo Lectivo</span> para comparar el rendimiento a lo largo del tiempo.</p>
+                        <div className="text-sm">La sección de <Badge variant="secondary">Análisis</Badge> te permite ver el rendimiento general de tu escuela. Puedes utilizar los filtros por <span className="font-semibold">Grado</span> y <span className="font-semibold">Curso</span> para desglosar los datos y obtener una visión más detallada. También puedes filtrar por <span className="font-semibold">Ciclo Lectivo</span> para comparar el rendimiento a lo largo del tiempo.</div>
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
@@ -202,3 +202,5 @@ export default function AyudaPage() {
         </div>
     );
 }
+
+    
