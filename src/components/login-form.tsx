@@ -23,6 +23,10 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { users } = useUsers();
+  
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [isLockedOut, setIsLockedOut] = useState(false);
+  const [isForgotPassDialogOpen, setIsForgotPassDialogOpen] = useState(false);
 
   const supportEmail = useMemo(() => {
     const evaluator = users.find(u => u.role === 'Evaluador');
@@ -42,9 +46,17 @@ export function LoginForm() {
     }
   }, [searchParams, toast, router]);
 
+  useEffect(() => {
+    if (loginAttempts >= 3) {
+      setIsLockedOut(true);
+      setIsForgotPassDialogOpen(true);
+    }
+  }, [loginAttempts]);
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLockedOut) return;
     setIsSubmitting(true);
 
     try {
@@ -108,6 +120,7 @@ export function LoginForm() {
             description: `Bienvenido, ${foundUser.name}.`,
           });
           sessionStorage.setItem('currentUser', JSON.stringify(foundUser));
+          setLoginAttempts(0); // Reset attempts on successful login
           router.push('/dashboard');
         } else if (foundUser.status === "Pendiente") {
           toast({
@@ -123,10 +136,12 @@ export function LoginForm() {
           });
         }
       } else {
+        setLoginAttempts(prev => prev + 1);
+        const attemptsLeft = 2 - loginAttempts;
         toast({
           variant: "destructive",
           title: "Error de autenticación",
-          description: "DNI/email o contraseña incorrectos.",
+          description: `DNI/email o contraseña incorrectos. Te quedan ${attemptsLeft} intento(s).`,
         });
       }
     } catch (error) {
@@ -142,7 +157,7 @@ export function LoginForm() {
   };
 
   return (
-    <Dialog>
+    <Dialog open={isForgotPassDialogOpen} onOpenChange={setIsForgotPassDialogOpen}>
       <form onSubmit={handleLogin} className="grid gap-4">
         <div className="grid gap-2">
           <Label htmlFor="email">DNI / Email</Label>
@@ -152,7 +167,7 @@ export function LoginForm() {
             placeholder="tu.dni@chubut.edu.ar"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isLockedOut}
           />
         </div>
         <div className="grid gap-2">
@@ -163,6 +178,7 @@ export function LoginForm() {
                 type="button"
                 variant="link"
                 className="ml-auto h-auto p-0 text-sm underline"
+                disabled={isLockedOut}
               >
                 ¿Olvidaste tu contraseña?
               </Button>
@@ -176,22 +192,22 @@ export function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               className="pr-10"
               required
-              disabled={isSubmitting}
+              disabled={isSubmitting || isLockedOut}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isLockedOut}
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </div>
         </div>
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button type="submit" className="w-full" disabled={isSubmitting || isLockedOut}>
           {isSubmitting ? "Ingresando..." : "Ingresar"}
         </Button>
-        <Button variant="outline" className="w-full" disabled={isSubmitting}>
+        <Button variant="outline" className="w-full" disabled={isSubmitting || isLockedOut}>
           Ingresar con Google
         </Button>
       </form>
@@ -202,8 +218,14 @@ export function LoginForm() {
                 <HelpCircle className="h-8 w-8 text-primary" />
                 <DialogTitle className="text-2xl">Recuperar Contraseña</DialogTitle>
             </div>
-            <DialogDescription asChild>
+          </DialogHeader>
+           <DialogDescription asChild>
                 <div className="space-y-4 text-base text-left">
+                    {isLockedOut && (
+                        <div className="rounded-md border border-destructive bg-destructive/10 p-3 text-center text-destructive-foreground">
+                            Has superado el número de intentos fallidos. Tu cuenta ha sido bloqueada temporalmente.
+                        </div>
+                    )}
                     <div>Para solicitar una nueva contraseña, por favor envía un correo electrónico a la siguiente dirección:</div>
                     <div className="rounded-md bg-muted p-3 text-center">
                         <a href={`mailto:${supportEmail}`} className="text-lg font-semibold text-primary underline">
@@ -220,7 +242,6 @@ export function LoginForm() {
                     </ul>
                 </div>
             </DialogDescription>
-          </DialogHeader>
       </DialogContent>
     </Dialog>
   );
