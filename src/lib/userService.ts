@@ -250,7 +250,8 @@ export async function updateUserPasswordInDb(userId: string, newPassword: string
     try {
         const userRef = doc(db, "users", userId);
         await updateDoc(userRef, {
-            password: newPassword
+            password: newPassword,
+            status: "Activo" // Unblock user when password is changed
         });
     } catch (error) {
         console.error(`Error updating password for user ${userId}:`, error);

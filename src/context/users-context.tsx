@@ -85,6 +85,7 @@ export function UsersProvider({ children }: { children: ReactNode }) {
         if (userToUpdate) {
             await addAuditLog({ action: "CAMBIAR_CONTRASENA", details: `Se cambió la contraseña para el usuario "${userToUpdate.email}".` });
         }
+        await refreshUsers(); // Refresh to get the new "Activo" status
     } catch (error) {
         console.error(`Failed to update password for user ${userId}:`, error);
         throw error;
