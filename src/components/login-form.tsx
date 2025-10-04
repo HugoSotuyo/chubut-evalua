@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, HelpCircle } from "lucide-react";
-import { findUserByEmail, seedInitialUsers, findUserByRole } from "@/lib/userService";
+import { findUserByEmail, seedInitialUsers, findUserByRole, lockUserAccount } from "@/lib/userService";
 import type { UserRole } from "@/lib/auth";
 import { useUsers } from "@/context/users-context";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
@@ -46,14 +46,6 @@ export function LoginForm() {
     }
   }, [searchParams, toast, router]);
 
-  useEffect(() => {
-    if (loginAttempts >= 3) {
-      setIsLockedOut(true);
-      setIsForgotPassDialogOpen(true);
-    }
-  }, [loginAttempts]);
-
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLockedOut) return;
@@ -70,6 +62,15 @@ export function LoginForm() {
       });
       setIsSubmitting(false);
       return;
+    }
+
+    const foundUser = await findUserByEmail(email);
+
+    if (foundUser?.status === "Bloqueado") {
+        setIsLockedOut(true);
+        setIsForgotPassDialogOpen(true);
+        setIsSubmitting(false);
+        return;
     }
     
     // --- Evaluator Specific Login ---
@@ -111,8 +112,6 @@ export function LoginForm() {
     }
 
     try {
-      const foundUser = await findUserByEmail(email);
-
       if (foundUser && foundUser.password === password) {
         if (foundUser.status === "Activo") {
           toast({
@@ -128,6 +127,9 @@ export function LoginForm() {
             title: "Cuenta Pendiente",
             description: "Tu cuenta está pendiente de activación por parte de un evaluador.",
           });
+        } else if (foundUser.status === "Bloqueado") {
+            setIsLockedOut(true);
+            setIsForgotPassDialogOpen(true);
         } else {
           toast({
             variant: "destructive",
@@ -136,13 +138,23 @@ export function LoginForm() {
           });
         }
       } else {
-        setLoginAttempts(prev => prev + 1);
-        const attemptsLeft = 2 - loginAttempts;
-        toast({
-          variant: "destructive",
-          title: "Error de autenticación",
-          description: `DNI/email o contraseña incorrectos. Te quedan ${attemptsLeft} intento(s).`,
-        });
+        const newAttempts = loginAttempts + 1;
+        setLoginAttempts(newAttempts);
+
+        if (newAttempts >= 3) {
+            setIsLockedOut(true);
+            if(foundUser){
+                await lockUserAccount(foundUser.id);
+            }
+            setIsForgotPassDialogOpen(true);
+        } else {
+            const attemptsLeft = 3 - newAttempts;
+            toast({
+              variant: "destructive",
+              title: "Error de autenticación",
+              description: `DNI/email o contraseña incorrectos. Te quedan ${attemptsLeft} intento(s).`,
+            });
+        }
       }
     } catch (error) {
       console.error("Login failed:", error);
@@ -223,7 +235,7 @@ export function LoginForm() {
                 <div className="space-y-4 text-base text-left">
                     {isLockedOut && (
                         <div className="rounded-md border border-destructive bg-destructive/10 p-3 text-center text-destructive-foreground">
-                            Has superado el número de intentos fallidos. Tu cuenta ha sido bloqueada temporalmente.
+                            Has superado el número de intentos fallidos. Tu cuenta ha sido bloqueada.
                         </div>
                     )}
                     <div>Para solicitar una nueva contraseña, por favor envía un correo electrónico a la siguiente dirección:</div>

@@ -77,7 +77,7 @@ export async function findUserByEmail(identifier: string): Promise<User | null> 
     
     // Prefer returning an active user if multiple exist (e.g., same email across different inactive years)
     const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
-    return users.find(u => u.status === "Activo") || users[0];
+    return users.find(u => u.status === "Activo") || users.find(u => u.status === "Bloqueado") || users[0];
 }
 
 export async function findDirectorBySchool(schoolName: string, schoolYear: string): Promise<User | null> {
@@ -206,7 +206,7 @@ export async function seedInitialUsers() {
     }
 }
 
-export async function updateUserStatusInDb(userId: string, newStatus: "Activo" | "Inactivo" | "Pendiente") {
+export async function updateUserStatusInDb(userId: string, newStatus: "Activo" | "Inactivo" | "Pendiente" | "Bloqueado") {
     const db = getDb();
     try {
         const userRef = doc(db, "users", userId);
@@ -217,6 +217,10 @@ export async function updateUserStatusInDb(userId: string, newStatus: "Activo" |
         console.error(`Error updating status for user ${userId}:`, error);
         throw new Error("Failed to update user status in database.");
     }
+}
+
+export async function lockUserAccount(userId: string) {
+    await updateUserStatusInDb(userId, "Bloqueado");
 }
 
 export async function updateUserInDb(user: User) {

@@ -1,5 +1,4 @@
 
-
 export type UserRole = "Evaluador" | "Referente" | "Administrador" | "Director" | "Docente";
 
 export type User = {
@@ -9,7 +8,7 @@ export type User = {
   password?: string;
   role: UserRole;
   school: string;
-  status: "Activo" | "Pendiente" | "Inactivo";
+  status: "Activo" | "Pendiente" | "Inactivo" | "Bloqueado";
   grade?: string;
   course?: string;
   dni?: string;
