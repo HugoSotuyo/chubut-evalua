@@ -71,7 +71,7 @@ async function seedInitialData() {
 
 export async function getAllSchools(): Promise<School[]> {
     const db = getDb();
-    await seedInitialData();
+    // await seedInitialData(); // This was causing the issue
     const schoolsCollection = collection(db, "schools");
     const querySnapshot = await getDocs(schoolsCollection);
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
@@ -79,7 +79,7 @@ export async function getAllSchools(): Promise<School[]> {
 
 export async function getAllRegions(): Promise<Region[]> {
     const db = getDb();
-    await seedInitialData();
+    // await seedInitialData(); // This was causing the issue
     const regionsCollection = collection(db, "regions");
     const querySnapshot = await getDocs(regionsCollection);
     const regions = querySnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name } as Region));

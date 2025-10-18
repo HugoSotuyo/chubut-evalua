@@ -49,7 +49,7 @@ async function seedInitialStudents() {
 
 export async function getAllStudents(): Promise<Student[]> {
     const db = getDb();
-    await seedInitialStudents();
+    // await seedInitialStudents(); // This was causing the issue
     const studentsCollection = collection(db, "students");
     const querySnapshot = await getDocs(studentsCollection);
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));

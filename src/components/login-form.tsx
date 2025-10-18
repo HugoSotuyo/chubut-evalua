@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, HelpCircle } from "lucide-react";
-import { findUserByEmail, seedInitialUsers, findUserByRole, lockUserAccount } from "@/lib/userService";
+import { findUserByEmail, findUserByRole, lockUserAccount } from "@/lib/userService";
 import type { UserRole } from "@/lib/auth";
 import { useUsers } from "@/context/users-context";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
@@ -50,19 +50,6 @@ export function LoginForm() {
     e.preventDefault();
     if (isLockedOut) return;
     setIsSubmitting(true);
-
-    try {
-      await seedInitialUsers();
-    } catch (error) {
-      console.error("Seeding check failed:", error);
-      toast({
-        variant: "destructive",
-        title: "Error de Servidor",
-        description: "No se pudo verificar o inicializar la base de datos.",
-      });
-      setIsSubmitting(false);
-      return;
-    }
 
     const foundUser = await findUserByEmail(email);
 

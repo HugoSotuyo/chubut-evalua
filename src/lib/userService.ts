@@ -179,7 +179,7 @@ export async function addUser(userData: NewUserPayload): Promise<{ success: bool
 
 export async function getAllUsers(): Promise<User[]> {
     const db = getDb();
-    await seedInitialUsers();
+    // await seedInitialUsers(); // This was causing the issue
     const users: User[] = [];
     try {
         const querySnapshot = await getDocs(collection(db, "users"));
