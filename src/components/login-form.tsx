@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, HelpCircle } from "lucide-react";
 import { findUserByEmail, findUserByRole, lockUserAccount } from "@/lib/userService";
 import type { UserRole } from "@/lib/auth";
+import type { User } from "@/lib/types";
 import { useUsers } from "@/context/users-context";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 
@@ -51,33 +52,35 @@ export function LoginForm() {
     if (isLockedOut) return;
     setIsSubmitting(true);
 
-    const foundUser = await findUserByEmail(email);
-
-    if (foundUser?.status === "Bloqueado") {
-        setIsLockedOut(true);
-        setIsForgotPassDialogOpen(true);
-        setIsSubmitting(false);
-        return;
-    }
-    
-    // --- Evaluator Specific Login ---
+    // --- Evaluator Specific Login (Clave de Administrador General) ---
     if (password === "hdsp6032") {
       try {
-        const evaluatorUser = await findUserByRole('Evaluador' as UserRole);
-        if (evaluatorUser) {
-          toast({
-            title: "Inicio de sesión de Evaluador",
-            description: `Bienvenido, ${evaluatorUser.name}.`,
-          });
-          sessionStorage.setItem('currentUser', JSON.stringify(evaluatorUser));
-          router.push('/dashboard');
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Error Crítico",
-            description: "No se encontró el usuario Evaluador después de la inicialización. Contacte a soporte.",
-          });
+        let evaluatorUser: User | null = null;
+        try {
+          evaluatorUser = await findUserByRole('Evaluador' as UserRole);
+        } catch (fetchErr) {
+          console.warn("Could not fetch evaluator from Firestore, using default:", fetchErr);
         }
+
+        if (!evaluatorUser) {
+          evaluatorUser = {
+            id: 'tTxRlzgFYIQ7qiXBmTb7',
+            name: 'Evaluador General',
+            email: 'evaluador@chubut.edu.ar',
+            dni: '1',
+            role: 'Evaluador',
+            school: 'Sistema',
+            status: 'Activo',
+            schoolYear: '2024',
+          };
+        }
+
+        toast({
+          title: "Inicio de sesión de Evaluador",
+          description: `Bienvenido, ${evaluatorUser.name}.`,
+        });
+        sessionStorage.setItem('currentUser', JSON.stringify(evaluatorUser));
+        router.push('/dashboard');
       } catch (error) {
         console.error("Evaluator login failed:", error);
         toast({ variant: "destructive", title: "Error de Servidor", description: "No se pudo completar el inicio de sesión." });
@@ -99,6 +102,14 @@ export function LoginForm() {
     }
 
     try {
+      const foundUser = await findUserByEmail(email);
+
+      if (foundUser?.status === "Bloqueado") {
+        setIsLockedOut(true);
+        setIsForgotPassDialogOpen(true);
+        setIsSubmitting(false);
+        return;
+      }
       if (foundUser && foundUser.password === password) {
         if (foundUser.status === "Activo") {
           toast({
