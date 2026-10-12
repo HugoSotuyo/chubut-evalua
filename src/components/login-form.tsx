@@ -114,9 +114,6 @@ export function LoginForm() {
             title: "Cuenta Pendiente",
             description: "Tu cuenta está pendiente de activación por parte de un evaluador.",
           });
-        } else if (foundUser.status === "Bloqueado") {
-            setIsLockedOut(true);
-            setIsForgotPassDialogOpen(true);
         } else {
           toast({
             variant: "destructive",

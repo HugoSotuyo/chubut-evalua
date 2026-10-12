@@ -25,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useSearch } from "@/context/search-context";
 import { useUsers } from "@/context/users-context";
-import type { User } from "@/context/users-context";
+import type { User } from "@/lib/types";
 import { RoleIcon } from "@/components/role-icon";
 import { useAuth } from "@/context/auth-context";
 import { useSchools } from "@/context/schools-context";
@@ -89,12 +89,12 @@ export default function UsuariosPage() {
   }, [usersForFilterOptions]);
 
   const uniqueGrades = useMemo(() => {
-    const grades = usersForFilterOptions.map(user => user.grade).filter(Boolean);
+    const grades = usersForFilterOptions.map(user => user.grade).filter((g): g is string => Boolean(g));
     return [...new Set(grades)].sort();
   }, [usersForFilterOptions]);
 
   const uniqueCourses = useMemo(() => {
-    const courses = usersForFilterOptions.map(user => user.course).filter(Boolean);
+    const courses = usersForFilterOptions.map(user => user.course).filter((c): c is string => Boolean(c));
     return [...new Set(courses)].sort();
   }, [usersForFilterOptions]);
 
@@ -506,7 +506,7 @@ export default function UsuariosPage() {
                     <div className="grid gap-4 py-2">
                         <div className="flex items-center gap-4 mb-2">
                              <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-2xl font-bold">
-                                {selectedUser.name.split(' ').map(n => n[0]).join('')}
+                                {selectedUser.name.split(' ').map((n: string) => n[0]).join('')}
                             </div>
                             <div>
                                 <h2 className="text-xl font-semibold">{selectedUser.name}</h2>

@@ -52,7 +52,7 @@ import { useSearch } from "@/context/search-context";
 import { usePathname } from "next/navigation";
 import { RoleIcon } from "./role-icon";
 import { mockLogout } from "@/context/auth-context";
-import type { User } from "@/context/users-context";
+import type { User } from "@/lib/types";
 import { useUsers } from "@/context/users-context";
 import { useMemo } from "react";
 import { useState } from "react";
@@ -63,7 +63,7 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ user }: DashboardHeaderProps) {
-  const userInitials = user.name.split(' ').map(n => n[0]).join('');
+  const userInitials = user.name.split(' ').map((n: string) => n[0]).join('');
   const { searchTerm, setSearchTerm } = useSearch();
   const pathname = usePathname();
   const { users } = useUsers();

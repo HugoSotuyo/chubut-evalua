@@ -1,10 +1,10 @@
 
 
 "use client";
-
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { getAllUsers, updateUserStatusInDb, deleteUserFromDb, addUser as addUserToDb, updateUserInDb, updateUserPasswordInDb, findDirectorBySchool } from '@/lib/userService'; 
 import type { User } from "@/lib/types";
+export type { User };
 import { useAuditLogs } from './audit-log-context';
 
 type NewUserPayload = Omit<User, 'id' | 'status' | 'fcmTokens'>;
