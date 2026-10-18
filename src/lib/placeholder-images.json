@@ -1,0 +1,74 @@
+[
+  {
+    "seed": "201",
+    "width": 1200,
+    "height": 800,
+    "hint": "Patagonia landscape"
+  },
+  {
+    "seed": "202",
+    "width": 1200,
+    "height": 800,
+    "hint": "Buenos Aires"
+  },
+  {
+    "seed": "203",
+    "width": 1200,
+    "height": 800,
+    "hint": "Iguazu falls"
+  },
+  {
+    "seed": "204",
+    "width": 1200,
+    "height": 800,
+    "hint": "Andes mountains"
+  },
+  {
+    "seed": "205",
+    "width": 1200,
+    "height": 800,
+    "hint": "Argentina flag"
+  },
+  {
+    "seed": "206",
+    "width": 1200,
+    "height": 800,
+    "hint": "Bariloche lake"
+  },
+  {
+    "seed": "207",
+    "width": 1200,
+    "height": 800,
+    "hint": "Ushuaia city"
+  },
+  {
+    "seed": "208",
+    "width": 1200,
+    "height": 800,
+    "hint": "gaucho horse"
+  },
+  {
+    "seed": "209",
+    "width": 1200,
+    "height": 800,
+    "hint": "Perito Moreno"
+  },
+  {
+    "seed": "210",
+    "width": 1200,
+    "height": 800,
+    "hint": "La Boca"
+  },
+  {
+    "seed": "211",
+    "width": 1200,
+    "height": 800,
+    "hint": "vineyard Mendoza"
+  },
+  {
+    "seed": "212",
+    "width": 1200,
+    "height": 800,
+    "hint": "obelisco Argentina"
+  }
+]
