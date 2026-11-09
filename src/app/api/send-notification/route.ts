@@ -1,23 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMessaging } from 'firebase-admin/messaging';
-import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps, applicationDefault } from 'firebase-admin/app';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-function getAdmin() {
-  if (!getApps().length) {
-    initializeApp({
-      credential: applicationDefault(),
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    });
-  }
-  return {
-    db: getFirestore(),
-    messaging: getMessaging(),
-  };
-}
 
 export async function POST(req: NextRequest) {
   console.log('Notification API endpoint hit.');
@@ -30,7 +14,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Missing directorId or newUserName' }, { status: 400 });
     }
 
-    const { db, messaging } = getAdmin();
+    // Import dinámico: firebase-admin solo se carga cuando llega una petición real,
+    // no durante el build de Vercel. Esto evita el error "reading prototype".
+    const { initializeApp, getApps, applicationDefault } = await import('firebase-admin/app');
+    const { getFirestore } = await import('firebase-admin/firestore');
+    const { getMessaging } = await import('firebase-admin/messaging');
+
+    if (!getApps().length) {
+      initializeApp({
+        credential: applicationDefault(),
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      });
+    }
+
+    const db = getFirestore();
+    const messaging = getMessaging();
 
     const userDoc = await db.collection('users').doc(directorId).get();
 
