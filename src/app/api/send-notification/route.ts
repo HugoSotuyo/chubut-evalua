@@ -1,26 +1,26 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { getMessaging } from 'firebase-admin/messaging';
 import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps, App, applicationDefault } from 'firebase-admin/app';
+import { initializeApp, getApps, applicationDefault } from 'firebase-admin/app';
 
-// Correctly initialize Firebase Admin SDK
-// This pattern ensures it's initialized only once.
-if (!getApps().length) {
-  initializeApp({
-    credential: applicationDefault(),
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID, // This is crucial for authentication
-  });
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+function getAdmin() {
+  if (!getApps().length) {
+    initializeApp({
+      credential: applicationDefault(),
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    });
+  }
+  return {
+    db: getFirestore(),
+    messaging: getMessaging(),
+  };
 }
 
-const db = getFirestore();
-
 export async function POST(req: NextRequest) {
-  console.log("Notification API endpoint hit.");
-
-  if (req.method !== 'POST') {
-    return NextResponse.json({ success: false, message: 'Method not allowed' }, { status: 405 });
-  }
+  console.log('Notification API endpoint hit.');
 
   try {
     const { directorId, newUserName } = await req.json();
@@ -29,6 +29,8 @@ export async function POST(req: NextRequest) {
     if (!directorId || !newUserName) {
       return NextResponse.json({ success: false, message: 'Missing directorId or newUserName' }, { status: 400 });
     }
+
+    const { db, messaging } = getAdmin();
 
     const userDoc = await db.collection('users').doc(directorId).get();
 
@@ -39,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     const userData = userDoc.data();
     const tokens = userData?.fcmTokens || [];
-    console.log(`Found director: ${userData?.name}. FCM Tokens: ${tokens.length > 0 ? tokens : 'none'}`);
+    console.log(`Found director: ${userData?.name}, FCM Tokens: ${tokens.length > 0 ? tokens : 'none'}`);
 
     if (tokens.length === 0) {
       console.log(`Director ${directorId} has no FCM tokens. No notification sent.`);
@@ -54,11 +56,11 @@ export async function POST(req: NextRequest) {
       tokens: tokens,
     };
 
-    console.log("Attempting to send notification via FCM...");
-    const response = await getMessaging().sendEachForMulticast(message);
-    
-    console.log('Successfully sent message:', response);
-    
+    console.log('Attempting to send notification via FCM...');
+    const response = await messaging.sendEachForMulticast(message);
+
+    console.log('Successfully sent messages', response);
+
     if (response.failureCount > 0) {
       const failedTokens: string[] = [];
       response.responses.forEach((resp, idx) => {
@@ -69,11 +71,11 @@ export async function POST(req: NextRequest) {
       });
       console.log('List of tokens that caused failures: ' + failedTokens);
     }
-    
+
     return NextResponse.json({ success: true, message: 'Notification sent successfully.' });
 
   } catch (error) {
-    console.error('Error sending notification:', error);
+    console.error('Error sending notification', error);
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
   }
 }
