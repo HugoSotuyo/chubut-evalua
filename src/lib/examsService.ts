@@ -85,3 +85,23 @@ export async function toggleExamStatus(examId: string) {
         await updateDoc(examRef, { status: newStatus });
     }
 }
+
+export async function deleteExamsByYear(schoolYear: string): Promise<{ deletedCount: number }> {
+    const db = getDb();
+    const examsRef = collection(db, "exams");
+    const querySnapshot = await getDocs(examsRef);
+    const examsToDelete: string[] = [];
+
+    querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        const examYear = data.schoolYear || data.created?.slice(0, 4) || "2024";
+        if (examYear === schoolYear) {
+            examsToDelete.push(docSnap.id);
+        }
+    });
+
+    const deletePromises = examsToDelete.map((id) => deleteDoc(doc(db, "exams", id)));
+    await Promise.all(deletePromises);
+
+    return { deletedCount: examsToDelete.length };
+}

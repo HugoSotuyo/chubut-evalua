@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useCa
 import { getAllExams, addExam as addExamDb, updateExam as updateExamDb, deleteExam as deleteExamDb, toggleExamStatus as toggleExamStatusDb } from '@/lib/examsService';
 import type { Exam } from '@/lib/types';
 import { useAuditLogs } from './audit-log-context';
+import { useSettings } from './settings-context';
 
 interface ExamsContextType {
   exams: Exam[];
@@ -12,6 +13,7 @@ interface ExamsContextType {
   updateExam: (exam: Omit<Exam, 'status'>) => Promise<void>;
   deleteExam: (examId: string) => Promise<void>;
   toggleExamStatus: (examId: string) => Promise<void>;
+  refreshExams: () => Promise<void>;
   loading: boolean;
 }
 
@@ -21,6 +23,7 @@ export function ExamsProvider({ children }: { children: ReactNode }) {
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const { addAuditLog } = useAuditLogs();
+  const { settings } = useSettings();
 
   const refreshExams = useCallback(async () => {
     setLoading(true);
@@ -39,7 +42,10 @@ export function ExamsProvider({ children }: { children: ReactNode }) {
   }, [refreshExams]);
 
   const addExam = async (examData: Omit<Exam, 'id' | 'status'>) => {
-    const examToSave: any = { ...examData };
+    const examToSave: any = { 
+      ...examData,
+      schoolYear: examData.schoolYear || settings.currentSchoolYear,
+    };
     if (examToSave.fileDataUrl === undefined) {
       delete examToSave.fileDataUrl;
     }
@@ -86,7 +92,7 @@ export function ExamsProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ExamsContext.Provider value={{ exams, addExam, updateExam, deleteExam, toggleExamStatus, loading }}>
+    <ExamsContext.Provider value={{ exams, addExam, updateExam, deleteExam, toggleExamStatus, refreshExams, loading }}>
       {children}
     </ExamsContext.Provider>
   );

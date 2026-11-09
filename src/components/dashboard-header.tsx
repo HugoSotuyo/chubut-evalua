@@ -69,10 +69,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
   const { users } = useUsers();
   const [isSupportOpen, setIsSupportOpen] = useState(false);
 
-  const evaluatorEmail = useMemo(() => {
-    const evaluator = users.find(u => u.role === 'Evaluador');
-    return evaluator ? evaluator.email : 'soporte@chubut.edu.ar';
-  }, [users]);
+  const supportEmail = "sotusolucionesdigitalesia@gmail.com";
   
   const searchPlaceholder = useMemo(() => {
     if (pathname.startsWith('/dashboard/examenes')) {
@@ -155,8 +152,8 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
             Para cualquier consulta o problema con la plataforma, por favor contacta a:
           </DialogDescription>
           <div className="rounded-md bg-muted p-3 text-center">
-            <a href={`mailto:${evaluatorEmail}`} className="text-lg font-semibold text-primary underline">
-              {evaluatorEmail}
+            <a href={`mailto:${supportEmail}`} className="text-lg font-semibold text-primary underline">
+              {supportEmail}
             </a>
           </div>
         </DialogContent>

@@ -13,8 +13,8 @@ import { AuditLogProvider } from '@/context/audit-log-context';
 import { SettingsProvider } from '@/context/settings-context';
 
 export const metadata: Metadata = {
-  title: 'Chubut evalúa',
-  description: 'Plataforma de evaluación y análisis de resultados para la provincia de Chubut.',
+  title: 'Sistema Evaluador Educativo',
+  description: 'Plataforma integral de evaluación y análisis de resultados educativos.',
 };
 
 export default function RootLayout({

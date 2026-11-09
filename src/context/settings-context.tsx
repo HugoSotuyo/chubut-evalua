@@ -19,6 +19,7 @@ const defaultSettings: SystemSettings = {
     incorrectScore: 0,
     defaultScore: 10,
     scoreStep: 1,
+    schoolYears: ["2024", "2025", "2026"],
 };
 
 

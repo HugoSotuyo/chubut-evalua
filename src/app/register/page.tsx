@@ -48,11 +48,11 @@ export default function RegisterPage() {
         <div className="flex items-center gap-4 text-secondary-foreground mb-4">
           <GraduationCap className="h-12 w-12" />
           <h1 className="text-4xl font-bold font-headline">
-            Chubut evalúa
+            Sistema Evaluador Educativo
           </h1>
         </div>
         <p className="text-xl text-secondary-foreground/80 font-medium text-center mb-8">
-          Provincia de Chubut
+          Gestión Educativa
         </p>
         {randomImage && imageUrl && (
             <Image

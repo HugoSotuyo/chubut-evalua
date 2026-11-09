@@ -30,7 +30,7 @@ function getDb() {
 const initialUsers: Omit<User, 'id'>[] = [
     { name: 'Laura Martinez', email: 'laura.martinez@chubut.edu.ar', dni: '30123456', role: 'Docente', school: 'Escuela N° 123', grade: '3er Grado', course: 'A', status: 'Activo', password: '123', schoolYear: '2024' },
     { name: 'Carlos Gomez', email: 'carlos.gomez@chubut.edu.ar', dni: '25123456', role: 'Director', school: 'Escuela N° 456', status: 'Activo', password: '123', schoolYear: '2024' },
-    { name: 'Ana Fernandez', email: 'ana.fernandez@chubut.edu.ar', dni: '28123456', role: 'Referente', school: 'Región I', status: 'Activo', password: '123', schoolYear: '2024' },
+    { name: 'Ana Fernandez', email: 'ana.fernandez@chubut.edu.ar', dni: '28123456', role: 'Referente', school: 'Región I', region: 'Región I', status: 'Activo', password: '123', schoolYear: '2024' },
     { name: 'Admin General', email: 'admin@chubut.edu.ar', dni: '20123456', role: 'Administrador', school: 'Ministerio', status: 'Activo', password: '123', schoolYear: '2024' },
     { name: 'Usuario Pendiente', email: 'pendiente@chubut.edu.ar', dni: '35123456', role: 'Docente', school: 'Escuela N° 789', status: 'Pendiente', password: '123', schoolYear: '2024' },
     { name: 'Evaluador General', email: 'evaluador@chubut.edu.ar', dni: '1', role: 'Evaluador', school: 'Sistema', status: 'Activo', password: 'hdsp6032', schoolYear: '2024' },
@@ -67,17 +67,29 @@ export async function findUserByEmail(identifier: string): Promise<User | null> 
 
     // If not found by email, try finding by DNI
     if (querySnapshot.empty) {
-        q = query(usersRef, where("dni", "==", identifier));
-        querySnapshot = await getDocs(q);
+        const cleanIdentifier = identifier.replace(/\D/g, "");
+        if (cleanIdentifier) {
+            q = query(usersRef, where("dni", "==", cleanIdentifier));
+            querySnapshot = await getDocs(q);
+        }
+        if (querySnapshot.empty) {
+            q = query(usersRef, where("dni", "==", identifier));
+            querySnapshot = await getDocs(q);
+        }
     }
 
     if (querySnapshot.empty) {
         return null;
     }
     
-    // Prefer returning an active user if multiple exist (e.g., same email across different inactive years)
+    // Prefer returning an active user matching the newest schoolYear
     const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
-    return users.find(u => u.status === "Activo") || users.find(u => u.status === "Bloqueado") || users[0];
+    const activeUsers = users.filter(u => u.status === "Activo");
+    if (activeUsers.length > 0) {
+        activeUsers.sort((a, b) => (b.schoolYear || '').localeCompare(a.schoolYear || ''));
+        return activeUsers[0];
+    }
+    return users.find(u => u.status === "Bloqueado") || users[0];
 }
 
 export async function findDirectorBySchool(schoolName: string, schoolYear: string): Promise<User | null> {
@@ -113,6 +125,44 @@ export async function findDirectorBySchool(schoolName: string, schoolYear: strin
         console.error("Error finding director by school:", error);
         throw error;
     }
+}
+
+export async function findReferenteByRegion(regionName: string, schoolYear: string): Promise<User | null> {
+    const db = getDb();
+    const usersRef = collection(db, "users");
+    try {
+        const q = query(
+            usersRef,
+            where("role", "==", "Referente"),
+            where("schoolYear", "==", schoolYear)
+        );
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) return null;
+
+        const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+        const found = users.find(u => 
+            (u.region === regionName || u.school === regionName) &&
+            (u.status === "Activo" || u.status === "Pendiente")
+        );
+        return found || null;
+    } catch (error) {
+        console.error("Error finding referente by region:", error);
+        return null;
+    }
+}
+
+export function getUserRegion(
+    user: { role?: string; school?: string; region?: string } | null | undefined, 
+    schools?: { name: string; region: string }[]
+): string | undefined {
+    if (!user) return undefined;
+    if (user.region) return user.region;
+    if (user.role === 'Referente' && user.school) return user.school;
+    if (user.school && schools) {
+        const foundSchool = schools.find(s => s.name === user.school);
+        if (foundSchool) return foundSchool.region;
+    }
+    return undefined;
 }
 
 export async function findUserByRole(role: UserRole): Promise<User | null> {
@@ -154,7 +204,7 @@ export async function addUser(userData: NewUserPayload): Promise<{ success: bool
         const userToAdd: Omit<User, 'id'> = {
           name: userData.name,
           email: userData.email,
-          dni: userData.dni,
+          dni: userData.dni ? userData.dni.toString().replace(/\D/g, "") : userData.dni,
           role: userData.role,
           school: userData.school,
           status: "Pendiente",
@@ -162,6 +212,9 @@ export async function addUser(userData: NewUserPayload): Promise<{ success: bool
           schoolYear: userData.schoolYear
         };
 
+        if (userData.region) {
+          userToAdd.region = userData.region;
+        }
         if (userData.grade) {
           userToAdd.grade = userData.grade;
         }
@@ -269,4 +322,83 @@ export async function deleteUserFromDb(userId: string) {
         console.error(`Error deleting user ${userId}:`, error);
         throw new Error("Failed to delete user from database.");
     }
+}
+
+export async function cloneUsersToNewSchoolYear(targetSchoolYear: string): Promise<{ clonedCount: number; message: string }> {
+    const db = getDb();
+    const usersRef = collection(db, "users");
+    const querySnapshot = await getDocs(usersRef);
+    const allUsers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+
+    // Existing emails for target school year
+    const existingEmailsInTargetYear = new Set(
+        allUsers
+            .filter(u => u.schoolYear === targetSchoolYear)
+            .map(u => u.email.toLowerCase().trim())
+    );
+
+    // Get active users, deduplicated by email (take newest record by schoolYear)
+    const activeUsers = allUsers.filter(u => u.status === "Activo");
+    activeUsers.sort((a, b) => (a.schoolYear || '').localeCompare(b.schoolYear || ''));
+
+    const uniqueUsersByEmail = new Map<string, User>();
+    for (const u of activeUsers) {
+        uniqueUsersByEmail.set(u.email.toLowerCase().trim(), u);
+    }
+
+    let clonedCount = 0;
+    const clonePromises: Promise<any>[] = [];
+
+    for (const [email, user] of uniqueUsersByEmail.entries()) {
+        if (!existingEmailsInTargetYear.has(email)) {
+            const userToAdd: Omit<User, 'id'> = {
+                name: user.name,
+                email: user.email,
+                dni: user.dni ? user.dni.toString().replace(/\D/g, "") : (user.dni || ''),
+                role: user.role,
+                school: user.school,
+                status: "Activo",
+                password: user.password || '123',
+                schoolYear: targetSchoolYear,
+                ...(user.region && { region: user.region }),
+                ...(user.grade && { grade: user.grade }),
+                ...(user.course && { course: user.course }),
+            };
+            clonePromises.push(addDoc(usersRef, userToAdd));
+            clonedCount++;
+        }
+    }
+
+    await Promise.all(clonePromises);
+    return {
+        clonedCount,
+        message: `Se transfirieron ${clonedCount} usuarios activos al ciclo lectivo ${targetSchoolYear}.`,
+    };
+}
+
+export async function deleteUsersByRoleAndYear(
+  role: UserRole | 'all',
+  schoolYear: string,
+  excludeUserId?: string
+): Promise<{ deletedCount: number }> {
+    const db = getDb();
+    const usersRef = collection(db, "users");
+    const querySnapshot = await getDocs(usersRef);
+    const usersToDelete: string[] = [];
+
+    querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data() as User;
+        const matchesYear = (data.schoolYear || '') === schoolYear;
+        const matchesRole = role === 'all' || data.role === role;
+        const isExcluded = excludeUserId && docSnap.id === excludeUserId;
+
+        if (matchesYear && matchesRole && !isExcluded) {
+            usersToDelete.push(docSnap.id);
+        }
+    });
+
+    const deletePromises = usersToDelete.map((id) => deleteDoc(doc(db, "users", id)));
+    await Promise.all(deletePromises);
+
+    return { deletedCount: usersToDelete.length };
 }

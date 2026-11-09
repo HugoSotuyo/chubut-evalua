@@ -1,5 +1,5 @@
 {
-  "name": "nextn",
+  "name": "sistema-evaluador-educativo",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "engines": {
-    "node": "26.x"
+    "node": "20"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",

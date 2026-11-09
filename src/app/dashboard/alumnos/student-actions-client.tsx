@@ -72,7 +72,8 @@ export function StudentActionsClient({ student, studentList = [] }: StudentActio
     setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
     const name = formData.get("name") as string;
-    const dni = formData.get("dni") as string;
+    const rawDni = (formData.get("dni") as string) || "";
+    const dni = rawDni.replace(/\D/g, "").trim();
 
     try {
       if (editingStudent) {
@@ -154,12 +155,15 @@ export function StudentActionsClient({ student, studentList = [] }: StudentActio
 
   // Render "Add Student" and "Export" buttons if no student prop
   if (!student) {
+    const canAddStudent = user?.role === 'Docente' || user?.role === 'Director';
     return (
       <>
-        <Button onClick={() => handleOpenForm()}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Agregar Alumno
-        </Button>
+        {canAddStudent && (
+          <Button onClick={() => handleOpenForm()}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Agregar Alumno
+          </Button>
+        )}
         <Button onClick={handleExport} variant="outline">
             <FileDown className="mr-2 h-4 w-4" />
             Exportar Alumnos
@@ -185,17 +189,21 @@ export function StudentActionsClient({ student, studentList = [] }: StudentActio
               <FileSignature className="mr-2 h-4 w-4" />
               Cargar Examen
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => handleOpenForm(student)}>
-            Editar
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="text-destructive"
-            onSelect={() => handleDeleteStudent(student.id)}
-            disabled={isSubmitting}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Eliminar
-          </DropdownMenuItem>
+          {user?.role !== 'Referente' && (
+            <>
+              <DropdownMenuItem onSelect={() => handleOpenForm(student)}>
+                Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive"
+                onSelect={() => handleDeleteStudent(student.id)}
+                disabled={isSubmitting}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Eliminar
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       <FormDialog isOpen={isFormOpen} onOpenChange={setIsFormOpen} onSave={handleSaveStudent} editingStudent={editingStudent} onClose={handleCloseForm} isSubmitting={isSubmitting} />
@@ -259,8 +267,12 @@ function FormDialog({ isOpen, onOpenChange, onSave, editingStudent, onClose, isS
               <Input
                 id="dni"
                 name="dni"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={dni}
-                onChange={(e) => setDni(e.target.value)}
+                onChange={(e) => setDni(e.target.value.replace(/\D/g, ""))}
+                placeholder="12345678"
                 className="col-span-3"
                 required
                 readOnly={!!editingStudent}

@@ -13,6 +13,7 @@ interface ResultsContextType {
   addResult: (result: NewResult) => Promise<void>;
   deleteResult: (resultId: string) => Promise<void>;
   resultExists: (studentId: string, examId: string) => Promise<boolean>;
+  refreshResults: () => Promise<void>;
   loading: boolean;
 }
 
@@ -56,7 +57,7 @@ export function ResultsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <ResultsContext.Provider value={{ results, addResult, deleteResult, resultExists, loading }}>
+    <ResultsContext.Provider value={{ results, addResult, deleteResult, resultExists, refreshResults, loading }}>
       {children}
     </ResultsContext.Provider>
   );

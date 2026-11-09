@@ -14,9 +14,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useExams } from "@/context/exams-context";
 import { useAuth } from "@/context/auth-context";
 import { useSearch } from "@/context/search-context";
-import { PlusCircle, Trash2, Save, Filter, Paperclip, CalendarIcon } from "lucide-react";
+import { PlusCircle, Trash2, Save, Filter, Paperclip, CalendarIcon, Eye } from "lucide-react";
 import Link from "next/link";
 import { ExamActionsClient } from "./exam-actions-client";
+import { ViewExamDialog } from "./view-exam-dialog";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast";
@@ -29,9 +30,10 @@ import { Calendar } from "@/components/ui/calendar"
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import type { Exam } from "@/lib/types"
+import type { Exam, Result } from "@/lib/types"
 import { useSettings } from '@/context/settings-context';
 import { useResults } from '@/context/results-context';
+import { useSchools } from '@/context/schools-context';
 
 
 const questionSchema = z.object({
@@ -74,6 +76,7 @@ export default function ExamenesPage() {
   const { user } = useAuth();
   const { exams: allExams, updateExam } = useExams();
   const { results: allResults } = useResults();
+  const { schools } = useSchools();
   const { toast } = useToast();
   const { settings } = useSettings();
   const { searchTerm } = useSearch();
@@ -81,33 +84,78 @@ export default function ExamenesPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingExam, setEditingExam] = useState<Exam | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [viewingExam, setViewingExam] = useState<Exam | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+
+  const handleOpenViewDialog = (exam: Exam) => {
+    setViewingExam(exam);
+    setIsViewDialogOpen(true);
+  };
+
+  const userRegion = useMemo(() => {
+    if (user?.role === 'Referente') {
+      return (user as any).region || null;
+    }
+    return null;
+  }, [user]);
+
+  const regionSchoolNames = useMemo(() => {
+    if (!userRegion) return new Set<string>();
+    return new Set(
+      schools.filter(s => s.region === userRegion).map(s => s.name)
+    );
+  }, [schools, userRegion]);
+
+  const getScopedResultsForExam = (examId: string): Result[] => {
+    let examResults = allResults.filter(r => r.examId === examId);
+    if (user?.role === 'Docente') {
+      examResults = examResults.filter(
+        r => r.school === user.school && r.grade === user.grade && r.course === user.course
+      );
+    } else if (user?.role === 'Director') {
+      examResults = examResults.filter(r => r.school === user.school);
+      if (schoolYearFilter !== 'all') {
+        examResults = examResults.filter(r => r.schoolYear === schoolYearFilter);
+      }
+    } else if (user?.role === 'Referente') {
+      examResults = examResults.filter(r => regionSchoolNames.has(r.school));
+    }
+    return examResults;
+  };
   
   const [schoolYearFilter, setSchoolYearFilter] = useState(settings.currentSchoolYear || "all");
 
+  const getExamYear = (e: Exam) => e.schoolYear || e.created?.slice(0, 4) || "2024";
+
   const availableSchoolYears = useMemo(() => {
-    return [...new Set(allResults.map(r => r.schoolYear).filter(Boolean))].sort((a,b) => b.localeCompare(a));
-  }, [allResults]);
+    const fromResults = allResults.map(r => r.schoolYear).filter(Boolean);
+    const fromExams = allExams.map(e => getExamYear(e)).filter(Boolean);
+    const fromSettings = settings.schoolYears || [];
+    const current = settings.currentSchoolYear ? [settings.currentSchoolYear] : [];
+    return [...new Set([...fromSettings, ...current, ...fromResults, ...fromExams])].sort((a,b) => b.localeCompare(a));
+  }, [allResults, allExams, settings.schoolYears, settings.currentSchoolYear]);
 
   const filteredExams = useMemo(() => {
     if (!user) return [];
     let exams = allExams;
     
+    // Filtrar por ciclo lectivo
+    if (schoolYearFilter !== "all") {
+        if (user.role === 'Director') {
+            const resultsInYear = allResults.filter(r => r.schoolYear === schoolYearFilter && r.school === user.school);
+            const examIdsInYear = new Set(resultsInYear.map(r => r.examId));
+            exams = exams.filter(exam => examIdsInYear.has(exam.id) || getExamYear(exam) === schoolYearFilter);
+        } else {
+            exams = exams.filter(exam => getExamYear(exam) === schoolYearFilter);
+        }
+    }
+
     if (user.role === 'Docente') {
         exams = exams.filter(exam => exam.grade === user.grade && exam.status === 'Cerrado');
     }
     if (user.role === 'Director') {
         exams = exams.filter(exam => exam.status === 'Cerrado');
-        
-        if (schoolYearFilter !== "all") {
-            const resultsInYear = allResults.filter(r => r.schoolYear === schoolYearFilter && r.school === user.school);
-            const examIdsInYear = new Set(resultsInYear.map(r => r.examId));
-            exams = exams.filter(exam => examIdsInYear.has(exam.id));
-        } else {
-             // Show all exams that have results in the director's school across all years
-            const resultsInSchool = allResults.filter(r => r.school === user.school);
-            const examIdsInSchool = new Set(resultsInSchool.map(r => r.examId));
-            exams = exams.filter(exam => examIdsInSchool.has(exam.id));
-        }
     }
     
     if (searchTerm) {
@@ -234,34 +282,32 @@ export default function ExamenesPage() {
           )}
         </div>
         
-        {user.role === 'Director' && (
-             <Card>
-                <CardHeader>
-                    <div className="flex items-center gap-2">
-                        <Filter className="h-5 w-5" />
-                        <CardTitle>Filtros</CardTitle>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid md:grid-cols-4 gap-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="school-year-filter">Ciclo Lectivo</Label>
-                            <Select onValueChange={setSchoolYearFilter} value={schoolYearFilter}>
-                                <SelectTrigger id="school-year-filter">
-                                    <SelectValue placeholder="Seleccionar ciclo" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Todos los Ciclos</SelectItem>
-                                    {availableSchoolYears.map((year) => (
-                                        <SelectItem key={year} value={year}>{year}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        )}
+        <Card>
+          <CardHeader>
+              <div className="flex items-center gap-2">
+                  <Filter className="h-5 w-5" />
+                  <CardTitle>Filtros</CardTitle>
+              </div>
+          </CardHeader>
+          <CardContent>
+              <div className="grid md:grid-cols-4 gap-4">
+                  <div className="grid gap-2">
+                      <Label htmlFor="school-year-filter">Ciclo Lectivo</Label>
+                      <Select onValueChange={setSchoolYearFilter} value={schoolYearFilter}>
+                          <SelectTrigger id="school-year-filter">
+                              <SelectValue placeholder="Seleccionar ciclo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                              <SelectItem value="all">Todos los Ciclos</SelectItem>
+                              {availableSchoolYears.map((year) => (
+                                  <SelectItem key={year} value={year}>{year}</SelectItem>
+                              ))}
+                          </SelectContent>
+                      </Select>
+                  </div>
+              </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
@@ -283,9 +329,26 @@ export default function ExamenesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredExams.map((exam) => (
-                  <TableRow key={exam.id}>
-                    <TableCell className="font-medium">{exam.name}</TableCell>
+                {filteredExams.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      No se encontraron exámenes para el ciclo lectivo seleccionado.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredExams.map((exam) => (
+                    <TableRow key={exam.id}>
+                    <TableCell className="font-medium">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenViewDialog(exam)}
+                        className="group inline-flex items-center gap-1.5 font-medium hover:text-primary transition-colors text-left"
+                        title="Ver consignas y dificultad de las preguntas"
+                      >
+                        <span className="group-hover:underline">{exam.name}</span>
+                        <Eye className="h-3.5 w-3.5 text-muted-foreground opacity-60 group-hover:opacity-100 group-hover:text-primary shrink-0" />
+                      </button>
+                    </TableCell>
                     <TableCell>{exam.tema}</TableCell>
                     <TableCell>{exam.grade}</TableCell>
                     <TableCell>
@@ -293,10 +356,16 @@ export default function ExamenesPage() {
                     </TableCell>
                     <TableCell>{format(parseISO(exam.created), "dd/MM/yyyy")}</TableCell>
                     <TableCell>
-                      <ExamActionsClient exam={exam} userRole={user.role} onEdit={handleOpenEditDialog} />
+                      <ExamActionsClient
+                        exam={exam}
+                        userRole={user.role}
+                        onEdit={handleOpenEditDialog}
+                        onViewExam={handleOpenViewDialog}
+                      />
                     </TableCell>
                   </TableRow>
-                ))}
+                ))
+              )}
               </TableBody>
             </Table>
           </CardContent>
@@ -544,6 +613,13 @@ export default function ExamenesPage() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      <ViewExamDialog
+        exam={viewingExam}
+        isOpen={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
+        results={viewingExam ? getScopedResultsForExam(viewingExam.id) : []}
+      />
     </>
   );
 }

@@ -24,7 +24,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { users } = useUsers();
-  
+
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isLockedOut, setIsLockedOut] = useState(false);
   const [isForgotPassDialogOpen, setIsForgotPassDialogOpen] = useState(false);
@@ -95,7 +95,7 @@ export function LoginForm() {
       toast({
         variant: "destructive",
         title: "Campos incompletos",
-        description: "Por favor, ingresa tu DNI/email y contraseña.",
+        description: "Por favor, ingresa tu email y contraseña.",
       });
       setIsSubmitting(false);
       return;
@@ -137,18 +137,18 @@ export function LoginForm() {
         setLoginAttempts(newAttempts);
 
         if (newAttempts >= 3) {
-            setIsLockedOut(true);
-            if(foundUser){
-                await lockUserAccount(foundUser.id);
-            }
-            setIsForgotPassDialogOpen(true);
+          setIsLockedOut(true);
+          if (foundUser) {
+            await lockUserAccount(foundUser.id);
+          }
+          setIsForgotPassDialogOpen(true);
         } else {
-            const attemptsLeft = 3 - newAttempts;
-            toast({
-              variant: "destructive",
-              title: "Error de autenticación",
-              description: `DNI/email o contraseña incorrectos. Te quedan ${attemptsLeft} intento(s).`,
-            });
+          const attemptsLeft = 3 - newAttempts;
+          toast({
+            variant: "destructive",
+            title: "Error de autenticación",
+            description: `Email o contraseña incorrectos. Te quedan ${attemptsLeft} intento(s).`,
+          });
         }
       }
     } catch (error) {
@@ -167,11 +167,11 @@ export function LoginForm() {
     <Dialog open={isForgotPassDialogOpen} onOpenChange={setIsForgotPassDialogOpen}>
       <form onSubmit={handleLogin} className="grid gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="email">DNI / Email</Label>
+          <Label htmlFor="email">Email</Label>
           <Input
             id="email"
-            type="text"
-            placeholder="tu.dni@chubut.edu.ar"
+            type="email"
+            placeholder="tu.email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={isSubmitting || isLockedOut}
@@ -220,35 +220,35 @@ export function LoginForm() {
       </form>
 
       <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="flex items-center gap-4 mb-4">
-                <HelpCircle className="h-8 w-8 text-primary" />
-                <DialogTitle className="text-2xl">Recuperar Contraseña</DialogTitle>
+        <DialogHeader>
+          <div className="flex items-center gap-4 mb-4">
+            <HelpCircle className="h-8 w-8 text-primary" />
+            <DialogTitle className="text-2xl">Recuperar Contraseña</DialogTitle>
+          </div>
+        </DialogHeader>
+        <DialogDescription asChild>
+          <div className="space-y-4 text-base text-left">
+            {isLockedOut && (
+              <div className="rounded-md border border-destructive bg-destructive/10 p-3 text-center text-destructive-foreground">
+                Has superado el número de intentos fallidos. Tu cuenta ha sido bloqueada.
+              </div>
+            )}
+            <div>Para solicitar una nueva contraseña, por favor envía un correo electrónico a la siguiente dirección:</div>
+            <div className="rounded-md bg-muted p-3 text-center">
+              <a href={`mailto:${supportEmail}`} className="text-lg font-semibold text-primary underline">
+                {supportEmail}
+              </a>
             </div>
-          </DialogHeader>
-           <DialogDescription asChild>
-                <div className="space-y-4 text-base text-left">
-                    {isLockedOut && (
-                        <div className="rounded-md border border-destructive bg-destructive/10 p-3 text-center text-destructive-foreground">
-                            Has superado el número de intentos fallidos. Tu cuenta ha sido bloqueada.
-                        </div>
-                    )}
-                    <div>Para solicitar una nueva contraseña, por favor envía un correo electrónico a la siguiente dirección:</div>
-                    <div className="rounded-md bg-muted p-3 text-center">
-                        <a href={`mailto:${supportEmail}`} className="text-lg font-semibold text-primary underline">
-                            {supportEmail}
-                        </a>
-                    </div>
-                    <div>En el asunto, indica "Solicitud de Nueva Contraseña" y en el cuerpo del mensaje, asegúrate de incluir todos tus datos de perfil para que podamos identificarte:</div>
-                    <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1">
-                        <li>Nombre completo</li>
-                        <li>DNI / Email con el que te registraste</li>
-                        <li>Rol (Docente, Director, etc.)</li>
-                        <li>Región y Escuela</li>
-                        <li>Grado y curso (si aplica)</li>
-                    </ul>
-                </div>
-            </DialogDescription>
+            <div>En el asunto, indica "Solicitud de Nueva Contraseña" y en el cuerpo del mensaje, asegúrate de incluir todos tus datos de perfil para que podamos identificarte:</div>
+            <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1">
+              <li>Nombre completo</li>
+              <li>Email con el que te registraste</li>
+              <li>Rol (Docente, Director, etc.)</li>
+              <li>Región y Escuela</li>
+              <li>Grado y curso (si aplica)</li>
+            </ul>
+          </div>
+        </DialogDescription>
       </DialogContent>
     </Dialog>
   );

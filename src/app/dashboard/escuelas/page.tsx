@@ -67,9 +67,18 @@ export default function EscuelasPage() {
   const { toast } = useToast();
   const { searchTerm } = useSearch();
 
+  const userRegion = useMemo(() => {
+    if (!user) return undefined;
+    return user.region || (user.school.startsWith("Región") ? user.school : schools.find(s => s.name === user.school)?.region);
+  }, [user, schools]);
+
+  const canManageSchools = user?.role === 'Evaluador' || user?.role === 'Administrador';
+
   const filteredSchools = useMemo(() => {
     let results = schools;
-    if (regionFilter !== "all") {
+    if (user?.role === 'Referente') {
+      results = results.filter(school => school.region === userRegion);
+    } else if (regionFilter !== "all") {
       results = results.filter(school => school.region === regionFilter);
     }
     if (searchTerm) {
@@ -86,7 +95,7 @@ export default function EscuelasPage() {
     });
 
     return results;
-  }, [schools, regionFilter, searchTerm]);
+  }, [schools, regionFilter, searchTerm, user?.role, userRegion]);
 
 
   const handleOpenDeleteDialog = (school: School) => {
@@ -104,7 +113,7 @@ export default function EscuelasPage() {
   };
 
   const handleDeleteSchool = async () => {
-    if (!selectedSchool) return;
+    if (!selectedSchool || !canManageSchools) return;
     try {
       await deleteSchool(selectedSchool.id);
       toast({
@@ -120,7 +129,7 @@ export default function EscuelasPage() {
   };
   
   const handleDeleteRegion = async () => {
-    if (!selectedRegion) return;
+    if (!selectedRegion || !isEvaluador) return;
     try {
       const result = await deleteRegion(selectedRegion.id);
       toast({
@@ -138,6 +147,7 @@ export default function EscuelasPage() {
   };
 
   const handleToggleStatus = async (schoolId: string) => {
+    if (!canManageSchools) return;
     const schoolToToggle = schools.find((school) => school.id === schoolId);
     if (!schoolToToggle) return;
     
@@ -276,8 +286,12 @@ export default function EscuelasPage() {
     <div className="flex flex-col gap-8">
         <div className="flex items-center justify-between">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight font-headline">Gestión de Escuelas</h1>
-                <p className="text-muted-foreground">Administra las escuelas y regiones del sistema.</p>
+                <h1 className="text-3xl font-bold tracking-tight font-headline">
+                  {user.role === 'Referente' ? 'Escuelas de mi Región' : 'Gestión de Escuelas'}
+                </h1>
+                <p className="text-muted-foreground">
+                  {user.role === 'Referente' ? `Escuelas correspondientes a ${userRegion || 'tu región'}.` : 'Administra las escuelas y regiones del sistema.'}
+                </p>
             </div>
             <div className="flex items-center gap-2">
                 {isEvaluador && (
@@ -286,14 +300,18 @@ export default function EscuelasPage() {
                         Eliminar Región
                     </Button>
                 )}
-                <Button onClick={() => setIsAddRegionDialogOpen(true)} variant="outline">
-                    <Map className="mr-2 h-4 w-4" />
-                    Agregar Región
-                </Button>
-                <Button onClick={() => setIsAddSchoolDialogOpen(true)}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Agregar Escuela
-                </Button>
+                {canManageSchools && (
+                    <Button onClick={() => setIsAddRegionDialogOpen(true)} variant="outline">
+                        <Map className="mr-2 h-4 w-4" />
+                        Agregar Región
+                    </Button>
+                )}
+                {canManageSchools && (
+                    <Button onClick={() => setIsAddSchoolDialogOpen(true)}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Agregar Escuela
+                    </Button>
+                )}
                  <Button variant="outline" onClick={handleExport}>
                     <FileDown className="mr-2 h-4 w-4" />
                     Exportar Escuelas
@@ -301,32 +319,44 @@ export default function EscuelasPage() {
             </div>
         </div>
 
-        <Card>
-            <CardHeader>
-                <div className="flex items-center gap-2">
-                    <Filter className="h-5 w-5" />
-                    <CardTitle>Filtrar por Región</CardTitle>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <div className="grid md:grid-cols-4 gap-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="region-filter">Región</Label>
-                        <Select onValueChange={setRegionFilter} value={regionFilter}>
-                            <SelectTrigger id="region-filter">
-                                <SelectValue placeholder="Seleccionar región" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todas las Regiones</SelectItem>
-                                {regions.map((region, index) => (
-                                    <SelectItem key={`${region.id}-${index}`} value={region.name}>{region.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+        {user.role !== 'Referente' ? (
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center gap-2">
+                        <Filter className="h-5 w-5" />
+                        <CardTitle>Filtrar por Región</CardTitle>
                     </div>
-                </div>
-            </CardContent>
-        </Card>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid md:grid-cols-4 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="region-filter">Región</Label>
+                            <Select onValueChange={setRegionFilter} value={regionFilter}>
+                                <SelectTrigger id="region-filter">
+                                    <SelectValue placeholder="Seleccionar región" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todas las Regiones</SelectItem>
+                                    {regions.map((region, index) => (
+                                        <SelectItem key={`${region.id}-${index}`} value={region.name}>{region.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        ) : (
+            <Card>
+                <CardHeader className="py-4">
+                    <div className="flex items-center gap-2">
+                        <Map className="h-5 w-5 text-primary" />
+                        <CardTitle className="text-lg">Región Asignada: <span className="font-semibold text-primary">{userRegion || 'Sin región'}</span></CardTitle>
+                    </div>
+                    <CardDescription>Solo puedes visualizar las escuelas pertenecientes a tu región asignada.</CardDescription>
+                </CardHeader>
+            </Card>
+        )}
 
 
         <Card>
@@ -359,24 +389,28 @@ export default function EscuelasPage() {
                                     <Badge variant={school.status === "Inactiva" ? "secondary" : "default"}>{school.status}</Badge>
                                 </TableCell>
                                 <TableCell>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button aria-haspopup="true" size="icon" variant="ghost">
-                                                <MoreHorizontal className="h-4 w-4" />
-                                                <span className="sr-only">Toggle menu</span>
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                            <DropdownMenuItem onSelect={() => handleOpenEditDialog(school)}>Editar</DropdownMenuItem>
-                                            <DropdownMenuItem onSelect={() => handleToggleStatus(school.id)}>
-                                                {school.status === "Activa" ? "Desactivar" : "Activar"}
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(school)}>
-                                                Eliminar
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                    {canManageSchools ? (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button aria-haspopup="true" size="icon" variant="ghost">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                    <span className="sr-only">Toggle menu</span>
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                                                <DropdownMenuItem onSelect={() => handleOpenEditDialog(school)}>Editar</DropdownMenuItem>
+                                                <DropdownMenuItem onSelect={() => handleToggleStatus(school.id)}>
+                                                    {school.status === "Activa" ? "Desactivar" : "Activar"}
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(school)}>
+                                                    Eliminar
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    ) : (
+                                        <span className="text-xs text-muted-foreground">Solo lectura</span>
+                                    )}
                                 </TableCell>
                             </TableRow>
                             ))

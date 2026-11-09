@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Download } from "lucide-react";
+import { MoreHorizontal, Download, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useExams } from "@/context/exams-context";
 import type { Exam } from "@/lib/types";
@@ -16,9 +16,10 @@ interface ExamActionsProps {
   exam: Exam;
   userRole: UserRole;
   onEdit: (exam: Exam) => void;
+  onViewExam?: (exam: Exam) => void;
 }
 
-export function ExamActionsClient({ exam, userRole, onEdit }: ExamActionsProps) {
+export function ExamActionsClient({ exam, userRole, onEdit, onViewExam }: ExamActionsProps) {
   const router = useRouter();
   const { toast } = useToast();
   const { deleteExam, toggleExamStatus } = useExams();
@@ -89,6 +90,12 @@ export function ExamActionsClient({ exam, userRole, onEdit }: ExamActionsProps) 
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+          {onViewExam && (
+            <DropdownMenuItem onSelect={() => onViewExam(exam)}>
+              <Eye className="mr-2 h-4 w-4" />
+              Ver Examen y Dificultad
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={handleViewAnalysis}>Ver Análisis</DropdownMenuItem>
           {exam.fileDataUrl && (
             <DropdownMenuItem onSelect={handleDownloadFile}>

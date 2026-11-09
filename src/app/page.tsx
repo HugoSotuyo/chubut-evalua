@@ -33,7 +33,7 @@ export default function LoginPage() {
           <div className="grid gap-2 text-center">
             <h1 className="text-3xl font-bold font-headline">Iniciar Sesión</h1>
             <p className="text-balance text-muted-foreground">
-              Ingresa tu DNI/email y contraseña para acceder al sistema
+              Ingresa tu email y contraseña para acceder al sistema
             </p>
           </div>
           <SuspenseWrapper>
@@ -51,11 +51,11 @@ export default function LoginPage() {
         <div className="flex items-center gap-4 text-secondary-foreground mb-4">
           <GraduationCap className="h-12 w-12" />
           <h1 className="text-4xl font-bold font-headline">
-            Chubut evalúa
+            Sistema Evaluador Educativo
           </h1>
         </div>
         <p className="text-xl text-secondary-foreground/80 font-medium text-center mb-8">
-          Provincia de Chubut
+          Gestión Educativa
         </p>
         {randomImage && imageUrl && (
           <Image

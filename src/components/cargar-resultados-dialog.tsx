@@ -82,10 +82,13 @@ export function CargarResultadosDialog({ student, isOpen, onOpenChange }: Cargar
 
             setIsLoadingExams(true);
             let filtered = [];
+            const studentYear = student.schoolYear;
+            const getExamYear = (e: any) => e.schoolYear || e.created?.slice(0, 4) || "2024";
+
             if (user?.role === 'Docente') {
-                filtered = exams.filter(e => e.status === 'Cerrado' && e.grade === user.grade);
+                filtered = exams.filter(e => e.status === 'Cerrado' && e.grade === user.grade && getExamYear(e) === studentYear);
             } else {
-                filtered = exams.filter(e => e.status === 'Abierto');
+                filtered = exams.filter(e => e.status === 'Abierto' && getExamYear(e) === studentYear);
             }
 
             const studentHasTakenPromises = filtered.map(exam => resultExists(student.id, exam.id));

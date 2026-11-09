@@ -141,8 +141,8 @@ export default function PerfilPage() {
                     />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="escuela">Escuela</Label>
-                    <Input id="escuela" value={user.school} readOnly />
+                    <Label htmlFor="escuela">{user.role === 'Referente' ? 'Región Asignada' : 'Escuela'}</Label>
+                    <Input id="escuela" value={user.role === 'Referente' ? (user.region || user.school) : user.school} readOnly />
                 </div>
                 {(user.role === 'Docente' && user.grade) && (
                     <div className="space-y-2">
@@ -156,7 +156,7 @@ export default function PerfilPage() {
                         <Input id="curso" value={user.course} readOnly />
                     </div>
                 )}
-                {user.schoolYear && (user.role === 'Director' || user.role === 'Docente') && (
+                {user.schoolYear && (user.role === 'Director' || user.role === 'Docente' || user.role === 'Referente') && (
                     <div className="space-y-2">
                         <Label htmlFor="schoolYear">Ciclo Lectivo</Label>
                         <Input id="schoolYear" value={user.schoolYear} readOnly />

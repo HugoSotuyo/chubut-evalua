@@ -72,3 +72,22 @@ export async function resultExists(studentId: string, examId: string): Promise<b
     const snapshot = await getCountFromServer(q);
     return snapshot.data().count > 0;
 }
+
+export async function deleteResultsByYear(schoolYear: string): Promise<{ deletedCount: number }> {
+    const db = getDb();
+    const resultsCollection = collection(db, "results");
+    const querySnapshot = await getDocs(resultsCollection);
+    const resultsToDelete: string[] = [];
+
+    querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if ((data.schoolYear || '') === schoolYear) {
+            resultsToDelete.push(docSnap.id);
+        }
+    });
+
+    const deletePromises = resultsToDelete.map((id) => deleteDoc(doc(db, "results", id)));
+    await Promise.all(deletePromises);
+
+    return { deletedCount: resultsToDelete.length };
+}
