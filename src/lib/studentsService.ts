@@ -73,3 +73,34 @@ export async function deleteStudent(studentId: string) {
     const studentRef = doc(db, "students", studentId);
     await deleteDoc(studentRef);
 }
+
+export async function deleteStudentsByYear(schoolYear: string): Promise<{ deletedCount: number }> {
+    const db = getDb();
+    const studentsRef = collection(db, "students");
+    const querySnapshot = await getDocs(studentsRef);
+    const studentsToDelete: string[] = [];
+
+    querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if ((data.schoolYear || '') === schoolYear) {
+            studentsToDelete.push(docSnap.id);
+        }
+    });
+
+    const deletePromises = studentsToDelete.map((id) => deleteDoc(doc(db, "students", id)));
+    await Promise.all(deletePromises);
+
+    // Also remove results belonging to this school year
+    const resultsRef = collection(db, "results");
+    const resultsSnap = await getDocs(resultsRef);
+    const resultsDeletePromises: Promise<any>[] = [];
+    resultsSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        if ((data.schoolYear || '') === schoolYear) {
+            resultsDeletePromises.push(deleteDoc(doc(db, "results", docSnap.id)));
+        }
+    });
+    await Promise.all(resultsDeletePromises);
+
+    return { deletedCount: studentsToDelete.length };
+}

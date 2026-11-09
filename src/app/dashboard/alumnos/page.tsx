@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSearch } from "@/context/search-context";
 import { useSettings } from "@/context/settings-context";
+import { useSchools } from "@/context/schools-context";
 
 export default function AlumnosPage() {
   const { user } = useAuth(); 
@@ -22,10 +23,22 @@ export default function AlumnosPage() {
   const { results: allResults } = useResults();
   const { searchTerm } = useSearch();
   const { settings } = useSettings();
+  const { schools } = useSchools();
 
   const [gradeFilter, setGradeFilter] = useState("all");
   const [courseFilter, setCourseFilter] = useState("all");
+  const [schoolFilter, setSchoolFilter] = useState("all");
   const [schoolYearFilter, setSchoolYearFilter] = useState(settings.currentSchoolYear || "all");
+
+  const userRegion = useMemo(() => {
+    if (!user) return undefined;
+    return user.region || (user.school.startsWith("Región") ? user.school : schools.find(s => s.name === user.school)?.region);
+  }, [user, schools]);
+
+  const regionSchoolNames = useMemo(() => {
+    if (!userRegion) return new Set();
+    return new Set(schools.filter(s => s.region === userRegion).map(s => s.name));
+  }, [schools, userRegion]);
 
   if (!user) {
     return <div>Cargando...</div>
@@ -59,9 +72,11 @@ export default function AlumnosPage() {
         return baseList.filter(student => student.school === user.school);
       }
       return [];
+    } else if (user.role === 'Referente') {
+      return baseList.filter(student => regionSchoolNames.has(student.school));
     }
     return baseList;
-  }, [studentsWithResults, user, schoolYearFilter, settings.currentSchoolYear]);
+  }, [studentsWithResults, user, schoolYearFilter, settings.currentSchoolYear, regionSchoolNames]);
   
   const studentList = useMemo(() => {
     let filtered = studentsInScope;
@@ -71,6 +86,9 @@ export default function AlumnosPage() {
       }
       if (courseFilter !== "all") {
         filtered = filtered.filter(student => student.course === courseFilter);
+      }
+      if (schoolFilter !== "all") {
+        filtered = filtered.filter(student => student.school === schoolFilter);
       }
     }
 
@@ -88,8 +106,15 @@ export default function AlumnosPage() {
     filtered.sort((a, b) => getGradeNumber(a.grade) - getGradeNumber(b.grade));
 
     return filtered;
-  }, [studentsInScope, gradeFilter, courseFilter, user.role, searchTerm]);
+  }, [studentsInScope, gradeFilter, courseFilter, schoolFilter, user.role, searchTerm]);
   
+  const availableSchools = useMemo(() => {
+    if (user.role === 'Referente') {
+      return schools.filter(s => s.region === userRegion).map(s => s.name).sort();
+    }
+    return [...new Set(studentsInScope.map(s => s.school).filter(Boolean))].sort();
+  }, [user.role, schools, userRegion, studentsInScope]);
+
   const availableGrades = useMemo(() => {
       const grades = studentsInScope.map(s => s.grade);
       return [...new Set(grades)].sort();
@@ -101,8 +126,11 @@ export default function AlumnosPage() {
   }, [studentsInScope]);
   
   const availableSchoolYears = useMemo(() => {
-    return [...new Set(allStudents.map(s => s.schoolYear).filter(Boolean))].sort((a, b) => b.localeCompare(a));
-  }, [allStudents]);
+    const fromStudents = allStudents.map(s => s.schoolYear).filter(Boolean);
+    const fromSettings = settings.schoolYears || [];
+    const current = settings.currentSchoolYear ? [settings.currentSchoolYear] : [];
+    return [...new Set([...fromSettings, ...current, ...fromStudents])].sort((a, b) => b.localeCompare(a));
+  }, [allStudents, settings.schoolYears, settings.currentSchoolYear]);
 
 
   const getCardTexts = () => {
@@ -116,6 +144,11 @@ export default function AlumnosPage() {
         return {
           title: `Alumnos de ${user.school}`,
           description: 'Lista de todos los alumnos registrados en tu escuela.',
+        };
+      case 'Referente':
+        return {
+          title: `Alumnos de ${userRegion || 'mi Región'}`,
+          description: 'Lista de todos los alumnos registrados en las escuelas de tu región.',
         };
       default:
         return {
@@ -214,6 +247,9 @@ export default function AlumnosPage() {
               <TableRow>
                 <TableHead>Nombre Completo</TableHead>
                 <TableHead>DNI</TableHead>
+                {(user.role === 'Referente' || user.role === 'Evaluador' || user.role === 'Administrador') && (
+                  <TableHead>Escuela</TableHead>
+                )}
                 <TableHead>Grado</TableHead>
                 <TableHead>Curso</TableHead>
                 <TableHead>Exámenes Cargados</TableHead>
@@ -228,6 +264,9 @@ export default function AlumnosPage() {
                   <TableRow key={student.id}>
                     <TableCell className="font-medium">{student.name}</TableCell>
                     <TableCell>{student.dni}</TableCell>
+                    {(user.role === 'Referente' || user.role === 'Evaluador' || user.role === 'Administrador') && (
+                      <TableCell>{student.school}</TableCell>
+                    )}
                     <TableCell>{student.grade}</TableCell>
                     <TableCell>{student.course}</TableCell>
                     <TableCell>

@@ -31,13 +31,14 @@ import { useAuth } from "@/context/auth-context";
 import { useSchools } from "@/context/schools-context";
 import { Input } from "@/components/ui/input";
 import type { UserRole } from "@/lib/auth";
-import type { School } from "@/lib/types";
+import { canEditUserRole, getInferiorRoles } from "@/lib/auth";
+import type { School, Region } from "@/lib/types";
 import { useSettings } from "@/context/settings-context";
 
 
 export default function UsuariosPage() {
   const { users, deleteUser, enableUser, updateUser, updateUserPassword } = useUsers();
-  const { schools } = useSchools();
+  const { schools, regions } = useSchools();
   const { settings } = useSettings();
 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -60,6 +61,20 @@ export default function UsuariosPage() {
   const { user: currentUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const userRegion = useMemo(() => {
+    if (!currentUser) return undefined;
+    return currentUser.region || (currentUser.school.startsWith("Región") ? currentUser.school : schools.find(s => s.name === currentUser.school)?.region);
+  }, [currentUser, schools]);
+
+  const schoolsInUserRegion = useMemo(() => {
+    if (!userRegion) return [];
+    return schools.filter(s => s.region === userRegion);
+  }, [schools, userRegion]);
+
+  const schoolNamesInUserRegion = useMemo(() => {
+    return new Set(schoolsInUserRegion.map(s => s.name));
+  }, [schoolsInUserRegion]);
+
   // When school year filter changes, reset other filters
   useEffect(() => {
     setFilters(prev => ({
@@ -79,28 +94,37 @@ export default function UsuariosPage() {
   }, [users, filters.schoolYear]);
 
   const uniqueRoles = useMemo(() => {
+    if (currentUser?.role === 'Referente') {
+      return ['Director', 'Docente'];
+    }
     const roles = usersForFilterOptions.map(user => user.role);
     return [...new Set(roles)].filter(role => role !== 'Evaluador');
-  }, [usersForFilterOptions]);
+  }, [usersForFilterOptions, currentUser?.role, schoolsInUserRegion]);
   
   const uniqueSchools = useMemo(() => {
+    if (currentUser?.role === 'Referente') {
+      return schoolsInUserRegion.map(s => s.name).sort();
+    }
     const schoolNames = usersForFilterOptions.map(user => user.school).filter(Boolean);
     return [...new Set(schoolNames)].sort();
-  }, [usersForFilterOptions]);
+  }, [usersForFilterOptions, currentUser?.role, schoolsInUserRegion]);
 
   const uniqueGrades = useMemo(() => {
     const grades = usersForFilterOptions.map(user => user.grade).filter((g): g is string => Boolean(g));
     return [...new Set(grades)].sort();
-  }, [usersForFilterOptions]);
+  }, [usersForFilterOptions, currentUser?.role, schoolsInUserRegion]);
 
   const uniqueCourses = useMemo(() => {
     const courses = usersForFilterOptions.map(user => user.course).filter((c): c is string => Boolean(c));
     return [...new Set(courses)].sort();
-  }, [usersForFilterOptions]);
+  }, [usersForFilterOptions, currentUser?.role, schoolsInUserRegion]);
 
   const uniqueSchoolYears = useMemo(() => {
-    return [...new Set(users.map(u => u.schoolYear).filter(Boolean))].sort((a,b) => b.localeCompare(a));
-  }, [users]);
+    const fromUsers = users.map(u => u.schoolYear).filter(Boolean);
+    const fromSettings = settings.schoolYears || [];
+    const current = settings.currentSchoolYear ? [settings.currentSchoolYear] : [];
+    return [...new Set([...fromSettings, ...current, ...fromUsers])].sort((a,b) => b.localeCompare(a));
+  }, [users, settings.schoolYears, settings.currentSchoolYear]);
 
   const filteredUsers = useMemo(() => {
     if (!currentUser) return [];
@@ -119,6 +143,27 @@ export default function UsuariosPage() {
             results = results.filter(u => u.course === appliedFilters.course);
         }
 
+    } else if (currentUser.role === "Referente") {
+        results = users.filter(u => {
+            const isInRegion = (u.school && schoolNamesInUserRegion.has(u.school)) || 
+                               (u.role === 'Referente' && (u.region === userRegion || u.school === userRegion));
+            return isInRegion && (u.role === 'Director' || u.role === 'Docente' || u.role === 'Referente');
+        });
+        if (appliedFilters.role !== "all") {
+            results = results.filter(u => u.role === appliedFilters.role);
+        }
+        if (appliedFilters.school !== "all") {
+            results = results.filter(u => u.school === appliedFilters.school);
+        }
+        if (appliedFilters.grade !== "all") {
+            results = results.filter(u => u.grade === appliedFilters.grade);
+        }
+        if (appliedFilters.course !== "all") {
+            results = results.filter(u => u.course === appliedFilters.course);
+        }
+        if (appliedFilters.schoolYear !== "all") {
+            results = results.filter(u => u.schoolYear === appliedFilters.schoolYear);
+        }
     } else {
        if (appliedFilters.role !== "all") {
             results = results.filter(u => u.role === appliedFilters.role);
@@ -169,7 +214,7 @@ export default function UsuariosPage() {
 
 
     return finalResults;
-  }, [users, appliedFilters, searchTerm, currentUser]);
+  }, [users, appliedFilters, searchTerm, currentUser, schoolNamesInUserRegion, userRegion]);
   
   const handleFilterChange = (filterName: keyof typeof filters, value: string) => {
     setFilters(prev => ({ ...prev, [filterName]: value }));
@@ -180,27 +225,108 @@ export default function UsuariosPage() {
   };
 
   const handleOpenDeleteDialog = (user: User) => {
+    if (!canEditUserRole(currentUser?.role, user.role)) {
+      toast({
+        title: "Acceso no permitido",
+        description: `Tu rol (${currentUser?.role}) no puede eliminar a un usuario con rol ${user.role}. Solo puedes gestionar roles inferiores.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    if (currentUser?.role === 'Referente') {
+      const isTargetInRegion = (user.school && schoolNamesInUserRegion.has(user.school)) || (user.region === userRegion);
+      if (!isTargetInRegion) {
+        toast({
+          title: "Acceso no permitido",
+          description: "Solo puedes gestionar usuarios pertenecientes a tu región.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     setSelectedUser(user);
     setIsAlertOpen(true);
   };
   
   const handleOpenProfileDialog = (user: User) => {
+    if (currentUser?.role === 'Referente') {
+      const isTargetInRegion = (user.school && schoolNamesInUserRegion.has(user.school)) || (user.region === userRegion);
+      if (!isTargetInRegion) {
+        toast({
+          title: "Acceso no permitido",
+          description: "Solo puedes gestionar usuarios pertenecientes a tu región.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     setSelectedUser(user);
     setIsProfileDialogOpen(true);
   }
 
   const handleOpenEditDialog = (user: User) => {
+    if (!canEditUserRole(currentUser?.role, user.role)) {
+      toast({
+        title: "Acceso no permitido",
+        description: `Tu rol (${currentUser?.role}) no puede editar a un usuario con rol ${user.role}. Solo puedes editar roles inferiores.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    if (currentUser?.role === 'Referente') {
+      const isTargetInRegion = (user.school && schoolNamesInUserRegion.has(user.school)) || (user.region === userRegion);
+      if (!isTargetInRegion) {
+        toast({
+          title: "Acceso no permitido",
+          description: "Solo puedes gestionar usuarios pertenecientes a tu región.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     setSelectedUser(user);
     setIsEditDialogOpen(true);
   }
 
   const handleOpenChangePasswordDialog = (user: User) => {
+    if (currentUser?.role === 'Referente') {
+      const isTargetInRegion = (user.school && schoolNamesInUserRegion.has(user.school)) || (user.region === userRegion);
+      if (!isTargetInRegion) {
+        toast({
+          title: "Acceso no permitido",
+          description: "Solo puedes gestionar usuarios pertenecientes a tu región.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     setSelectedUser(user);
     setIsChangePasswordDialogOpen(true);
   }
 
   const handleDeleteUser = async () => {
     if (!selectedUser || isSubmitting) return;
+
+    if (!canEditUserRole(currentUser?.role, selectedUser.role)) {
+      toast({
+        title: "Acceso no permitido",
+        description: `Tu rol (${currentUser?.role}) no tiene permisos para eliminar a este usuario.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (currentUser?.role === 'Referente') {
+      const isTargetInRegion = (selectedUser.school && schoolNamesInUserRegion.has(selectedUser.school)) || (selectedUser.region === userRegion);
+      if (!isTargetInRegion) {
+        toast({
+          title: "Acceso no permitido",
+          description: "Solo puedes eliminar usuarios pertenecientes a tu región.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
 
     setIsSubmitting(true);
     try {
@@ -225,6 +351,27 @@ export default function UsuariosPage() {
   const handleEnableUser = async (userId: string) => {
     const userToEnable = users.find((user) => user.id === userId);
     if (!userToEnable || isSubmitting) return;
+
+    if (!canEditUserRole(currentUser?.role, userToEnable.role)) {
+      toast({
+        title: "Acceso no permitido",
+        description: `Tu rol (${currentUser?.role}) no puede habilitar a un usuario con rol ${userToEnable.role}. Solo puedes gestionar roles inferiores.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (currentUser?.role === 'Referente') {
+      const isTargetInRegion = (userToEnable.school && schoolNamesInUserRegion.has(userToEnable.school)) || (userToEnable.region === userRegion);
+      if (!isTargetInRegion) {
+        toast({
+          title: "Acceso no permitido",
+          description: "Solo puedes habilitar usuarios de tu región asignada.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
 
     setIsSubmitting(true);
     try {
@@ -274,6 +421,15 @@ export default function UsuariosPage() {
 
   if (!currentUser) {
     return <div>Cargando...</div>;
+  }
+
+  if (currentUser.role === 'Docente') {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center">
+        <h2 className="text-xl font-semibold">Acceso no disponible</h2>
+        <p className="text-muted-foreground mt-2">Los docentes no cuentan con permisos para la gestión de usuarios.</p>
+      </div>
+    );
   }
   
   const showAdvancedFilters = ['Evaluador', 'Administrador', 'Referente', 'Director'].includes(currentUser.role);
@@ -394,8 +550,8 @@ export default function UsuariosPage() {
 
         <Card>
             <CardHeader>
-                <CardTitle>{currentUser.role === 'Director' ? 'Docentes de mi Escuela' : 'Usuarios Registrados'}</CardTitle>
-                <CardDescription>{currentUser.role === 'Director' ? 'Lista de todos los docentes con acceso a tu escuela.' : 'Lista de todos los usuarios con acceso a la plataforma.'}</CardDescription>
+                <CardTitle>{currentUser.role === 'Director' ? 'Docentes de mi Escuela' : currentUser.role === 'Referente' ? `Usuarios de ${userRegion || 'mi Región'}` : 'Usuarios Registrados'}</CardTitle>
+                <CardDescription>{currentUser.role === 'Director' ? 'Lista de todos los docentes con acceso a tu escuela.' : currentUser.role === 'Referente' ? 'Lista de directores y docentes asignados a las escuelas de tu región.' : 'Lista de todos los usuarios con acceso a la plataforma.'}</CardDescription>
             </CardHeader>
             <CardContent>
                 <Table>
@@ -446,12 +602,12 @@ export default function UsuariosPage() {
                                             <Eye className="mr-2 h-4 w-4" />
                                             Ver Perfil
                                         </DropdownMenuItem>
-                                        {user.status === "Pendiente" && (currentUser.role === 'Evaluador' || currentUser.role === 'Director' || currentUser.role === 'Administrador') && (
+                                        {user.status === "Pendiente" && canEditUserRole(currentUser.role, user.role) && (
                                             <DropdownMenuItem onSelect={() => handleEnableUser(user.id)} disabled={isSubmitting}>
                                                 {isSubmitting ? "Habilitando..." : `Habilitar ${user.role}`}
                                             </DropdownMenuItem>
                                         )}
-                                        {showAdvancedFilters && (
+                                        {canEditUserRole(currentUser.role, user.role) && (
                                             <DropdownMenuItem onSelect={() => handleOpenEditDialog(user)}>
                                                 <Edit className="mr-2 h-4 w-4" />
                                                 Editar
@@ -463,7 +619,7 @@ export default function UsuariosPage() {
                                                 Cambiar Contraseña
                                             </DropdownMenuItem>
                                         )}
-                                        {(currentUser.role === 'Evaluador' || currentUser.role === 'Director' || currentUser.role === 'Administrador') && (
+                                        {canEditUserRole(currentUser.role, user.role) && (
                                           <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(user)}>Eliminar</DropdownMenuItem>
                                         )}
                                     </DropdownMenuContent>
@@ -516,9 +672,15 @@ export default function UsuariosPage() {
                                 </div>
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input id="email" value={selectedUser.email} readOnly />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="email">Email</Label>
+                                <Input id="email" value={selectedUser.email} readOnly />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="dni">DNI</Label>
+                                <Input id="dni" value={selectedUser.dni || "-"} readOnly />
+                            </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
@@ -566,7 +728,27 @@ export default function UsuariosPage() {
             isOpen={isEditDialogOpen} 
             onOpenChange={setIsEditDialogOpen}
             user={selectedUser}
+            currentUserRole={currentUser.role}
             onSave={async (updatedUser) => {
+                if (!canEditUserRole(currentUser.role, selectedUser?.role) || !canEditUserRole(currentUser.role, updatedUser.role)) {
+                    toast({ 
+                        title: "Permiso denegado", 
+                        description: `Tu rol (${currentUser.role}) solo puede editar o asignar roles inferiores en escala jerárquica.`, 
+                        variant: "destructive" 
+                    });
+                    return;
+                }
+                if (currentUser?.role === 'Referente') {
+                    const isTargetInRegion = (updatedUser.school && schoolNamesInUserRegion.has(updatedUser.school)) || (updatedUser.region === userRegion);
+                    if (!isTargetInRegion) {
+                        toast({
+                            title: "Permiso denegado",
+                            description: "No puedes asignar o mover usuarios fuera de tu región asignada.",
+                            variant: "destructive",
+                        });
+                        return;
+                    }
+                }
                 setIsSubmitting(true);
                 try {
                     await updateUser(updatedUser);
@@ -579,7 +761,8 @@ export default function UsuariosPage() {
                     setIsSubmitting(false);
                 }
             }}
-            allSchools={schools}
+            allSchools={currentUser?.role === 'Referente' ? schoolsInUserRegion : schools}
+            allRegions={regions}
             isSubmitting={isSubmitting}
         />
 
@@ -610,21 +793,33 @@ interface EditUserDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   user: User | null;
+  currentUserRole?: UserRole;
   onSave: (user: User) => Promise<void>;
   allSchools: School[];
+  allRegions?: Region[];
   isSubmitting: boolean;
 }
 
-function EditUserDialog({ isOpen, onOpenChange, user, onSave, allSchools, isSubmitting }: EditUserDialogProps) {
+function EditUserDialog({ isOpen, onOpenChange, user, currentUserRole, onSave, allSchools, allRegions = [], isSubmitting }: EditUserDialogProps) {
     const [editedUser, setEditedUser] = useState<User | null>(user);
 
     useEffect(() => {
         setEditedUser(user);
     }, [user]);
 
+    const availableRoles = useMemo(() => {
+        return getInferiorRoles(currentUserRole);
+    }, [currentUserRole]);
+
     const handleFieldChange = (field: keyof User, value: any) => {
         if (!editedUser) return;
         
+        if (field === 'role') {
+            if (!availableRoles.includes(value as UserRole)) {
+                return;
+            }
+        }
+
         const updatedUser = { ...editedUser, [field]: value };
 
         if (field === 'role' && value !== 'Docente') {
@@ -667,33 +862,81 @@ function EditUserDialog({ isOpen, onOpenChange, user, onSave, allSchools, isSubm
                             <Label htmlFor="edit-name">Nombre Completo</Label>
                             <Input id="edit-name" value={editedUser.name} onChange={(e) => handleFieldChange('name', e.target.value)} disabled={isSubmitting} />
                         </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-email">Email</Label>
+                                <Input id="edit-email" value={editedUser.email} disabled className="bg-muted" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-dni">DNI</Label>
+                                <Input id="edit-dni" value={editedUser.dni || "-"} disabled className="bg-muted" />
+                            </div>
+                        </div>
                         <div className="space-y-2">
-                            <Label htmlFor="edit-role">Rol</Label>
-                            <Select value={editedUser.role} onValueChange={(value) => handleFieldChange('role', value as UserRole)} disabled={isSubmitting}>
+                            <Label htmlFor="edit-role">Rol (Roles inferiores permitidos)</Label>
+                            <Select 
+                                value={editedUser.role} 
+                                onValueChange={(value) => handleFieldChange('role', value as UserRole)} 
+                                disabled={isSubmitting || availableRoles.length <= 1}
+                            >
                                 <SelectTrigger id="edit-role">
                                     <SelectValue placeholder="Seleccionar rol" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="Administrador">Administrador</SelectItem>
-                                    <SelectItem value="Referente">Referente</SelectItem>
-                                    <SelectItem value="Director">Director</SelectItem>
-                                    <SelectItem value="Docente">Docente</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-school">Escuela</Label>
-                            <Select value={selectedSchoolId} onValueChange={handleSchoolChange} disabled={isSubmitting}>
-                                <SelectTrigger id="edit-school">
-                                    <SelectValue placeholder="Seleccionar escuela" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {allSchools.map(school => (
-                                        <SelectItem key={school.id} value={school.id}>{school.name}</SelectItem>
+                                    {availableRoles.map(role => (
+                                        <SelectItem key={role} value={role}>{role}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
+                            {availableRoles.length <= 1 && (
+                                <p className="text-xs text-muted-foreground">Tu rol solo puede gestionar este rol inferior.</p>
+                            )}
                         </div>
+                        {editedUser.role === 'Referente' ? (
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-region">Región Asignada</Label>
+                                <Select 
+                                    value={editedUser.region || editedUser.school} 
+                                    onValueChange={(val) => {
+                                        setEditedUser({ ...editedUser, region: val, school: val });
+                                    }} 
+                                    disabled={isSubmitting}
+                                >
+                                    <SelectTrigger id="edit-region">
+                                        <SelectValue placeholder="Seleccionar región" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {allRegions.map(region => (
+                                            <SelectItem key={region.id} value={region.name}>{region.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-school">Escuela</Label>
+                                <Select 
+                                    value={selectedSchoolId} 
+                                    onValueChange={handleSchoolChange} 
+                                    disabled={isSubmitting || currentUserRole === 'Director'}
+                                >
+                                    <SelectTrigger id="edit-school">
+                                        <SelectValue placeholder="Seleccionar escuela" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {allSchools.map(school => (
+                                            <SelectItem key={school.id} value={school.id}>{school.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {currentUserRole === 'Director' && (
+                                    <p className="text-xs text-muted-foreground">Como Director, solo puedes gestionar docentes de tu escuela.</p>
+                                )}
+                                {currentUserRole === 'Referente' && (
+                                    <p className="text-xs text-muted-foreground">Como Referente, solo puedes asignar escuelas de tu región.</p>
+                                )}
+                            </div>
+                        )}
                         {editedUser.role === 'Docente' && (
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">

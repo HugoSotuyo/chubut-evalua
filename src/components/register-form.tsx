@@ -25,11 +25,22 @@ export function RegisterForm() {
   const [selectedRegion, setSelectedRegion] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dni, setDni] = useState("");
   const router = useRouter();
   const { toast } = useToast();
   const { addUser, users } = useUsers();
   const { schools, regions } = useSchools();
   const { settings } = useSettings();
+
+  const regionsWithReferentes = useMemo(() => {
+    return users
+      .filter(user => user.role === 'Referente' && user.schoolYear === settings.currentSchoolYear && (user.status === 'Activo' || user.status === 'Pendiente'))
+      .map(user => user.region || user.school);
+  }, [users, settings.currentSchoolYear]);
+
+  const availableRegionsForReferente = useMemo(() => {
+    return regions.filter(region => !regionsWithReferentes.includes(region.name));
+  }, [regions, regionsWithReferentes]);
 
   const schoolsWithDirectors = useMemo(() => {
     return users
@@ -59,11 +70,12 @@ export function RegisterForm() {
     const firstName = formData.get("first-name") as string;
     const lastName = formData.get("last-name") as string;
     const email = formData.get("email") as string;
-    const dni = formData.get("dni") as string;
+    const rawDni = (formData.get("dni") as string) || dni;
+    const cleanDni = rawDni.replace(/\D/g, "").trim();
     const password = formData.get("password") as string;
     const selectedRole = formData.get("role") as UserRole;
     
-    if (!firstName || !lastName || !selectedRole || !email || !password || !dni) {
+    if (!firstName || !lastName || !selectedRole || !email || !password || !cleanDni) {
         toast({
             title: "Error de validación",
             description: "Por favor, completa todos los campos requeridos.",
@@ -76,12 +88,36 @@ export function RegisterForm() {
     const userData: any = {
         name: `${firstName} ${lastName}`,
         email: email,
-        dni: dni,
+        dni: cleanDni,
         password: password,
         role: selectedRole,
         school: "N/A",
         schoolYear: settings.currentSchoolYear, // Automatically assign current school year
     };
+
+    if (selectedRole === "Referente") {
+        const region = (formData.get("region") as string) || selectedRegion;
+        if (!region || region === "no-regions") {
+            toast({
+                title: "Error de validación",
+                description: "Debes seleccionar una región disponible.",
+                variant: "destructive",
+            });
+            setIsSubmitting(false);
+            return;
+        }
+        if (regionsWithReferentes.includes(region)) {
+            toast({
+                title: "Región no disponible",
+                description: "La región seleccionada ya cuenta con un Referente asignado para este ciclo lectivo.",
+                variant: "destructive",
+            });
+            setIsSubmitting(false);
+            return;
+        }
+        userData.region = region;
+        userData.school = region;
+    }
 
     if (selectedRole === "Director" || selectedRole === "Docente") {
         const school = formData.get("escuela") as string;
@@ -150,7 +186,20 @@ export function RegisterForm() {
       </div>
       <div className="grid gap-2">
         <Label htmlFor="dni">DNI</Label>
-        <Input id="dni" name="dni" placeholder="12345678" required disabled={isSubmitting}/>
+        <Input 
+          id="dni" 
+          name="dni" 
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          placeholder="12345678" 
+          value={dni}
+          onChange={(e) => setDni(e.target.value.replace(/\D/g, ""))}
+          maxLength={10}
+          required 
+          disabled={isSubmitting}
+        />
+        <p className="text-[0.8rem] text-muted-foreground">Solo números, sin puntos ni espacios.</p>
       </div>
       <div className="grid gap-2">
         <Label htmlFor="email">Email / Usuario</Label>
@@ -158,14 +207,13 @@ export function RegisterForm() {
           id="email"
           type="text"
           name="email"
-          placeholder="tu.dni@chubut.edu.ar"
           required
           disabled={isSubmitting}
         />
       </div>
       <div className="grid gap-2">
         <Label htmlFor="role">Rol</Label>
-        <Select onValueChange={(value) => setRole(value as UserRole)} name="role" required disabled={isSubmitting}>
+        <Select onValueChange={(value) => { setRole(value as UserRole); setSelectedRegion(""); }} name="role" required disabled={isSubmitting}>
           <SelectTrigger>
             <SelectValue placeholder="Selecciona tu rol" />
           </SelectTrigger>
@@ -177,6 +225,29 @@ export function RegisterForm() {
           </SelectContent>
         </Select>
       </div>
+
+      {role === "Referente" && (
+        <div className="grid gap-2">
+          <Label htmlFor="region">Región</Label>
+          <Select name="region" onValueChange={setSelectedRegion} value={selectedRegion} required disabled={isSubmitting}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecciona una región disponible" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableRegionsForReferente.length > 0 ? (
+                availableRegionsForReferente.map(region => (
+                  <SelectItem key={region.id} value={region.name}>{region.name}</SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no-regions" disabled>
+                  No hay regiones disponibles en este ciclo lectivo
+                </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+          <p className="text-[0.8rem] text-muted-foreground">Como Referente, supervisarás y gestionarás únicamente las escuelas y usuarios de tu región asignada.</p>
+        </div>
+      )}
 
       {(role === "Director" || role === "Docente") && (
         <>

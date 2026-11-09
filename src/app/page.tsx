@@ -33,7 +33,7 @@ export default function LoginPage() {
           <div className="grid gap-2 text-center">
             <h1 className="text-3xl font-bold font-headline">Iniciar Sesión</h1>
             <p className="text-balance text-muted-foreground">
-              Ingresa tu DNI/email y contraseña para acceder al sistema
+              Ingresa tu email y contraseña para acceder al sistema
             </p>
           </div>
           <SuspenseWrapper>

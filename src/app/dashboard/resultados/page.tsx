@@ -39,9 +39,20 @@ export default function ResultadosPage() {
     const { user, loading: authLoading } = useAuth();
     const { results: allResults, deleteResult, loading: resultsLoading } = useResults();
     const { exams, loading: examsLoading } = useExams();
+    const { schools } = useSchools();
     const { searchTerm } = useSearch();
     const { toast } = useToast();
     const { settings } = useSettings();
+
+    const userRegion = useMemo(() => {
+        if (!user) return undefined;
+        return user.region || (user.school.startsWith("Región") ? user.school : schools.find(s => s.name === user.school)?.region);
+    }, [user, schools]);
+
+    const regionSchoolNames = useMemo(() => {
+        if (!userRegion) return new Set();
+        return new Set(schools.filter(s => s.region === userRegion).map(s => s.name));
+    }, [schools, userRegion]);
     
     const [filters, setFilters] = useState<Filters>({
         exam: "all",
@@ -96,15 +107,23 @@ export default function ResultadosPage() {
             const examNames = new Set(exams.filter(e => e.grade === user.grade).map(e => e.name));
             return Array.from(examNames).sort();
         }
+        if (user?.role === 'Referente') {
+            const regionResults = resultsForFilterOptions.filter(r => regionSchoolNames.has(r.school));
+            const examNames = new Set(regionResults.map(r => r.examName));
+            return Array.from(examNames).sort();
+        }
         const examNames = new Set(resultsForFilterOptions.map(r => r.examName));
         return Array.from(examNames).sort();
-    }, [resultsForFilterOptions, exams, user]);
+    }, [resultsForFilterOptions, exams, user, regionSchoolNames]);
 
 
     const availableSchools = useMemo(() => {
+        if (user?.role === 'Referente') {
+            return schools.filter(s => s.region === userRegion).map(s => s.name).sort();
+        }
         const schoolNames = new Set(resultsForFilterOptions.map(r => r.school));
         return Array.from(schoolNames).sort();
-    }, [resultsForFilterOptions]);
+    }, [resultsForFilterOptions, user?.role, schools, userRegion]);
     
     const availableGrades = useMemo(() => {
         const gradeNames = new Set(resultsForFilterOptions.map(r => r.grade).filter(Boolean));
@@ -135,6 +154,8 @@ export default function ResultadosPage() {
         // Role-based pre-filtering.
         if (user.role === "Director") {
             results = results.filter(r => r.school === user.school);
+        } else if (user.role === "Referente") {
+            results = results.filter(r => regionSchoolNames.has(r.school));
         } else if (user.role === "Docente") {
             results = results.filter(r => 
                 r.school === user.school &&
@@ -428,10 +449,12 @@ export default function ResultadosPage() {
                                                 <Eye className="mr-2 h-4 w-4" />
                                                 Ver Detalles
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(result)} disabled={isSubmitting}>
-                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                Anular Resultado
-                                            </DropdownMenuItem>
+                                            {user.role === 'Evaluador' && (
+                                                <DropdownMenuItem className="text-destructive" onSelect={() => handleOpenDeleteDialog(result)} disabled={isSubmitting}>
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Anular Resultado
+                                                </DropdownMenuItem>
+                                            )}
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>

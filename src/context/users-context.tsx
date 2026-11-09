@@ -16,6 +16,7 @@ interface UsersContextType {
   updateUserPassword: (userId: string, newPassword: string) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
   enableUser: (userId: string) => Promise<void>;
+  refreshUsers: () => Promise<void>;
   loading: boolean;
 }
 
@@ -124,7 +125,7 @@ export function UsersProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <UsersContext.Provider value={{ users, addUser, updateUser, updateUserPassword, deleteUser, enableUser, loading }}>
+    <UsersContext.Provider value={{ users, addUser, updateUser, updateUserPassword, deleteUser, enableUser, refreshUsers, loading }}>
       {children}
     </UsersContext.Provider>
   );

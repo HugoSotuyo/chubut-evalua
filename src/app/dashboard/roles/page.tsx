@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button"
 const rolesData = [
     {
         role: "Evaluador",
-        description: "Superusuario con acceso total al sistema. Responsable de la configuración inicial, gestión de datos maestros y supervisión general.",
+        description: "Superusuario con la escala jerárquica más alta del sistema. Responsable de la configuración inicial, gestión de datos maestros y supervisión general. Puede editar a todos los roles inferiores (Administrador, Referente, Director, Docente).",
         permissions: {
-            usuarios: ["Habilitar", "Eliminar"],
+            usuarios: ["Editar (Administrador, Referente, Director, Docente)", "Habilitar", "Eliminar"],
             escuelas: ["Crear", "Editar", "Eliminar", "Activar/Desactivar"],
             examenes: ["Crear", "Editar", "Eliminar", "Abrir/Cerrar"],
             resultados: ["Ver", "Anular"],
@@ -23,9 +23,9 @@ const rolesData = [
     },
     {
         role: "Administrador",
-        description: "Gestiona usuarios y escuelas a nivel sistema. No interviene en la parte pedagógica (exámenes, resultados).",
+        description: "Gestiona usuarios y escuelas a nivel sistema. Puede editar a los roles inferiores en escala (Referente, Director, Docente).",
         permissions: {
-            usuarios: ["Habilitar", "Eliminar"],
+            usuarios: ["Editar (Referente, Director, Docente)", "Habilitar", "Eliminar"],
             escuelas: ["Crear", "Editar", "Eliminar", "Activar/Desactivar"],
             examenes: [],
             resultados: [],
@@ -36,12 +36,12 @@ const rolesData = [
     },
     {
         role: "Referente",
-        description: "Rol de consulta y carga de datos a nivel distrital o regional. Puede crear exámenes y ver resultados y análisis.",
+        description: "Rol de consulta y gestión a nivel regional. Limitado exclusivamente a su región asignada (no puede visualizar ni modificar datos de otras regiones). Puede crear exámenes y gestionar a los roles inferiores en escala (Director, Docente) de su región.",
         permissions: {
-            usuarios: [],
-            escuelas: ["Ver"],
+            usuarios: ["Editar (Director, Docente de su región)", "Habilitar", "Eliminar"],
+            escuelas: ["Ver (Escuelas de su región)"],
             examenes: ["Crear", "Editar", "Eliminar"],
-            resultados: ["Ver"],
+            resultados: ["Ver (Resultados de su región)"],
             analisis: true,
             alumnos: false,
             admin: false
@@ -49,12 +49,12 @@ const rolesData = [
     },
     {
         role: "Director",
-        description: "Gestiona los usuarios (docentes) y alumnos de su propia escuela. Visualiza los resultados y análisis correspondientes a su institución.",
+        description: "Gestiona los usuarios y alumnos de su propia escuela. Puede editar al rol inferior en escala (Docente de su escuela).",
         permissions: {
-            usuarios: ["Habilitar Docentes", "Eliminar Docentes"],
+            usuarios: ["Editar (Docentes)", "Habilitar Docentes", "Eliminar Docentes"],
             escuelas: [],
             examenes: ["Ver"],
-            resultados: ["Ver"],
+            resultados: ["Ver (Resultados de su escuela)"],
             analisis: true,
             alumnos: true,
             admin: false
@@ -62,7 +62,7 @@ const rolesData = [
     },
     {
         role: "Docente",
-        description: "Rol enfocado en la gestión de sus alumnos y la carga de resultados de los exámenes correspondientes a su grado.",
+        description: "Rol enfocado en la gestión de sus alumnos y la carga de resultados de los exámenes correspondientes a su grado. Menor escala en el sistema.",
         permissions: {
             usuarios: [],
             escuelas: [],

@@ -108,6 +108,7 @@ export default function CrearExamenPage() {
             questions: questionsWithParsedScores,
             fileDataUrl,
             fileName,
+            schoolYear: settings.currentSchoolYear,
         });
         toast({
           title: "Examen Guardado",

@@ -27,6 +27,7 @@ interface SchoolsContextType {
   toggleSchoolStatus: (schoolId: string) => Promise<void>;
   addRegion: (regionName: string) => Promise<{ success: boolean; message: string }>;
   deleteRegion: (regionId: string) => Promise<{ success: boolean; message: string }>;
+  refreshSchools: () => Promise<void>;
   loading: boolean;
 }
 
@@ -117,6 +118,7 @@ export function SchoolsProvider({ children }: { children: ReactNode }) {
     toggleSchoolStatus,
     addRegion,
     deleteRegion,
+    refreshSchools: refreshData,
     loading 
   };
 

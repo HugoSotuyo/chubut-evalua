@@ -14,6 +14,7 @@ export type User = {
   dni?: string;
   schoolYear: string;
   fcmTokens?: string[];
+  region?: string;
 };
 
 export type Question = {
@@ -33,6 +34,7 @@ export type Exam = {
     questions: Question[];
     fileDataUrl?: string;
     fileName?: string;
+    schoolYear?: string;
 };
 
 export type Student = {
@@ -92,7 +94,9 @@ export type AuditAction =
   | "CAMBIAR_ESTADO_ESCUELA"
   | "CREAR_REGION"
   | "ELIMINAR_REGION"
-  | "ACTUALIZAR_PARAMETROS";
+  | "ACTUALIZAR_PARAMETROS"
+  | "CREAR_CICLO_LECTIVO"
+  | "DEPURAR_DATOS";
 
 export type AuditLog = {
     id: string;
@@ -110,4 +114,5 @@ export type SystemSettings = {
     incorrectScore: number;
     defaultScore: number;
     scoreStep: number;
+    schoolYears?: string[];
 };

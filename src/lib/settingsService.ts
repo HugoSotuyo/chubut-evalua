@@ -34,6 +34,7 @@ const defaultSettings: SystemSettings = {
     incorrectScore: 0,
     defaultScore: 10,
     scoreStep: 1,
+    schoolYears: ["2024", "2025", "2026"],
 };
 
 export async function getSystemSettings(): Promise<SystemSettings> {
@@ -42,8 +43,16 @@ export async function getSystemSettings(): Promise<SystemSettings> {
     const docSnap = await getDoc(settingsRef);
 
     if (docSnap.exists()) {
-        // Merge with defaults to ensure all keys are present
-        return { ...defaultSettings, ...docSnap.data() } as SystemSettings;
+        const data = docSnap.data();
+        const mergedSchoolYears = Array.isArray(data.schoolYears) && data.schoolYears.length > 0
+            ? [...new Set([...defaultSettings.schoolYears!, ...data.schoolYears])]
+            : defaultSettings.schoolYears;
+
+        return {
+            ...defaultSettings,
+            ...data,
+            schoolYears: mergedSchoolYears,
+        } as SystemSettings;
     } else {
         // If no settings exist, create them with default values
         await setDoc(settingsRef, defaultSettings);

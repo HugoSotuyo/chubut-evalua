@@ -14,6 +14,7 @@ interface StudentsContextType {
   addStudent: (student: NewStudent) => Promise<void>;
   updateStudent: (student: Omit<Student, 'results'>) => Promise<void>;
   deleteStudent: (studentId: string) => Promise<void>;
+  refreshStudents: () => Promise<void>;
   loading: boolean;
 }
 
@@ -70,7 +71,7 @@ export function StudentsProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <StudentsContext.Provider value={{ students, addStudent, updateStudent, deleteStudent, loading }}>
+    <StudentsContext.Provider value={{ students, addStudent, updateStudent, deleteStudent, refreshStudents, loading }}>
       {children}
     </StudentsContext.Provider>
   );

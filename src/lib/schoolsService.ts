@@ -158,3 +158,28 @@ export async function deleteRegion(regionId: string): Promise<{ success: boolean
     await deleteDoc(regionDocRef);
     return { success: true, message: `La región "${regionToDelete.name}" ha sido eliminada.` };
 }
+
+export async function clearAllSchools(): Promise<{ deletedCount: number }> {
+    const db = getDb();
+    const schoolsRef = collection(db, "schools");
+    const snapshot = await getDocs(schoolsRef);
+    const deletePromises = snapshot.docs.map(d => deleteDoc(doc(db, "schools", d.id)));
+    await Promise.all(deletePromises);
+    return { deletedCount: snapshot.docs.length };
+}
+
+export async function clearAllRegions(): Promise<{ deletedCount: number }> {
+    const db = getDb();
+    // 1. Remove region linkage from schools if any exist
+    const schoolsRef = collection(db, "schools");
+    const schoolsSnap = await getDocs(schoolsRef);
+    const updatePromises = schoolsSnap.docs.map(d => updateDoc(doc(db, "schools", d.id), { region: '', regionId: null }));
+    await Promise.all(updatePromises);
+
+    // 2. Delete all regions
+    const regionsRef = collection(db, "regions");
+    const regionsSnap = await getDocs(regionsRef);
+    const deletePromises = regionsSnap.docs.map(d => deleteDoc(doc(db, "regions", d.id)));
+    await Promise.all(deletePromises);
+    return { deletedCount: regionsSnap.docs.length };
+}
